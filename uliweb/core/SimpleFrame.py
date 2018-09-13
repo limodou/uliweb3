@@ -25,7 +25,7 @@ from uliweb import UliwebError
 
 # from rules import Mapping, add_rule
 from . import rules
-import six
+from ..utils._compat import string_types, callable, import_
 
 try:
     set
@@ -69,7 +69,7 @@ class Finder(object):
         return obj
     
     def __setitem__(self, name, value):
-        if isinstance(value, six.string_types):
+        if isinstance(value, string_types):
             value = import_attr(value)
         self.__objects[name] = value
 
@@ -138,7 +138,7 @@ def json(data, **json_kwargs):
     if 'content_type' not in json_kwargs:
         json_kwargs['content_type'] = 'application/json; charset=utf-8'
         
-    if six.callable(data):
+    if callable(data):
         @wraps(data)
         def f(*arg, **kwargs):
             ret = data(*arg, **kwargs)
@@ -164,7 +164,7 @@ def jsonp(data, **json_kwargs):
     if not r_callback.match(begin):
         raise BadRequest("The callback name is not right, it can be alphabetic, number and underscore only")
     
-    if six.callable(data):
+    if callable(data):
         @wraps(data)
         def f(*arg, **kwargs):
             ret = data(*arg, **kwargs)
@@ -204,7 +204,7 @@ def url_for(endpoint, **values):
     if inspect.isfunction(endpoint) or inspect.ismethod(endpoint):
         point = rules.get_function_path(endpoint)
     else:
-        if isinstance(endpoint, six.string_types):
+        if isinstance(endpoint, string_types):
             #if the endpoint is string format, then find and replace
             #the module prefix with app alias which matched
             for k, v in __app_alias__.items():
@@ -535,7 +535,7 @@ class Dispatcher(object):
                 log.addHandler(_handler)
                 
     def process_domains(self, settings):
-        from six.moves.urllib.parse import urlparse
+        urlparse = import_('urllib.parse', 'urlparse')
 
         Dispatcher.domains = {}
         
@@ -654,10 +654,10 @@ class Dispatcher(object):
         request.rule = rule
         #get handler
         _klass = None
-        if isinstance(endpoint, six.string_types):
+        if isinstance(endpoint, string_types):
             mod, _klass, handler = import_handler(endpoint)
             mod = sys.modules[mod.__name__]
-        elif six.callable(endpoint):
+        elif callable(endpoint):
             handler = endpoint
             mod = sys.modules[handler.__module__]
         
@@ -775,7 +775,7 @@ class Dispatcher(object):
             else:
                 d = None
             response.write(self.template(tmpfile, result, env, default_template=d))
-        elif isinstance(result, six.string_types):
+        elif isinstance(result, string_types):
             response.write(result)
         elif isinstance(result, (Response, BaseResponse)):
             response = result
@@ -951,7 +951,7 @@ class Dispatcher(object):
                         dispatch.bind(args[0], **args[2])(args[1])
                 else:
                     is_wrong = True
-            elif isinstance(args, six.string_types):
+            elif isinstance(args, string_types):
                 dispatch.bind(args)(bind_name)
             else:
                 is_wrong = True
@@ -979,7 +979,7 @@ class Dispatcher(object):
                         expose(args[0], name=name, **args[2])(args[1])
                 else:
                     is_wrong = True
-            elif isinstance(args, six.string_types):
+            elif isinstance(args, string_types):
                 expose(args)(name)
             else:
                 is_wrong = True
