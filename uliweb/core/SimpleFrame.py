@@ -23,7 +23,7 @@ from uliweb.i18n import gettext_lazy, i18n_ini_convertor
 from uliweb.utils.localproxy import LocalProxy, Global
 from uliweb import UliwebError
 
-#from rules import Mapping, add_rule
+# from rules import Mapping, add_rule
 from . import rules
 import six
 
@@ -43,7 +43,7 @@ __app_dirs__ = {}
 __app_alias__ = {}
 
 r_callback = re.compile(r'^[\w_]+$')
-#Initialize pyini env
+# Initialize pyini env
 pyini.set_env({
     'env':{'_':gettext_lazy, 'gettext_lazy':gettext_lazy},
     'convertors':i18n_ini_convertor,

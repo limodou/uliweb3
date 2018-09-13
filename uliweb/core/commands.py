@@ -1,3 +1,5 @@
+from __future__ import print_function, absolute_import, unicode_literals
+from uliweb.utils._compat import input, with_metaclass, string_types, callable
 ##################################################################
 # This module is desired by Django
 ##################################################################
@@ -5,8 +7,7 @@ import sys, os
 from optparse import make_option, OptionParser, IndentedHelpFormatter
 import uliweb
 from uliweb.utils.common import log
-import six
-from six.moves import input
+
 
 def handle_default_options(options):
     """
@@ -17,6 +18,7 @@ def handle_default_options(options):
     """
     if options.pythonpath:
         sys.path.insert(0, options.pythonpath)
+
 
 class CommandError(Exception):
     """
@@ -33,6 +35,7 @@ class CommandError(Exception):
     """
     pass
 
+
 def get_answer(message, answers='Yn', default='Y', quit='n'):
     """
     Get an answer from stdin, the answers should be 'Y/n' etc.
@@ -48,9 +51,10 @@ def get_answer(message, answers='Yn', default='Y', quit='n'):
     while ans not in answers.upper():
         ans = input(message).strip().upper()
     if quit and ans == quit.upper():
-        six.print_("Command be cancelled!")
+        print("Command be cancelled!")
         sys.exit(1)
     return ans
+
 
 def get_input(prompt, default=None, choices=None, option_value=None):
     """
@@ -74,6 +78,7 @@ def get_input(prompt, default=None, choices=None, option_value=None):
             break
     return r
 
+
 class CommandMetaclass(type):
     def __init__(cls, name, bases, dct):
         option_list = list(dct.get('option_list', []))
@@ -81,9 +86,9 @@ class CommandMetaclass(type):
             if hasattr(c, 'option_list') and isinstance(c.option_list, list):
                 option_list.extend(c.option_list)
         cls.option_list = option_list
-        
-@six.patch_with_metaclass(CommandMetaclass)
-class Command(object):
+
+
+class Command(with_metaclass(CommandMetaclass)):
     option_list = ()
     help = ''
     args = ''
@@ -102,8 +107,9 @@ class Command(object):
                             version='',
                             add_help_option = False,
                             option_list=self.option_list)
+
     def get_version(self):
-        return "Uliweb version is %s" % uliweb.version
+        return "{} version is {}".format(self.prog_name, self.version)
 
     def usage(self, subcommand):
         """
@@ -112,9 +118,9 @@ class Command(object):
     
         """
         if self.has_options:
-            usage = '%%prog %s [options] %s' % (subcommand, self.args)
+            usage = '%%prog {} [options] {}'.format(subcommand, self.args)
         else:
-            usage = '%%prog %s %s' % (subcommand, self.args)
+            usage = '%%prog {} {}'.format(subcommand, self.args)
         if self.help:
             return '%s\n\n%s' % (usage, self.help)
         else:
@@ -132,16 +138,17 @@ class Command(object):
     def get_apps(self, global_options, include_apps=None):
         from uliweb.core.SimpleFrame import get_apps
         
-        return get_apps(global_options.apps_dir, include_apps=include_apps, 
-            settings_file=global_options.settings, local_settings_file=global_options.local_settings)
+        return get_apps(global_options.apps_dir, include_apps=include_apps,
+                        settings_file=global_options.settings,
+                        local_settings_file=global_options.local_settings)
     
     def get_application(self, global_options):
         from uliweb.manage import make_simple_application
         
-        return make_simple_application(project_dir=global_options.project, 
-            settings_file=global_options.settings, 
-            local_settings_file=global_options.local_settings
-            )
+        return make_simple_application(project_dir=global_options.project,
+                                       settings_file=global_options.settings,
+                                       local_settings_file=global_options.local_settings
+                                       )
         
     def run_from_argv(self, prog, subcommand, global_options, argv):
         """
@@ -156,19 +163,19 @@ class Command(object):
     def execute(self, args, options, global_options):
         from uliweb.utils.common import check_apps_dir
 
-        #add apps_dir to global_options and insert it to sys.path
+        # add apps_dir to global_options and insert it to sys.path
         if global_options.apps_dir not in sys.path:
             sys.path.insert(0, global_options.apps_dir)
         
         if self.check_apps_dirs:
             check_apps_dir(global_options.apps_dir)
-        if self.check_apps and args: #then args should be apps
+        if self.check_apps and args:  # then args should be apps
             all_apps = self.get_apps(global_options)
             apps = args
             args = []
             for p in apps:
                 if p not in all_apps:
-                    six.print_('Error: Appname %s is not a valid app' % p)
+                    print('Error: Appname {} is not a valid app'.format(p))
                     sys.exit(1)
                 else:
                     args.append(p)
@@ -185,10 +192,12 @@ class Command(object):
     
         """
         raise NotImplementedError()
-    
+
+
 class NewFormatter(IndentedHelpFormatter):
     def format_heading(self, heading):
         return "%*s%s:\n" % (self.current_indent, "", 'Global Options')
+
 
 class NewOptionParser(OptionParser):
     def _process_args(self, largs, rargs, values):
@@ -217,7 +226,8 @@ class NewOptionParser(OptionParser):
                     if '=' in arg:
                         del rargs[0]
                 largs.append(arg)
-                
+
+
 class CommandManager(Command):
     usage_info = "%prog [global_options] [subcommand [options] [args]]"
     
@@ -228,7 +238,7 @@ class CommandManager(Command):
         self.global_options = global_options
     
     def get_commands(self, global_options):
-        if six.callable(self.commands):
+        if callable(self.commands):
             commands = self.commands(global_options)
         else:
             commands = self.commands
@@ -238,12 +248,14 @@ class CommandManager(Command):
         """
         Returns the script's main help text, as a string.
         """
-        usage = ['',"Type '%s help <subcommand>' for help on a specific subcommand." % self.prog_name,'']
+        usage = ['',
+                 "Type '{} help <subcommand>' for help on a specific subcommand.".format(self.prog_name),
+                 '']
         usage.append('Available subcommands:')
-        commands = self.get_commands(global_options).keys()
+        commands = list(self.get_commands(global_options).keys())
         commands.sort()
         for cmd in commands:
-            usage.append('  %s' % cmd)
+            usage.append('  {}'.format(cmd))
         return '\n'.join(usage)
     
     def fetch_command(self, global_options, subcommand):
@@ -256,8 +268,8 @@ class CommandManager(Command):
         try:
             klass = commands[subcommand]
         except KeyError:
-            sys.stderr.write("Unknown command: %r\nType '%s help' for usage.\n" % \
-                (subcommand, self.prog_name))
+            sys.stderr.write("Unknown command: {!r}\nType '{} help' for usage.\n".format(
+                subcommand, self.prog_name))
             sys.exit(1)
         return klass
     
@@ -270,11 +282,10 @@ class CommandManager(Command):
         # These options could affect the commands that are available, so they
         # must be processed early.
         parser = NewOptionParser(prog=self.prog_name,
-                             usage=self.usage_info,
-#                             version=self.get_version(),
-                             formatter = NewFormatter(),
-                             add_help_option = False,
-                             option_list=self.option_list)
+                                 usage=self.usage_info,
+                                 formatter=NewFormatter(),
+                                 add_help_option=False,
+                                 option_list=self.option_list)
         
         if not self.global_options:
             global_options, args = parser.parse_args(self.argv)
@@ -295,7 +306,7 @@ class CommandManager(Command):
             
         if len(args) == 0:
             if global_options.version:
-                six.print_(self.get_version())
+                print(self.get_version())
                 sys.exit(1)
             else:
                 print_help(global_options)
@@ -304,13 +315,13 @@ class CommandManager(Command):
         try:
             subcommand = args[0]
         except IndexError:
-            subcommand = 'help' # Display help if no arguments were given.
+            subcommand = 'help'  # Display help if no arguments were given.
     
         if subcommand == 'help':
             if len(args) > 1:
                 command = self.fetch_command(global_options, args[1])
                 if issubclass(command, CommandManager):
-                    cmd = command(['help'], None, '%s %s' % (self.prog_name, args[1]), global_options=global_options)
+                    cmd = command(['help'], None, '{} {}'.format(self.prog_name, args[1]), global_options=global_options)
                     cmd.execute()
                 else:
                     command().print_help(self.prog_name, args[1])
@@ -322,37 +333,38 @@ class CommandManager(Command):
         else:
             command = self.fetch_command(global_options, subcommand)
             if issubclass(command, CommandManager):
-                cmd = command(args[1:], None, '%s %s' % (self.prog_name, subcommand), global_options=global_options)
+                cmd = command(args[1:], None, '{} {}'.format(self.prog_name, subcommand), global_options=global_options)
                 cmd.execute()
             else:
                 cmd = command()
                 cmd.run_from_argv(self.prog_name, subcommand, global_options, args[1:])
-    
+
+
 class ApplicationCommandManager(CommandManager):
     option_list = (
         make_option('--help', action='store_true', dest='help',
-            help='show this help message and exit.'),
-        make_option('-v', '--verbose', action='store_true', 
-            help='Output the result in verbose mode.'),
+                    help='show this help message and exit.'),
+        make_option('-v', '--verbose', action='store_true',
+                    help='Output the result in verbose mode.'),
         make_option('-s', '--settings', dest='settings', default='settings.ini',
-            help='Settings file name. Default is "settings.ini".'),
+                    help='Settings file name. Default is "settings.ini".'),
         make_option('-L', '--local_settings', dest='local_settings', default='local_settings.ini',
-            help='Local settings file name. Default is "local_settings.ini".'),
+                    help='Local settings file name. Default is "local_settings.ini".'),
         make_option('--project', default='.', dest='project',
-            help='Your project directory, default is current directory.'),
+                    help='Your project directory, default is current directory.'),
         make_option('--pythonpath', default='',
-            help='A directory to add to the Python path, e.g. "/home/myproject".'),
+                    help='A directory to add to the Python path, e.g. "/home/myproject".'),
         make_option('--version', action='store_true', dest='version',
-            help="show program's version number and exit."),
-#        make_option('--include-apps', default=[], dest='include_apps',
-#            help='Including extend apps when execute the command.'),
+                    help="show program's version number and exit."),
     )
     help = ''
     args = ''
-    
+
+
 def execute_command_line(argv=None, commands=None, prog_name=None, callback=None):
     m = ApplicationCommandManager(argv, commands, prog_name)
     m.execute(callback)
-    
+
+
 if __name__ == '__main__':
     execute_command_line(sys.argv)
