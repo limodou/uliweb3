@@ -18,6 +18,7 @@ from io import StringIO, BytesIO
 
 """
 import sys
+import inspect
 
 PY3 = sys.version_info[0] == 3
 PY2 = sys.version_info[0] == 2
@@ -72,6 +73,9 @@ if not PY2:
     open = open
 
     callable = lambda x: hasattr(x, '__call__')
+
+    ismethod = lambda f: callable(f) and not inspect.isclass(f) and '.' in f.__qualname__
+    isfunction = lambda f: callable(f) and not inspect.isclass(f) and '.' not in f.__qualname__
 
 else:
     unichr = unichr
@@ -128,6 +132,8 @@ else:
     input = raw_input
 
     from io import open
+
+    from inspect import ismethod, isfunction
 
 try:
     next = next

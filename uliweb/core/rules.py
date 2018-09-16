@@ -1,8 +1,9 @@
+from __future__ import print_function, absolute_import, unicode_literals
 import os
 import inspect
 from uliweb.utils.common import log
 from uliweb.utils.sorteddict import SortedDict
-import six
+from ..utils._compat import string_types, iterkeys, ismethod, isfunction
 
 class ReservedKeyError(Exception):pass
 
@@ -76,7 +77,7 @@ def expose(rule=None, **kwargs):
 class Expose(object):
     def __init__(self, rule=None, restful=False, **kwargs):
         self.restful = restful
-        if inspect.isfunction(rule) or inspect.isclass(rule):
+        if isfunction(rule) or inspect.isclass(rule):
             self.parse_level = 1
             self.rule = None
             self.kwargs = {}
@@ -107,7 +108,7 @@ class Expose(object):
         return appname, '/'.join(s)
     
     def parse(self, f):
-        if inspect.isfunction(f) or inspect.ismethod(f):
+        if isfunction(f) or ismethod(f):
             func, result = self.parse_function(f)
             a = __exposes__.setdefault(func, [])
             a.append(result)
@@ -125,7 +126,7 @@ class Expose(object):
         f.__exposed_url__ = prefix
         for name in dir(f):
             func = getattr(f, name)
-            if (inspect.ismethod(func) or inspect.isfunction(func)) and not name.startswith('_'):
+            if (ismethod(func) or isfunction(func)) and not name.startswith('_'):
                 if hasattr(func, '__exposed__') and func.__exposed__:
                     new_endpoint = '.'.join([func.__module__, f.__name__, name])
                     f_func = get_func(func)
@@ -150,7 +151,7 @@ class Expose(object):
                                 if not keep and rule.startswith(prefix):
                                     rule = self._fix_url(appname, rule)
                             __no_need_exposed__.append((v[0], new_endpoint, rule, v[3]))
-                            for k in six.iterkeys(__url_names__):
+                            for k in iterkeys(__url_names__):
                                 if __url_names__[k] == v[1]:
                                     __url_names__[k] = new_endpoint
                 else:
@@ -161,7 +162,7 @@ class Expose(object):
     def _get_url(self, appname, prefix, f):
         args = inspect.getargspec(f)[0]
         if args:
-            if inspect.ismethod(f):
+            if ismethod(f):
                 args = args[1:]
             args = ['<%s>' % x for x in args]
         if f.__name__ in reserved_keys:
@@ -204,7 +205,7 @@ class Expose(object):
     def __call__(self, f):
         from uliweb.utils.common import safe_import
         
-        if isinstance(f, six.string_types):
+        if isinstance(f, string_types):
             try:
                 _, f = safe_import(f)
             except:
@@ -212,4 +213,3 @@ class Expose(object):
                 raise
         self.parse(f)
         return f
-    
