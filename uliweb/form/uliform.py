@@ -1,16 +1,17 @@
 #coding=utf-8
-import os
 import cgi
 import datetime
-import time
-from .validators import *
-from uliweb.i18n import gettext_lazy as _
-from uliweb.core.html import Buf, Tag, begin_tag, u_str
-from .widgets import *
-from .layout import *
-from uliweb.core.storage import Storage
-from uliweb.utils import date
+import os
 import six
+import time
+
+from uliweb.core.html import Buf, Tag, begin_tag, u_str
+from uliweb.i18n import gettext_lazy as _
+from uliweb.utils import date
+from uliweb.utils.storage import Storage
+from .layout import *
+from .validators import *
+from .widgets import *
 
 DEFAULT_FORM_CLASS = 'form'
 REQUIRED_CAPTION = '*'

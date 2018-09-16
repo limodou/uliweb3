@@ -9,7 +9,9 @@ __url__ = 'https://github.com/limodou/uliweb'
 __license__ = 'BSD'
 version = __version__ = '0.2'
 
-import os, sys
+import os
+import sys
+
 workpath = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(workpath, 'lib'))
 
@@ -20,7 +22,7 @@ from uliweb.core.SimpleFrame import (Request, Response, redirect, Redirect, erro
         functions, response, request, settings, application, NotFound, HTTPException,
     )
 from uliweb.core.js import json_dumps
-from uliweb.core.storage import Storage
+from uliweb.utils.storage import Storage
 
 class Middleware(object):
     ORDER = 500

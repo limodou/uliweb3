@@ -3,28 +3,28 @@
 # License: BSD
 ####################################################################
 
-import os, sys
 import cgi
 import inspect
+import os
 import re
-from werkzeug import Request as OriginalRequest, Response as OriginalResponse
+import sys
 from werkzeug import ClosingIterator, Local, LocalManager, BaseResponse
+from werkzeug import Request as OriginalRequest, Response as OriginalResponse
 from werkzeug.exceptions import HTTPException, NotFound, BadRequest
 from werkzeug.routing import Map
 
-from . import template
-from .js import json_dumps
-from .storage import Storage
-from . import dispatch
-from uliweb.utils.common import (pkg, log, import_attr, 
-    myimport, wraps, norm_path)
 import uliweb.utils.pyini as pyini
-from uliweb.i18n import gettext_lazy, i18n_ini_convertor
-from uliweb.utils.localproxy import LocalProxy, Global
 from uliweb import UliwebError
-
+from uliweb.i18n import gettext_lazy, i18n_ini_convertor
+from uliweb.utils.common import (pkg, log, import_attr,
+                                 myimport, wraps, norm_path)
+from uliweb.utils.localproxy import LocalProxy, Global
+from uliweb.utils.storage import Storage
+from . import dispatch
 # from rules import Mapping, add_rule
 from . import rules
+from . import template
+from .js import json_dumps
 from ..utils._compat import string_types, callable, import_
 
 try:
