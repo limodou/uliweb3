@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function, absolute_import, unicode_literals
 import sys, os
 import logging
 import inspect
@@ -6,8 +7,7 @@ from optparse import make_option
 import uliweb
 from uliweb.core.commands import Command, CommandManager
 from uliweb.core import SimpleFrame
-import six
-from six.moves import input
+from .utils._compat import input, string_types, iteritems, exec_
 
 apps_dir = 'apps'
 __commands__ = {}
@@ -103,7 +103,7 @@ def make_application(debug=None, apps_dir='apps', project_dir=None,
     #process wsgi middlewares
     middlewares = []
     parameters = {}
-    for name, v in six.iteritems(uliweb.settings.get('WSGI_MIDDLEWARES', {})):
+    for name, v in iteritems(uliweb.settings.get('WSGI_MIDDLEWARES', {})):
         order, kwargs = 500, {}
         if not v:
             continue
@@ -247,25 +247,6 @@ class MakeProjectCommand(Command):
             os.rename(os.path.join(project_name, '.gitignore.template'), os.path.join(project_name, '.gitignore'))
 register_command(MakeProjectCommand)
 
-class SupportCommand(Command):
-    name = 'support'
-    help = 'Add special support to existed project, such as: gae, dotcloud'
-    args = 'supported_type'
-    check_apps_dirs = False
-
-    def handle(self, options, global_options, *args):
-        from uliweb.utils.common import extract_dirs
-        
-        _types = ['gae', 'dotcloud', 'sae', 'bae', 'heroku']
-        if not args:
-            support_type = ''
-            while not support_type in _types:
-                support_type = input('Please enter support type[%s]:' % '/'.join(_types))
-        else:
-            support_type = args[0]
-        
-        extract_dirs('uliweb', 'template_files/support/%s' % support_type, '.', verbose=global_options.verbose)
-register_command(SupportCommand)
 
 class ExportStaticCommand(Command):
     """
@@ -296,12 +277,12 @@ class ExportStaticCommand(Command):
         self.get_application(global_options)
         
         if not args:
-            six.print_("Error: outputdir should be a directory and existed", file=sys.stderr)
+            print("Error: outputdir should be a directory and existed", file=sys.stderr)
             sys.exit(0)
         else:
             outputdir = os.path.abspath(args[0])
             if global_options.verbose:
-                six.print_("Export direcotry is %s ..." % outputdir)
+                print("Export direcotry is {} ...".format(outputdir))
                 
         if not args[1:]:
             apps = self.get_apps(global_options)
@@ -326,13 +307,13 @@ class ExportStaticCommand(Command):
             try:
                 os.remove(f)
             except:
-                six.print_("Error: static file [%s] can't be deleted")
+                print("Error: static file [{}] can't be deleted".format(f))
                 
         d = init_static_combine()
         for k, v in d.items():
             filename = os.path.join(outputdir, k)
             if verbose:
-                six.print_('Process ... %s' % filename)
+                print_('Process ... {}'.format(filename))
             readme = os.path.splitext(filename)[0] + '.txt'
             with open(filename, 'w') as f:
                 ext = os.path.splitext(k)[1]
@@ -341,12 +322,12 @@ class ExportStaticCommand(Command):
                 elif ext == '.css':
                     processor = cssmin
                 else:
-                    six.print_("Error: Unsupport type %s" % ext)
+                    print("Error: Unsupport type {}".format(ext))
                     sys.exit(1)
                 for x in v:
                     fname = os.path.join(outputdir, x)
                     if verbose:
-                        six.print_('    add %s' % fname)
+                        print('    add {}'.format(fname))
                     kwargs = {}
                     if ext == '.css':
                         kwargs = {'base_dir':os.path.dirname(x)}
@@ -368,12 +349,12 @@ class ExportStaticCommand(Command):
         if sfile.endswith('.js') and ('.min.' not in sfile and '.pack.' not in sfile) and (self.options.js or self.options.auto):
             open(dfile, 'w').write(jsmin(open(sfile).read()))
             if self.global_options.verbose:
-                six.print_('Compress %s to %s' % (sfile, dfile))
+                print('Compress {} to {}'.format(sfile, dfile))
             return True
         if sfile.endswith('.css') and ('.min.' not in sfile and '.pack.' not in sfile) and (self.options.css or self.options.auto):
             open(dfile, 'w').write(cssmin(open(sfile).read()))
             if self.global_options.verbose:
-                six.print_('Compress %s to %s' % (sfile, dfile))
+                print('Compress {} to {}'.format(sfile, dfile))
             return True
 register_command(ExportStaticCommand)
     
@@ -392,7 +373,7 @@ class ExportCommand(Command):
         from uliweb.utils.common import extract_dirs
         
         if not options.outputdir:
-            six.print_("Error: please give the output directory with '-d outputdir' argument", file=sys.stderr)
+            print_("Error: please give the output directory with '-d outputdir' argument", file=sys.stderr)
             sys.exit(0)
         else:
             outputdir = options.outputdir
@@ -412,7 +393,7 @@ class ExportCommand(Command):
                 dest = os.path.join(dest, m)
                 module = '.'.join(mod)
                 if global_options.verbose:
-                    six.print_('Export %s to %s ...' % (module, dest))
+                    print('Export {} to {} ...'.format(module, dest))
                 if module == app:
                     recursion = True
                 else:
@@ -462,7 +443,7 @@ class CallCommand(Command):
     
     def handle(self, options, global_options, *args):
         if not args:
-            six.print_("Error: There is no command module name behind call command.")
+            print_("Error: There is no command module name behind call command.")
             return
         else:
             command = args[0]
@@ -477,7 +458,7 @@ class CallCommand(Command):
             try:
                 mod = __import__(m, fromlist=['*'])
                 if global_options.verbose:
-                    six.print_("Importing... %s.%s" % (f, command))
+                    print("Importing... {}.{}".format(f, command))
                 if hasattr(mod, 'call'):
                     getattr(mod, 'call')(args, options, global_options)
                 exe_flag = True
@@ -485,7 +466,7 @@ class CallCommand(Command):
                 continue
             
         if not exe_flag:
-            six.print_("Error: Can't import the [%s], please check the file and try again." % command)
+            print("Error: Can't import the [{}], please check the file and try again.".format(command))
 register_command(CallCommand)
  
 class MakeCmdCommand(Command):
@@ -614,7 +595,7 @@ class MyInteractive(InteractiveConsole):
                     line = self.raw_input(prompt)
                     # Can be None if sys.stdin was redefined
                     encoding = getattr(sys.stdin, "encoding", None)
-                    if encoding and not isinstance(line, six.text_type):
+                    if encoding and not isinstance(line, string_types):
                         line = line.decode(encoding)
                 except EOFError:
                     self.write("\n")
@@ -663,7 +644,7 @@ class ShellCommand(Command):
         Interpreter = MyInteractive(namespace)
         if args:
             def call():
-                six.exec_(compile(open(args[0]).read(), args[0], 'exec'), namespace)
+                exec_(compile(open(args[0]).read(), args[0], 'exec'), namespace)
         else:
             call = None
         Interpreter.interact(self.banner, call=call)
@@ -710,9 +691,9 @@ class FindCommand(Command):
         url_adapter = url_map.bind_to_environ(env)
         try:
             endpoint, values = url_adapter.match()
-            six.print_('%s' % endpoint)
+            print(endpoint)
         except NotFound:
-            six.print_('Not Found')
+            print('Not Found')
 
     def _find_template(self, template, tree):
         """
@@ -726,7 +707,7 @@ class FindCommand(Command):
             for dir in application.template_dirs:
                 filename = os.path.join(dir, template)
                 if os.path.exists(filename):
-                    six.print_(filename.replace('\\', '/'))
+                    print(filename.replace('\\', '/'))
         else:
             
             def get_rel_filename(filename, path):
@@ -759,9 +740,9 @@ class FindCommand(Command):
                     n = nodes[x]
                     caption = ('(%s)' % n['prop']) if n['prop'] else ''
                     if cur == n['id']:
-                        six.print_('-'*(level*indent-1)+'>', '%s%s' % (caption, n['id']))
+                        print('-'*(level*indent-1)+'>', '%s%s' % (caption, n['id']))
                     else:
-                        six.print_(' '*level*indent, '%s%s' % (caption, n['id']))
+                        print(' '*level*indent, '%s%s' % (caption, n['id']))
                     print_tree(tree_ids.get(x, []), cur=cur, level=level+1, indent=indent)
             
             templates = []
@@ -769,9 +750,9 @@ class FindCommand(Command):
             for dir in application.template_dirs:
                 filename = os.path.join(dir, template)
                 if os.path.exists(filename):
-                    six.print_(get_rel_filename(filename, path))
+                    print(get_rel_filename(filename, path))
                     print()
-                    six.print_('-------------- Tree --------------')
+                    print('-------------- Tree --------------')
                     break
             if filename:
                 def see(action, cur_filename, filename):
@@ -795,15 +776,15 @@ class FindCommand(Command):
         for appname in reversed(apps):
             path = os.path.join(get_app_dir(appname), 'static', static)
             if os.path.exists(path):
-                six.print_('%s' % path)
+                print('%s' % path)
                 return
-        six.print_('Not Found')
+        print('Not Found')
         
     def _find_model(self, global_options, model):
         from uliweb import settings
         
         model_path = settings.MODELS.get(model, 'Not Found')
-        six.print_(model_path)
+        print(model_path)
 register_command(FindCommand)
 
 def collect_files(options, apps_dir, apps):
@@ -847,7 +828,7 @@ def call(args=None):
     from uliweb.i18n.i18ntool import I18nCommand
     register_command(I18nCommand)
     
-    if isinstance(args, (six.text_type, str)):
+    if isinstance(args, string_types):
         import shlex
         args = shlex.split(args)
     

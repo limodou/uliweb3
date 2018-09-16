@@ -1,11 +1,13 @@
 #! /usr/bin/env python
 #coding=utf-8
 
+from __future__ import print_function, absolute_import, unicode_literals
+from ..utils._compat import input, with_metaclass, string_types, iteritems, u, PY3, exec_
+from io import StringIO
+
 import re
 import os
-from six import StringIO
 import cgi
-import six
 
 __templates_temp_dir__ = 'tmp/templates_temp'
 __options__ = {'use_temp_dir':False}
@@ -142,7 +144,7 @@ def eval_vars(vs, vars, env):
     if isinstance(vs, (tuple, list)):
         return [eval_vars(x, vars, env) for x in vs]
     elif isinstance(vs, dict):
-        return dict([(x, eval_vars(y, vars, env)) for x, y in six.iteritems(vs)])
+        return dict([(x, eval_vars(y, vars, env)) for x, y in iteritems(vs)])
     else:
         return eval(vs, env, vars)
 
@@ -369,12 +371,13 @@ class Out(object):
         self.buf = StringIO()
         
     def _str(self, text):
-        if not isinstance(text, six.string_types):
-            text = six.text_type(text)
-        if not isinstance(text, six.text_type):
-            return text.decode(self.encoding)
-        else:
-            return text
+        if not isinstance(text, string_types):
+            text = u(text, self.encoding)
+        # if not isinstance(text, six.text_type):
+        #     return text.decode(self.encoding)
+        # else:
+        #     return text
+        return text
 
     def write(self, text, escape=True):
         s = self._str(text)
@@ -420,7 +423,7 @@ class Template(object):
         self.end_tag = end_tag or END_TAG
         self.see = see #will used to track the derive relation of templates
         
-        for k, v in six.iteritems(__nodes__):
+        for k, v in iteritems(__nodes__):
             if hasattr(v, 'init'):
                 v.init(self)
         
@@ -672,7 +675,7 @@ class Template(object):
         If inherit_tags is True, then use current begin and end tag string, 
         or use default tag string
         """
-        if six.PY3:
+        if PY3:
             text = text.decode(self.encoding)
             
         b = r_tag.search(text)
@@ -731,12 +734,12 @@ class Template(object):
         
         e.update(self.exec_env)
         
-        if isinstance(code, six.string_types):
+        if isinstance(code, string_types):
             if self.compile:
                 code = self.compile(code, filename, 'exec', e)
             else:
                 code = compile(code, filename, 'exec')
-        six.exec_(code, e)
+        exec_(code, e)
         text = out.getvalue()
         
         for f in self.callbacks:
