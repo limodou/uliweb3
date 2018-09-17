@@ -52,9 +52,28 @@ def get_answer(message, answers='Yn', default='Y', quit='n'):
         ans = input(message).strip().upper()
     if quit and ans == quit.upper():
         print("Command be cancelled!")
-        sys.exit(1)
+        sys.exit(0)
     return ans
 
+def get_commands(mod):
+    """
+    Find commands from a module
+    """
+    import inspect
+    import types
+
+    commands = {}
+
+    def check(c):
+        return (inspect.isclass(c) and
+            issubclass(c, Command) and c is not Command and not issubclass(c, CommandManager))
+
+    for name in dir(mod):
+        c = getattr(mod, name)
+        if check(c):
+            commands[c.name] = c
+
+    return commands
 
 def get_input(prompt, default=None, choices=None, option_value=None):
     """
@@ -65,10 +84,10 @@ def get_input(prompt, default=None, choices=None, option_value=None):
         return option_value
     
     choices = choices or []
-    r = input(prompt+' ') or default
     while 1:
-        if not r:
-            r = input(prompt)
+        r = input(prompt+' ').strip()
+        if not r and default is not None:
+            return default
         if choices:
             if r not in choices:
                 r = None
@@ -82,9 +101,10 @@ def get_input(prompt, default=None, choices=None, option_value=None):
 class CommandMetaclass(type):
     def __init__(cls, name, bases, dct):
         option_list = list(dct.get('option_list', []))
-        for c in bases:
-            if hasattr(c, 'option_list') and isinstance(c.option_list, list):
-                option_list.extend(c.option_list)
+        if dct.get('options_inherit', True):
+            for c in bases:
+                if hasattr(c, 'option_list') and isinstance(c.option_list, list):
+                    option_list.extend(c.option_list)
         cls.option_list = option_list
 
 
@@ -93,8 +113,8 @@ class Command(with_metaclass(CommandMetaclass)):
     help = ''
     args = ''
     check_apps_dirs = True
-    has_options = False
     check_apps = False
+    skip_options = False #if True, then it'll skip not defined options and keep them in args
 
     def create_parser(self, prog_name, subcommand):
         """
@@ -105,7 +125,7 @@ class Command(with_metaclass(CommandMetaclass)):
         return OptionParser(prog=prog_name,
                             usage=self.usage(subcommand),
                             version='',
-                            add_help_option = False,
+                            add_help_option=False,
                             option_list=self.option_list)
 
     def get_version(self):
@@ -117,8 +137,8 @@ class Command(with_metaclass(CommandMetaclass)):
         default from the attribute ``self.help``.
     
         """
-        if self.has_options:
-            usage = '%%prog {} [options] {}'.format(subcommand, self.args)
+        if len(self.option_list) > 0:
+            usage = '%%prog %s [options] %s' % (subcommand, self.args)
         else:
             usage = '%%prog {} {}'.format(subcommand, self.args)
         if self.help:
@@ -142,13 +162,16 @@ class Command(with_metaclass(CommandMetaclass)):
                         settings_file=global_options.settings,
                         local_settings_file=global_options.local_settings)
     
-    def get_application(self, global_options):
+    def get_application(self, global_options, default_settings=None):
         from uliweb.manage import make_simple_application
         
-        return make_simple_application(project_dir=global_options.project,
-                                       settings_file=global_options.settings,
-                                       local_settings_file=global_options.local_settings
+        app = make_simple_application(project_dir=global_options.project,
+            settings_file=global_options.settings, 
+            local_settings_file=global_options.local_settings,
+            default_settings=default_settings
                                        )
+        from uliweb import application
+        return application
         
     def run_from_argv(self, prog, subcommand, global_options, argv):
         """
@@ -156,7 +179,15 @@ class Command(with_metaclass(CommandMetaclass)):
     
         """
         self.prog_name = prog
-        parser = self.create_parser(prog, subcommand)
+        if self.skip_options:
+            parser = NewOptionParser(prog=self.prog_name,
+                     usage=self.usage(subcommand),
+                     version='',
+                     formatter=NewFormatter(),
+                     add_help_option=False,
+                     option_list=self.option_list)
+        else:
+            parser = self.create_parser(prog, subcommand)
         options, args = parser.parse_args(argv)
         self.execute(args, options, global_options)
         
@@ -281,7 +312,7 @@ class CommandManager(Command):
         # Preprocess options to extract --settings and --pythonpath.
         # These options could affect the commands that are available, so they
         # must be processed early.
-        parser = NewOptionParser(prog=self.prog_name,
+        self.parser = parser = NewOptionParser(prog=self.prog_name,
                                  usage=self.usage_info,
                                  formatter=NewFormatter(),
                                  add_help_option=False,
@@ -296,22 +327,37 @@ class CommandManager(Command):
             global_options = self.global_options
             args = self.argv
     
+        if global_options.envs:
+            for x in global_options.envs:
+                if '=' in x:
+                    k, v = x.split('=')
+                    os.environ[k.strip()] = v.strip()
+                else:
+                    print ('Error: environment variable definition (%s) format is not right, '
+                           'shoule be -Ek=v or -Ek="a b"' % x)
+
+        global_options.settings = global_options.settings or os.environ.get('SETTINGS', 'settings.ini')
+        global_options.local_settings = global_options.local_settings or os.environ.get('LOCAL_SETTINGS', 'local_settings.ini')
+        
         if callback:
             callback(global_options)
-            
-        def print_help(global_options):
-            parser.print_help()
-            sys.stderr.write(self.print_help_info(global_options) + '\n')
-            sys.exit(1)
             
         if len(args) == 0:
             if global_options.version:
                 print(self.get_version())
-                sys.exit(1)
+                sys.exit(0)
             else:
-                print_help(global_options)
+                self.print_help(global_options)
                 sys.ext(1)
     
+        self.do_command(args, global_options)
+
+    def print_help(self, options):
+        self.parser.print_help()
+        sys.stderr.write(self.print_help_info(options) + '\n')
+        sys.exit(0)
+
+    def do_command(self, args, global_options):
         try:
             subcommand = args[0]
         except IndexError:
@@ -325,11 +371,11 @@ class CommandManager(Command):
                     cmd.execute()
                 else:
                     command().print_help(self.prog_name, args[1])
-                sys.exit(1)
+                sys.exit(0)
             else:
-                print_help(global_options)
+                self.print_help(global_options)
         if global_options.help:
-            print_help(global_options)
+            self.print_help(global_options)
         else:
             command = self.fetch_command(global_options, subcommand)
             if issubclass(command, CommandManager):
@@ -348,7 +394,9 @@ class ApplicationCommandManager(CommandManager):
                     help='Output the result in verbose mode.'),
         make_option('-s', '--settings', dest='settings', default='settings.ini',
                     help='Settings file name. Default is "settings.ini".'),
-        make_option('-L', '--local_settings', dest='local_settings', default='local_settings.ini',
+        make_option('-y', '--yes', dest='yes', action='store_true',
+                    help='Automatic yes to prompt.'),
+        make_option('-L', '--local_settings', dest='local_settings', default='',
                     help='Local settings file name. Default is "local_settings.ini".'),
         make_option('--project', default='.', dest='project',
                     help='Your project directory, default is current directory.'),
@@ -356,6 +404,9 @@ class ApplicationCommandManager(CommandManager):
                     help='A directory to add to the Python path, e.g. "/home/myproject".'),
         make_option('--version', action='store_true', dest='version',
                     help="show program's version number and exit."),
+        make_option('-E', dest='envs', default=[], action='append',
+                    help="Environment variables definition, "
+                    "e.g. -Efontname=\"Your Name\", support multi variables."),
     )
     help = ''
     args = ''

@@ -1,7 +1,8 @@
 *.pyc
 *.bak
 .idea
-_git*.pyo
+_git
+*.pyo
 *egg*
 build
 dist
