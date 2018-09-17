@@ -159,7 +159,7 @@ try:
     next = next
 except NameError:
     def next(it):
-        return it.next()
+        return get_next(it)
 
 
 def with_metaclass(meta, *bases):

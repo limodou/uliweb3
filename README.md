@@ -1,3 +1,5 @@
+![LOGO](https://raw.github.com/limodou/uliweb3/master/logos/uliweb_logo_media.png)
+
 Uliweb Introduction
 =====================
 
@@ -9,7 +11,6 @@ Uliweb3 is a project for transfer uliweb from py2 to py3. And want to make it as
 
 There are difference between uliweb and uliweb3:
 
-[X] Remove Support command
 [X] Remove taglib
 [X] Remove uaml
 [X] Remove rcssmin

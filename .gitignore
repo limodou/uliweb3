@@ -1,4 +1,9 @@
 *.pyc
 *.bak
 .idea
-_git
+_git*.pyo
+*egg*
+build
+dist
+test/.*
+test/coverage_output
