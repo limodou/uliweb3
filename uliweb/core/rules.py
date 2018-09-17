@@ -1,8 +1,11 @@
 from __future__ import print_function, absolute_import, unicode_literals
 import os
+import re
 import inspect
 from uliweb.utils.common import log
 from uliweb.utils.sorteddict import SortedDict
+from uliweb.utils.date import now
+import copy
 from ..utils._compat import string_types, iterkeys, ismethod, isfunction
 
 class ReservedKeyError(Exception):pass
@@ -11,6 +14,7 @@ __exposes__ = SortedDict()
 __no_need_exposed__ = []
 __class_methods__ = {}
 __app_rules__ = {}
+__url_route_rules__ = []
 __url_names__ = {}
 static_views = []
 
@@ -27,26 +31,37 @@ def add_rule(map, url, endpoint=None, **kwargs):
         raise
             
 def merge_rules():
+    from itertools import chain
+    
     s = []
     index = {}
-    for v in __exposes__.values():
-        for x in v:
-            appname, endpoint, url, kw = x
-            methods = [y.upper() for y in kw.get('methods', [])]
-            methods.sort()
-            i = index.get((url, tuple(methods)), None)
-            if i is not None:
-                s[i] = x
-            else:
-                s.append(x)
-                index[(url, tuple(methods))] = len(s)-1
-    return __no_need_exposed__ + s
+    for v in sorted(__no_need_exposed__ + list(chain(*__exposes__.values())), key=lambda x:x[4]):
+        appname, endpoint, url, kw, timestamp = v
+        if 'name' in kw:
+            url_name = kw.pop('name')
+        else:
+            url_name = endpoint
+        __url_names__[url_name] = endpoint
+        methods = [y.upper() for y in kw.get('methods', [])]
+        methods.sort()
+
+        key = url, tuple(methods), kw.get('subdomain')
+        i = index.get(key, None)
+        if i is not None:
+            s[i] = appname, endpoint, url, kw
+        else:
+            s.append((appname, endpoint, url, kw))
+            index[key] = len(s)-1
+            
+    return s
+
 
 def get_func(f):
     if inspect.ismethod(f):
         return f.__func__
     else:
         return f
+
 
 def get_function_path(f):
     if hasattr(f, '__qualname__'):
@@ -58,14 +73,62 @@ def get_function_path(f):
     else:
         return f.__module__ + '.' + f.__name__
 
+
+def get_classname(f):
+    if hasattr(f, '__qualname__'):
+        return f.__qualname__.rsplit('.', 1)[0]
+    elif getattr(f, '__self__', None):
+        return f.__self__.__name__
+    elif getattr(f, 'im_class', None):
+        return f.im_class.__name__
+
+
 def clear_rules():
     global __exposes__, __no_need_exposed__
     __exposes__ = {}
     __no_need_exposed__ = []
 
-def set_app_rules(rules):
+def set_app_rules(rules=None):
     global __app_rules__
-    __app_rules__.update(rules)
+    __app_rules__ = {}
+    __app_rules__.update(rules or {})
+    
+def set_urlroute_rules(rules=None):
+    """
+    rules should be (pattern, replace)
+
+    e.g.: ('/admin', '/demo')
+    """
+    global __url_route_rules__
+    __url_route_rules__ = []
+    for k, v in (rules or {}).values():
+        __url_route_rules__.append((re.compile(k), v))
+
+def get_endpoint(f):
+    if inspect.ismethod(f):
+        # if not f.im_self:    #instance method
+        #     clsname = f.im_class.__name__
+        # else:                       #class method
+        #     clsname = f.im_self.__name__
+        clsname = f.im_class.__name__
+        endpoint = '.'.join([f.im_class.__module__, clsname, f.__name__])
+    elif inspect.isfunction(f):
+        endpoint = '.'.join([f.__module__, f.__name__])
+    else:
+        endpoint = f
+    return endpoint
+
+def get_template_args(appname, f):
+    viewname, clsname = '', ''
+    if inspect.ismethod(f):
+        if not f.im_self:    #instance method
+            clsname = f.im_class.__name__
+        else:                       #class method
+            clsname = f.im_self.__name__
+        viewname = f.__name__
+    else:
+        viewname = f.__name__
+    return {'appname':appname, 'view_class':clsname, 'function':viewname} 
     
 def expose(rule=None, **kwargs):
     e = Expose(rule, **kwargs)
@@ -75,8 +138,12 @@ def expose(rule=None, **kwargs):
         return e
     
 class Expose(object):
-    def __init__(self, rule=None, restful=False, **kwargs):
+    def __init__(self, rule=None, restful=False, replace=False, template=None,
+                 layout=None, **kwargs):
         self.restful = restful
+        self.replace = replace
+        self.template = template
+        self.layout = layout
         if isfunction(rule) or inspect.isclass(rule):
             self.parse_level = 1
             self.rule = None
@@ -87,16 +154,56 @@ class Expose(object):
             self.rule = rule
             self.kwargs = kwargs
             
+    def _get_app_prefix(self, appname):
+        if appname in __app_rules__:
+            d = __app_rules__[appname]
+            if not d:
+                return
+            if isinstance(d, str):
+                return d
+            else:
+                return d.get('prefix')
+
+    def _get_app_subdomin(self, appname):
+        if appname in __app_rules__:
+            d = __app_rules__[appname]
+            if not d:
+                return
+            if isinstance(d, str):
+                return
+            else:
+                return d.get('subdomain')
+
     def _fix_url(self, appname, rule):
-        if rule.startswith('/') and appname in __app_rules__:
-            suffix = __app_rules__[appname]
-            url = os.path.join(suffix, rule.lstrip('/')).replace('\\', '/')
+        app_prefix = self._get_app_prefix(appname)
+        if rule.startswith('/') and app_prefix:
+            url = os.path.normcase(os.path.join(app_prefix, rule.lstrip('/'))).replace('\\', '/')
         else:
             if rule.startswith('!'):
                 url = rule[1:]
             else:
                 url = rule
-        return url.rstrip('/') or '/'
+
+        if len(url) > 1:
+            url = url.rstrip('/')
+        return url
+
+    def _fix_route(self, rule):
+        for k, v in __url_route_rules__:
+            if k.match(rule):
+                return k.sub(v, rule)
+        return rule
+
+    def _fix_kwargs(self, appname, v):
+        _subdomain = self._get_app_subdomin(appname)
+        if _subdomain is None:
+            _subdomain = self.kwargs.get('subdomain')
+        if _subdomain is None:
+            return
+        if _subdomain:
+            v['subdomain'] = _subdomain
+        else:
+            v.pop('subdomain', None)
             
     def _get_path(self, f):
         m = f.__module__.split('.')
@@ -113,8 +220,7 @@ class Expose(object):
             a = __exposes__.setdefault(func, [])
             a.append(result)
         else:
-            result = list(self.parse_class(f))
-            __no_need_exposed__.extend(result)
+            self.parse_class(f)
             
     def parse_class(self, f):
         appname, path = self._get_path(f)
@@ -138,26 +244,67 @@ class Expose(object):
                             if func.__no_rule__:
                                 rule = self._get_url(appname, prefix, func)
                             else:
+                                #check if the func has already rule
                                 _old = func.__old_rule__.get(v[2])
-                                keep = _old.startswith('!')
-                                if keep:
-                                    _old = _old[1:]
-                                if _old:
-                                    rule = os.path.join(prefix, _old).replace('\\', '/')
+                                #if keep, then it'll skip app prefix
+                                if _old.startswith('!'):
+                                    rule = _old[1:]
+                                    if not rule.startswith('/'):
+                                        raise ValueError("The rule of <!rule> definition should be start with '!/'")
+
                                 else:
-                                    rule = prefix
-                                #if rule has perfix of appname, then fix it, otherwise
-                                #maybe it's root url, e.g. /register
-                                if not keep and rule.startswith(prefix):
+                                    rule = os.path.join(prefix, _old).replace('\\', '/')
                                     rule = self._fix_url(appname, rule)
-                            __no_need_exposed__.append((v[0], new_endpoint, rule, v[3]))
-                            for k in iterkeys(__url_names__):
-                                if __url_names__[k] == v[1]:
-                                    __url_names__[k] = new_endpoint
+
+                                func.__old_rule__['clsname'] = clsname
+                                #save processed data
+                                x = list(v)
+                                x[1] = new_endpoint
+                                x[2] = rule
+                                func.__dict__['__saved_rule__'] = x
+
+                                #add subdomain process
+                                self._fix_kwargs(appname, v[3])
+
+                            rule = self._fix_route(rule)
+                            __no_need_exposed__.append((v[0], new_endpoint, rule, v[3], now()))
+                    else:
+                        #maybe is subclass
+                        v = copy.deepcopy(func.func_dict.get('__saved_rule__'))
+                        if func.__dict__.get('__fixed_url__'):
+                            rule = v[2]
+                        else:
+                            rule = self._get_url(appname, prefix, func)
+                        rule = self._fix_route(rule)
+                        if v and new_endpoint != v[1]:
+                            if self.replace:
+                                v[3]['name'] = v[3].get('name') or v[1]
+                                func.__dict__['__template__'] = {'function':func.__name__, 'view_class':func.__old_rule__['clsname'], 'appname':appname}
+                            else:
+                                v[2] = rule
+                            v[1] = new_endpoint
+                            v[4] = now()
+                            func.__dict__['__saved_rule__'] = v
+
+                            #add subdomain process
+                            self._fix_kwargs(appname, v[3])
+                            __no_need_exposed__.append(v)
                 else:
                     rule = self._get_url(appname, prefix, func)
+                    rule = self._fix_route(rule)
                     endpoint = '.'.join([f.__module__, clsname, func.__name__])
-                    yield appname, endpoint, rule, {}
+                    #process inherit kwargs from class
+                    #add subdomain process
+                    kw = {}
+                    self._fix_kwargs(appname, kw)
+                    x = appname, endpoint, rule, kw, now()
+                    __no_need_exposed__.append(x)
+                    func.__dict__['__exposed__'] = True
+                    func.__dict__['__saved_rule__'] = list(x)
+                    func.__dict__['__old_rule__'] = {'rule':rule, 'clsname':clsname}
+                    func.__dict__['__template__'] = None
+                    func.__dict__['__layout__'] = None
+                    func.__dict__['__fixed_url__'] = False
     
     def _get_url(self, appname, prefix, f):
         args = inspect.getargspec(f)[0]
@@ -187,20 +334,26 @@ class Expose(object):
             else:
                 rule = '/' + '/'.join([path, f.__name__] + args)
         else:
+            self.rule = self._fix_route(self.rule)
             rule = self.rule
+        fixed_url = rule.startswith('!')
         rule = self._fix_url(appname, rule)
         endpoint = get_function_path(f)
+        clsname = get_classname(f)
         f.__dict__['__exposed__'] = True
         f.__dict__['__no_rule__'] = (self.parse_level == 1) or (self.parse_level == 2 and (self.rule is None))
         if not hasattr(f, '__old_rule__'):
             f.__dict__['__old_rule__'] = {}
     
         f.__dict__['__old_rule__'][rule] = self.rule
-        #add name parameter process
-        if 'name' in self.kwargs:
-            url_name = self.kwargs.pop('name')
-            __url_names__[url_name] = endpoint
-        return f, (appname, endpoint, rule, self.kwargs.copy())
+        f.__dict__['__old_rule__']['clsname'] = clsname
+        f.__dict__['__template__'] = self.template
+        f.__dict__['__layout__'] = self.layout
+        f.__dict__['__fixed_url__'] = fixed_url
+
+        kw = self.kwargs.copy()
+        self._fix_kwargs(appname, kw)
+        return f, (appname, endpoint, rule, kw, now())
     
     def __call__(self, f):
         from uliweb.utils.common import safe_import

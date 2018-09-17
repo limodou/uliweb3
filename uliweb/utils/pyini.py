@@ -14,17 +14,21 @@
 # float, string, etc. So it's very like a normal python file, but it's has
 # some sections definition.
 
-import sys, os
+from __future__ import print_function, absolute_import
+
+import sys
+import os
 import re
 import codecs
-from six import StringIO, b
 import locale
 import copy
 import tokenize
 import token
 from .sorteddict import SortedDict
 from traceback import print_exc
-import six
+from ._compat import string_types, u, b, text_type, PY2, get_next
+from io import StringIO
+
 
 __all__ = ['SortedDict', 'Section', 'Ini', 'uni_prt']
 
@@ -47,6 +51,8 @@ except:
 
 r_encoding = re.compile(r'\s*coding\s*[=:]\s*([-\w.]+)')
 r_var = re.compile(r'(?<!\{)\{\{([^\{].*?)(?<!\})\}\}(?!\})', re.U)
+r_var_env = re.compile(r'(?<!\{)\{\{([^\{].*?)(?<!\})\}\}(?!\})|(?:\$(\w[\d\w_]*)|\$\{(\w[\d\w_]*)\})', re.U)
+r_pre_var = re.compile(r'#\{\w+\}', re.U)
 __default_env__ = {}
 
 def set_env(env=None):
@@ -104,7 +110,7 @@ def uni_prt(a, encoding='utf-8', beautiful=False, indent=0, convertors=None):
             else:
                 ind = indent
             s.append(indent_char*ind + uni_prt(k, encoding, beautiful, indent+1, convertors=convertors))
-            if i<len(a)-1:
+            if i < len(a)-1:
                 if beautiful:
                     s.append(',\n')
                 else:
@@ -136,19 +142,20 @@ def uni_prt(a, encoding='utf-8', beautiful=False, indent=0, convertors=None):
         if beautiful:
             s.append('\n')
         s.append(indent_char*indent + '}')
-    elif isinstance(a, str):
+    elif isinstance(a, string_types):
         t = a
         for i in escapechars:
             t = t.replace(i[0], i[1])
-        s.append("'%s'" % t)
-    elif isinstance(a, six.text_type):
-        t = a
-        for i in escapechars:
-            t = t.replace(i[0], i[1])
-        try:
-            s.append("u'%s'" % t.encode(encoding))
-        except:
-            print_exc()
+        if PY2:
+            if isinstance(a, str):
+               s.append("'%s'" % t)
+            else:
+                try:
+                    s.append("u'%s'" % t.encode(encoding))
+                except:
+                    print_exc()
+        else:
+            s.append("'%s'" % t)
     else:
         _type = type(a)
         c_func = convertors.get(_type)
@@ -158,21 +165,18 @@ def uni_prt(a, encoding='utf-8', beautiful=False, indent=0, convertors=None):
             s.append(str(a))
     return ''.join(s)
 
-def eval_value(value, globals, locals, encoding):
-    txt = '#coding=%s\n%s' % (encoding, value)
-    result = eval(txt, dict(globals), dict(locals))
-    
+def eval_value(value, globals, locals, encoding, include_env):
     #process {{format}}
     def sub_(m):
-        txt = m.group(1).strip()
+        txt = filter(None, m.groups())[0].strip()
         try:
-            v = eval_value(str(txt), globals, locals, encoding)
+            v = eval_value(txt, globals, locals, encoding, include_env)
             _type = type(txt)
-            if not isinstance(v, six.string_types):
+            if not isinstance(v, string_types):
                 v = _type(v)
             elif not isinstance(v, _type):
-                if _type is six.text_type:
-                    v = six.text_type(v, encoding)
+                if _type is text_type:
+                    v = u(v, encoding)
                 else:
                     v = v.encode(encoding)
         except:
@@ -180,8 +184,24 @@ def eval_value(value, globals, locals, encoding):
             v = m.group()
         return v
     
-    if isinstance(result, six.string_types):
-        result = r_var.sub(sub_, result)
+    if isinstance(value, string_types):
+        if include_env:
+            v = r_var_env.sub(sub_, value)
+        else:
+            v = r_var.sub(sub_, value)
+    elif isinstance(value, EvalValue):
+        if include_env:
+            v = r_var_env.sub(sub_, value.value)
+        else:
+            v = r_var.sub(sub_, value.value)
+    else:
+        v = value
+        
+    txt = '#coding=%s\n%s' % (encoding, v)
+    result = eval(txt, dict(globals), dict(locals))
+
+#    if isinstance(result, (str, unicode)):
+#        result = r_var.sub(sub_, result)
     return result
     
 class Empty(object): pass
@@ -206,17 +226,21 @@ class Lazy(object):
         
         [EvalValue, int, str]
     """
-    def __init__(self, key, globals, sec_name, encoding):
+    def __init__(self, key, globals, sec_name, encoding, include_env):
         self.key = key
         self.values = []
         self.globals = globals
         self.sec_name = sec_name
         self.encoding = encoding
         self.cached_value = Empty
+        self.include_env = include_env
         
     def eval(self, value):
         try:
-            v = eval_value(value, self.globals, self.globals[self.sec_name], self.encoding)
+            _locals = self.globals[self.sec_name]
+            if not isinstance(_locals, SortedDict):
+                _locals = {}
+            v = eval_value(value, self.globals, _locals, self.encoding, self.include_env)
             return v
         except Exception as e:
             print_exc()
@@ -233,7 +257,7 @@ class Lazy(object):
             result = []
             for v in self.values:
                 value = self.eval(v)
-                if not isinstance(value, (list, dict, set)):
+                if not isinstance(value, (list, dict, set)) and len(self.values)>1:
                     self.cached_value = self.eval(self.values[-1])
                     break
                 else:
@@ -247,8 +271,36 @@ class Lazy(object):
             
         return self.cached_value
     
+class RawValue(object):
+    def __init__(self, filename, lineno, text, replace_flag=''):
+        self.filename = filename
+        self.lineno = lineno
+        self.text = text
+        self.replace_flag = replace_flag
+        
+    def __str__(self):
+        _length = 26
+        if len(self.filename) > _length:
+            s = self.filename.replace('\\', '/').split('/')
+            t = -1
+            for i in range(len(s)-1, -1, -1):
+                t = len(s[i]) + t + 1
+                if t > _length:
+                    break
+            filename = '.../' + '/'.join(s[i+1:])
+        else:
+            filename = self.filename.replace('\\', '/')
+        return '%-30s:%04d' % (filename, self.lineno)
+    
+    def value(self):
+        if self.replace_flag:
+            op = ' <= '
+        else:
+            op = ' = '
+        return "%s%s" % (op, self.text)
+    
 class Section(SortedDict):
-    def __init__(self, name, comments=None, encoding=None, root=None):
+    def __init__(self, name, comments=None, encoding=None, root=None, info=None):
         super(Section, self).__init__()
         self._root = root
         self._name = name
@@ -256,10 +308,12 @@ class Section(SortedDict):
         self._field_comments = {}
         self._field_flag = {}
         self._encoding = encoding
+        self._info = info
         
         #sync
         if self._root and self._lazy:
-            self._root._globals.setdefault(name, SortedDict())
+#            self._root._globals.setdefault(name, SortedDict())
+            self._root._globals[name] = SortedDict()
          
     @property
     def _lazy(self):
@@ -276,7 +330,7 @@ class Section(SortedDict):
     def __setitem__(self, key, value, replace=False):
         if self._lazy:
             if not key in self or replace:
-                v = Lazy(key, self._root._globals, self._name, self._encoding)
+                v = Lazy(key, self._root._globals, self._name, self._encoding, self._root._import_env)
             else:
                 v = self[key]
             v.add(value)
@@ -285,7 +339,7 @@ class Section(SortedDict):
             if not replace:
                 v = merge_data([value], self.get(key))
                 
-        super(Section, self).__setitem__(key, v)
+        super(Section, self).__setitem__(key, v, append=replace)
     
     def add_comment(self, key=None, comments=None):
         comments = comments or []
@@ -307,20 +361,26 @@ class Section(SortedDict):
         
     def dumps(self, out, convertors=None):
         if self._comments:
-            six.print_('\n'.join(self._comments), file=out)
-        six.print_('[%s]' % self._name, file=out)
+            print('\n'.join(self._comments), file=out)
+        if self._root and self._root._raw:
+            print('%s [%s]' % (self._info, self._name), file=out)
+        else:
+            print('[%s]' % self._name, file=out)
         for f in self.keys():
             comments = self.comment(f)
             if comments:
-                six.print_('\n'.join(comments), file=out)
-            if self._field_flag.get(f, False):
-                op = ' <= '
+                print('\n'.join(comments), file=out)
+            if self._root and self._root._raw:
+                print("%s %s%s" % (str(self[f]), f, self[f].value()), file=out)
             else:
-                op = ' = '
-            buf = f + op + uni_prt(self[f], self._encoding, convertors=convertors)
-            if len(buf) > 79:
-                buf = f + op + uni_prt(self[f], self._encoding, True, convertors=convertors)
-            six.print_(buf, file=out)
+                if self._field_flag.get(f, False):
+                    op = ' <= '
+                else:
+                    op = ' = '
+                buf = f + op + uni_prt(self[f], self._encoding, convertors=convertors)
+                if len(buf) > 79:
+                    buf = f + op + uni_prt(self[f], self._encoding, True, convertors=convertors)
+                    print(buf, file=out)
             
     def __delitem__(self, key):
         super(Section, self).__delitem__(key)
@@ -329,7 +389,7 @@ class Section(SortedDict):
     def __delattr__(self, key):
         try: 
             del self[key]
-        except KeyError as k: 
+        except KeyError as k:
             raise AttributeError(k)
     
     def __str__(self):     
@@ -338,14 +398,25 @@ class Section(SortedDict):
         return buf.getvalue()
     
 class Ini(SortedDict):
-    def __init__(self, inifile='', commentchar=None, encoding=None, 
-        env=None, convertors=None, lazy=False, writable=False):
+    def __init__(self, inifile='', commentchar=None, encoding=None,
+        env=None, convertors=None, lazy=False, writable=False, raw=False,
+        import_env=True, basepath='.', pre_variables=None):
         """
         lazy is used to parse first but not deal at time, and only when 
         the user invoke finish() function, it'll parse the data.
+        
+        import_env will import all environment variables
+
+        if inifile is dict, then automatically add to ini object
         """
         super(Ini, self).__init__()
-        self._inifile = inifile
+        if isinstance(inifile, dict):
+            self._inifile = ''
+            data = inifile
+        else:
+            self._inifile = inifile
+            data = None
+        self._basepath = basepath
         self._commentchar = commentchar or __default_env__.get('commentchar', '#')
         self._encoding = encoding or __default_env__.get('encoding', 'utf-8')
         self._env = __default_env__.get('env', {}).copy()
@@ -353,16 +424,28 @@ class Ini(SortedDict):
         self._env['set'] = set
         self.update(self._env)
         self._globals = SortedDict()
+        self._pre_variables = pre_variables or {}
+        self._import_env = import_env
+        if self._import_env:
+            self._globals.update(os.environ)
+        
         self._convertors = __default_env__.get('convertors', {}).copy()
         self._convertors.update(convertors or {})
         self._lazy = lazy
         self._writable = writable
+        self._raw = raw
         
         if lazy:
-            self._globals = self._env.copy()
+            self._globals.update(self._env.copy())
             
         if self._inifile:
             self.read(self._inifile)
+        
+        if data:
+            for k, v in data.items():
+                s = self.add(k)
+                for _k, _v in v.items():
+                    s[_k] = _v
         
     def set_filename(self, filename):
         self._inifile = filename
@@ -370,12 +453,28 @@ class Ini(SortedDict):
     def get_filename(self):
         return self._inifile
     
+    def set_basepath(self, basepath):
+        self._basepath = basepath
+
+    def set_pre_variables(self, v):
+        self._pre_variables = v or {}
+
     filename = property(get_filename, set_filename)
     
+    def _pre_var(self, value):
+        """
+        replace predefined variables, the format is #{name}
+        """
+
+        def sub_(m):
+            return self._pre_variables.get(m.group()[2:-1].strip(), '')
+
+        return r_pre_var.sub(sub_, value)
+
     def read(self, fobj, filename=''):
         encoding = None
         
-        if isinstance(fobj, six.string_types):
+        if isinstance(fobj, string_types):
             f = open(fobj, 'rb')
             text = f.read()
             f.close()
@@ -393,14 +492,14 @@ class Ini(SortedDict):
             
         if not encoding:
             try:
-                six.text_type(text, 'UTF-8')
+                u(text, 'UTF-8')
                 encoding = 'UTF-8'
             except:
                 encoding = defaultencoding
                 
         self._encoding = encoding
         
-        if six.PY3:
+        if not PY2:
             text = text.decode(encoding)
             
         f = StringIO(text)
@@ -429,20 +528,24 @@ class Ini(SortedDict):
                     #process include notation
                     if sec_name.startswith('include:'):
                         _filename = sec_name[8:].strip()
-                        _filename = os.path.abspath(_filename)
-                        if os.path.exists(_filename):
+                        _file = os.path.join(self._basepath, _filename)
+                        if os.path.exists(_file):
                             old_encoding = self._encoding
-                            self.read(_filename)
+                            old_filename = self.filename
+                            self.set_filename(_file)
+                            self.read(_file, filename=_file)
+                            self.set_filename(old_filename)
                             self._encoding = old_encoding
                         else:
                             import warnings
                             warnings.warn(Warning("Can't find the file [%s], so just skip it" % _filename), stacklevel=2)
                         continue
-                    section = self.add(sec_name, comments)
+                    info = RawValue(self._inifile, lineno, sec_name)
+                    section = self.add(sec_name, comments, info=info)
                     comments = []
                 elif '=' in line:
                     if section is None:
-                        raise Exception("No section found, please define it first in %s file" % self.filename)
+                        raise Exception("No section found, please define it first in %s file, line=%s" % (filename or self._inifile, line))
 
                     #if find <=, then it'll replace the old value for mutable variables
                     #because the default behavior will merge list and dict
@@ -463,11 +566,13 @@ class Ini(SortedDict):
                     rest = line[end:].strip()
                     #if key= then value will be set ''
                     if rest == '':
-                        v = None
+                        value = 'None'
                     else:
                         f.seek(lastpos+end)
                         try:
                             value, iden_existed = self.__read_line(f)
+                            #add pre variables process
+                            value = self._pre_var(value)
                         except Exception as e:
                             print_exc()
                             raise Exception("Parsing ini file error in %s:%d:%s" % (filename or self._inifile, lineno, line))
@@ -477,14 +582,16 @@ class Ini(SortedDict):
                             else:
                                 v = value
                         else:
-                            try:
-                                v = eval_value(value, self, self[sec_name], self._encoding)
-                            except Exception as e:
-                                print_exc()
-                                six.print_(dict(self))
-                                raise Exception("Converting value (%s) error in %s:%d:%s" % (value, filename or self._inifile, lineno, line))
-                    section.add(keyname, v, comments, replace=replace_flag)
-                    comments = []
+                            if self._raw:
+                                v = RawValue(self._inifile, lineno, value, replace_flag)
+                            else:
+                                try:
+                                    v = eval_value(value, self.env(), self[sec_name], self._encoding, self._import_env)
+                                except Exception as e:
+                                    print_exc()
+                                    raise Exception("Converting value (%s) error in %s:%d:%s" % (value, filename or self._inifile, lineno, line))
+                        section.add(keyname, v, comments, replace=replace_flag)
+                        comments = []
             else:
                 comments.append(line)
                 
@@ -493,14 +600,14 @@ class Ini(SortedDict):
             filename = self.filename
         if not filename:
             filename = sys.stdout
-        if isinstance(filename, six.string_types):
+        if isinstance(filename, string_types):
             f = open(filename, 'wb')
             need_close = True
         else:
             f = filename
             need_close = False
         
-        six.print_('#coding=%s' % self._encoding, file=f)
+        print('#coding=%s' % self._encoding, file=f)
         for s in self.keys():
             if s in self._env:
                 continue
@@ -523,7 +630,7 @@ class Ini(SortedDict):
         time = 0
         iden_existed = False
         while 1:
-            v = six.next(g)
+            v = get_next(g)
             tokentype, t, start, end, line = v
             if tokentype == 54:
                 continue
@@ -547,11 +654,11 @@ class Ini(SortedDict):
         for k, v in value.items():
             self.set_var(k, v)
 
-    def add(self, sec_name, comments=None):
+    def add(self, sec_name, comments=None, info=None):
         if sec_name in self:
             section = self[sec_name]
         else:
-            section = Section(sec_name, comments, self._encoding, root=self)
+            section = Section(sec_name, comments, self._encoding, root=self, info=info)
             self[sec_name] = section
         return section
     
@@ -596,6 +703,17 @@ class Ini(SortedDict):
         
         return flag
 
+    def items(self):
+        return ((k, self[k]) for k in self.keys() if not k in self._env)
+    
+    def env(self):
+        if self._import_env:
+            d = {}
+            d.update(os.environ.copy())
+            d.update(dict(self))
+            return d
+        return self
+    
     def freeze(self):
         """
         Process all EvalValue to real value
@@ -609,6 +727,10 @@ class Ini(SortedDict):
                     if self.writable:
                         _v.get()
                     else:
-                        v.__setitem__(_k, _v.get(), replace=True)
+                        try:
+                            v.__setitem__(_k, _v.get(), replace=True)
+                        except:
+                            print("Error ini key:", _k)
+                            raise
                         del _v
-        del self._globals
+        self._globals = SortedDict()

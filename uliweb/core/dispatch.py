@@ -1,7 +1,7 @@
 import logging
 import inspect
 from uliweb.utils.common import import_attr
-import six
+from ..utils._compat import callable
 
 __all__ = ['HIGH', 'MIDDLE', 'LOW', 'bind', 'call', 'get', 'unbind', 'call_once', 'get_once']
 
@@ -11,6 +11,12 @@ LOW = 3
 
 _receivers = {}
 _called = {}
+
+def reset():
+    global _receivers, _called
+
+    _receivers.clear()
+    _called.clear()
 
 def bind(topic, signal=None, kind=MIDDLE, nice=-1):
     """
@@ -35,7 +41,7 @@ def bind(topic, signal=None, kind=MIDDLE, nice=-1):
                 n = 900
         else:
             n = nice
-        if six.callable(func):
+        if callable(func):
             func_name = func.__module__ + '.' + func.__name__
             func = func
         else:
@@ -54,7 +60,7 @@ def unbind(topic, func):
         receivers = _receivers[topic]
         for i in range(len(receivers)-1, -1, -1):
             nice, f = receivers[i]
-            if (six.callable(func) and f['func'] == func) or (f['func_name'] == func):
+            if (callable(func) and f['func'] == func) or (f['func_name'] == func):
                 del receivers[i]
                 return
 
@@ -96,7 +102,7 @@ def call(sender, topic, *args, **kwargs):
                 logging.error("Can't import function %s" % f['func_name'])
                 raise
             f['func'] = _f
-        if six.callable(_f):
+        if callable(_f):
             kw = kwargs.copy()
             if not _test(kw, f):
                 continue
@@ -140,7 +146,7 @@ def get(sender, topic, *args, **kwargs):
                 logging.error("Can't import function %s" % f['func_name'])
                 raise
             f['func'] = _f
-        if six.callable(_f):
+        if callable(_f):
             if not _test(kwargs, f):
                 continue
             try:

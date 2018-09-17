@@ -30,6 +30,7 @@ if not PY2:
     unichr = chr
     range = range
     string_types = (str,)
+    text_type = str
 
     iterkeys = lambda d: iter(d.keys())
     itervalues = lambda d: iter(d.values())
@@ -67,7 +68,7 @@ if not PY2:
     import builtins
     exec_ = getattr(builtins, "exec")
 
-    get_next = lambda x: x.next
+    get_next = lambda x: x.__next__()
 
     input = input
     open = open
@@ -77,10 +78,25 @@ if not PY2:
     ismethod = lambda f: callable(f) and not inspect.isclass(f) and '.' in f.__qualname__
     isfunction = lambda f: callable(f) and not inspect.isclass(f) and '.' not in f.__qualname__
 
+
+    def get_class(meth):
+        if inspect.ismethod(meth):
+            for cls in inspect.getmro(meth.__self__.__class__):
+                if cls.__dict__.get(meth.__name__) is meth:
+                    return cls
+            meth = meth.__func__  # fallback to __qualname__ parsing
+        if inspect.isfunction(meth):
+            cls = getattr(inspect.getmodule(meth),
+                          meth.__qualname__.split('.<locals>', 1)[0].rsplit('.', 1)[0])
+            if isinstance(cls, type):
+                return cls
+        return getattr(meth, '__objclass__', None)  # handle special descriptor objects
+
 else:
     unichr = unichr
     range = xrange
     string_types = (str, unicode)
+    text_type = unicode
 
     iterkeys = lambda d: d.iterkeys()
     itervalues = lambda d: d.itervalues()
@@ -127,13 +143,17 @@ else:
             locs = globs
         exec("""exec code in globs, locs""")
 
-    get_next = lambda x: x.__next__
+    get_next = lambda x: x.next()
 
     input = raw_input
 
     from io import open
 
     from inspect import ismethod, isfunction
+
+    def get_class(meth):
+        if inspect.ismethod(meth):
+            return meth.im_class
 
 try:
     next = next
