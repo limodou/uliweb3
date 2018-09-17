@@ -9,4 +9,16 @@ Uliweb3 is a project for transfer uliweb from py2 to py3. And want to make it as
 
 There are difference between uliweb and uliweb3:
 
-[ ] Remove Support command
+[X] Remove Support command
+[X] Remove taglib
+[X] Remove uaml
+[X] Remove rcssmin
+[X] Remove rjsmin
+[X] Remove pysimplesoap
+[X] Remove utils/rst.py
+[X] Remove bae
+[X] Remove heroku
+[X] Remove sae
+[X] Remove soap
+[X] Remove xmlrpc
+[X] Remove dbupload

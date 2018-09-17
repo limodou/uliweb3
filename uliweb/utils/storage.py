@@ -4,6 +4,7 @@ Developed by Massimo Di Pierro <mdipierro@cs.depaul.edu>
 License: GPL v2
 """
 
+
 class Storage(dict):
     """
     A Storage object is like a dictionary except `obj.foo` can be used
@@ -23,16 +24,26 @@ class Storage(dict):
     
     """
     def __getattr__(self, key): 
-        try: return self[key]
-        except KeyError as k: return None
+        try:
+            return self[key]
+        except KeyError:
+            return None
+
     def __setattr__(self, key, value): 
         self[key] = value
+
     def __delattr__(self, key):
-        try: del self[key]
-        except KeyError as k: raise AttributeError(k)
+        try:
+            del self[key]
+        except KeyError as k:
+            raise AttributeError(k)
+
     def __repr__(self):     
         return '<Storage ' + dict.__repr__(self) + '>'
+
     def __getstate__(self): 
         return dict(self)
-    def __setstate__(self,value):
-        for k,v in value.items(): self[k]=v
+
+    def __setstate__(self, value):
+        for k, v in value.items():
+            self[k] = v
