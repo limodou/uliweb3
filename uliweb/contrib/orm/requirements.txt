@@ -1,0 +1,3 @@
+SQLAlchemy > 0.7
+MySQL-python
+uliweb-alembic
