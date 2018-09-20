@@ -31,6 +31,7 @@ if not PY2:
     range = range
     string_types = (str,)
     text_type = str
+    integer_types = (int,)
 
     iterkeys = lambda d: iter(d.keys())
     itervalues = lambda d: iter(d.values())
@@ -97,6 +98,7 @@ else:
     range = xrange
     string_types = (str, unicode)
     text_type = unicode
+    integer_types = (int, long)
 
     iterkeys = lambda d: d.iterkeys()
     itervalues = lambda d: d.itervalues()

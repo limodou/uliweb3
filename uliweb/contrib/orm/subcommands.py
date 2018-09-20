@@ -31,11 +31,11 @@ class InitCommand(SQLCommand, Command):
             'engine_name':options.engine,
             'script_location':alembic_path})
         
-        with open(ini_file, 'w') as f:
+        with open(ini_file, 'wb') as f:
             f.write(text)
             
         #drop old alembic_version table
-        db = get_connection(engine_name=options.engine)
+        db = get_connection(options.engine)
         metadata = MetaData(db)
         if db.dialect.has_table(db.connect(), 'alembic_version'):
             version = Table('alembic_version', metadata, autoload=True) 
@@ -52,8 +52,7 @@ class RevisionCommand(SQLCommand, Command):
         make_option('-f', '--force', dest='force', action='store_true', default=False, help="Directly diff without check last unfinished version."),
     )
     check_apps = True
-    has_options = True
-    
+
     def handle(self, options, global_options, *args):
         from alembic.config import Config
         from uliweb.orm import engine_manager
@@ -85,11 +84,18 @@ class DiffCommand(RevisionCommand):
     name = 'diff'
     help = 'Create a new revision file with autogeneration.'
     check_apps = True
-    has_options = True
-    
+
     def do(self, config, args, options, global_options):
         self.run('revision', config, message=options.message, autogenerate=True, skip=options.force)
     
+class CurrentCommand(RevisionCommand):
+    name = 'current'
+    help = 'Display the current revision for each database.'
+    check_apps = True
+
+    def do(self, config, args, options, global_options):
+        self.run('current', config)
+
 class UpgradeCommand(RevisionCommand):
     name = 'upgrade'
     help = 'Upgrade to a later version.'
@@ -99,8 +105,7 @@ class UpgradeCommand(RevisionCommand):
         make_option('--tag', dest='tag', help="Arbitrary 'tag' name - can be used by custom env.py scripts."),
     )
     check_apps = True
-    has_options = True
-    
+
     def do(self, config, args, options, global_options):
         if not args:
             revision = 'head'
