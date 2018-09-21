@@ -16,21 +16,21 @@ log = logging.getLogger('uliweb.console')
 
 def get_commands(global_options):
     global __commands__
-    
+
     def check(c):
-        return (inspect.isclass(c) and 
+        return (inspect.isclass(c) and
             issubclass(c, Command) and c is not Command and c is not CommandManager)
-    
+
     def find_mod_commands(mod):
         for name in dir(mod):
             c = getattr(mod, name)
             if check(c):
                 register_command(c)
-        
+
     def collect_commands():
         from uliweb import get_apps, get_app_dir
         from uliweb.utils.common import is_pyfile_exist
-        
+
         apps = get_apps(global_options.apps_dir, settings_file=global_options.settings,
                 local_settings_file=global_options.local_settings)
         for f in apps:
@@ -43,11 +43,11 @@ def get_commands(global_options):
 
     collect_commands()
     return __commands__
-    
+
 def register_command(kclass):
     global __commands__
     __commands__[kclass.name] = kclass
-    
+
 workpath = os.path.join(os.path.dirname(__file__), 'lib')
 if workpath not in sys.path:
     sys.path.insert(0, os.path.join(workpath, 'lib'))
@@ -66,7 +66,7 @@ def install_config(apps_dir):
                 p = os.path.abspath(os.path.normpath(p))
                 if not p in sys.path:
                     sys.path.insert(0, p)
-                    
+
 def make_application(debug=None, apps_dir='apps', project_dir=None,
     include_apps=None, debug_console=True, settings_file=None,
     local_settings_file=None, start=True, default_settings=None,
@@ -86,10 +86,10 @@ def make_application(debug=None, apps_dir='apps', project_dir=None,
     #process settings and local_settings
     settings_file = settings_file or os.environ.get('SETTINGS', 'settings.ini')
     local_settings_file = local_settings_file or os.environ.get('LOCAL_SETTINGS', 'local_settings.ini')
-    
+
     dispatcher_cls = dispatcher_cls or SimpleFrame.Dispatcher
     dispatcher_kwargs = dispatcher_kwargs or {}
-    
+
     if project_dir:
         apps_dir = os.path.abspath(os.path.normpath(os.path.join(project_dir, 'apps')))
     if not project_dir:
@@ -104,12 +104,12 @@ def make_application(debug=None, apps_dir='apps', project_dir=None,
 
     if project_dir not in sys.path:
         sys.path.insert(0, project_dir)
-        
+
     if apps_dir not in sys.path:
         sys.path.insert(0, apps_dir)
-        
+
     install_config(apps_dir)
-    
+
     if trace_print:
         output = sys.stdout
 
@@ -131,14 +131,14 @@ def make_application(debug=None, apps_dir='apps', project_dir=None,
         default_settings=default_settings,
         reset=True,
         **dispatcher_kwargs)
-    
+
     if verbose:
         log.info(' * settings file is "%s"' % settings_file)
         log.info(' * local settings file is "%s"' % local_settings_file)
 
     #settings global application object
     SimpleFrame.__global__.application = app
-    
+
     #process wsgi middlewares
     middlewares = []
     parameters = {}
@@ -162,13 +162,13 @@ def make_application(debug=None, apps_dir='apps', project_dir=None,
             cls = v
         middlewares.append((order, name))
         parameters[name] = cls, kwargs
-        
-    middlewares.sort(key=lambda x: x[0])
+
+    middlewares.sort(key=lambda k: k[0])
     for name in reversed([x[1] for x in middlewares]):
         clspath, kwargs = parameters[name]
         cls = import_attr(clspath)
         app = cls(app, **kwargs)
-                
+
     debug_flag = uliweb.settings.GLOBAL.DEBUG
     if debug or (debug is None and debug_flag):
         if not debug_cls:
@@ -198,7 +198,7 @@ class MakeAppCommand(Command):
     args = 'appname'
     help = 'Create a new app according the appname parameter.'
     check_apps_dirs = False
-    
+
     def handle(self, options, global_options, *args):
         from uliweb.utils.common import extract_dirs
 
@@ -209,7 +209,7 @@ class MakeAppCommand(Command):
             apps = [appname]
         else:
             apps = args
-        
+
         for appname in apps:
             ans = '-1'
             app_path = appname.replace('.', '//')
@@ -217,9 +217,9 @@ class MakeAppCommand(Command):
                 path = os.path.join('apps', app_path)
             else:
                 path = app_path
-        
+
             if os.path.exists(path):
-                if options.force:
+                if global_options.yes:
                     ans = 'y'
                 while ans not in ('y', 'n'):
                     ans = input('The app directory has been existed, do you want to overwrite it?(y/n)[n]')
@@ -242,7 +242,7 @@ class MakePkgCommand(Command):
             while not args:
                 args = input('Please enter python package name:')
             args = [args]
-        
+
         for p in args:
             if not os.path.exists(p):
                 os.makedirs(p)
@@ -261,14 +261,14 @@ class MakeProjectCommand(Command):
     def handle(self, options, global_options, *args):
         from uliweb.utils.common import extract_dirs
         from uliweb.core.template import template_file
-        
+
         if not args:
             project_name = ''
             while not project_name:
                 project_name = input('Please enter project name:')
         else:
             project_name = args[0]
-        
+
         ans = '-1'
         if os.path.exists(project_name):
             if global_options.yes:
@@ -442,7 +442,7 @@ register_command(ConfigCommand)
 
 class ExportStaticCommand(Command):
     """
-    Compress js and css will follow the rule that: if the filename include 
+    Compress js and css will follow the rule that: if the filename include
     '.min.' or '.pack.',
     then don't process it.
     """
@@ -460,13 +460,13 @@ class ExportStaticCommand(Command):
         # make_option('--auto', action='store_true', dest='auto', default=False,
         #     help='Enable javascript and css both compress process.'),
     )
-    
+
     def handle(self, options, global_options, *args):
         from uliweb.utils.common import copy_dir_with_check
         from uliweb import settings
-        
+
         self.get_application(global_options)
-        
+
         if not args:
             print("Error: outputdir should be a directory and existed", file=sys.stderr)
             sys.exit(0)
@@ -474,7 +474,7 @@ class ExportStaticCommand(Command):
             outputdir = os.path.abspath(args[0])
             if global_options.verbose:
                 print("Export direcotry is {} ...".format(outputdir))
-                
+
         if not args[1:]:
             apps = self.get_apps(global_options)
         else:
@@ -484,9 +484,9 @@ class ExportStaticCommand(Command):
         self.global_options = global_options
         # copy_dir_with_check(dirs, outputdir, False, options.check, processor=self.process_file)
         copy_dir_with_check(dirs, outputdir, False, options.check)
-        
+
         # self.process_combine(outputdir, global_options.verbose)
-        
+
     def process_combine(self, outputdir, verbose=False):
         #automatically process static combine
         from uliweb.contrib.template import init_static_combine
@@ -525,19 +525,19 @@ class ExportStaticCommand(Command):
                         kwargs = {'base_dir':os.path.dirname(x)}
                     f.write(processor(open(fname).read(), **kwargs))
                     f.write('\n')
-                 
+
             with open(readme, 'w') as r:
                 for x in v:
                     r.write(x)
                     r.write('\n')
-        
+
     def process_file(self, sfile, dpath, dfile):
         from rjsmin.rjsmin import jsmin
         from rcssmin.rcssmin import cssmin
-        
+
         js_compressor = None
         css_compressor = None
-        
+
         if sfile.endswith('.js') and ('.min.' not in sfile and '.pack.' not in sfile) and (self.options.js or self.options.auto):
             open(dfile, 'w').write(jsmin(open(sfile).read()))
             if self.global_options.verbose:
@@ -562,13 +562,13 @@ class ExportCommand(Command):
 
     def handle(self, options, global_options, *args):
         from uliweb.utils.common import extract_dirs
-        
+
         if not options.outputdir:
             print_("Error: please give the output directory with '-d outputdir' argument", file=sys.stderr)
             sys.exit(0)
         else:
             outputdir = options.outputdir
-    
+
         if not args:
             apps = self.get_apps(global_options)
         else:
@@ -590,17 +590,17 @@ class ExportCommand(Command):
                 else:
                     recursion = False
                 extract_dirs(module, '', dest, verbose=global_options.verbose, recursion=recursion)
-                
+
 register_command(ExportCommand)
 
 #class ExtractUrlsCommand(Command):
 #    name = 'extracturls'
 #    help = 'Extract all url mappings from view modules to a specified file.'
 #    args = ''
-#    
+#
 #    def handle(self, options, global_options, *args):
 #        urlfile = 'urls.py'
-#        
+#
 #        application = SimpleFrame.Dispatcher(apps_dir=global_options.project, start=False)
 #        filename = os.path.join(application.apps_dir, urlfile)
 #        if os.path.exists(filename):
@@ -621,7 +621,7 @@ register_command(ExportCommand)
 #        f.close()
 #        print 'urls.py has been created successfully.'
 #register_command(ExtractUrlsCommand)
-#        
+#
 class CallCommand(Command):
     name = 'call'
     help = 'Call <exefile>.py for each installed app according the command argument.'
@@ -634,17 +634,17 @@ class CallCommand(Command):
         make_option('--gevent', action='store_true', default=False, dest='gevent',
             help='Apply gevent monkey patch before execute the script.'),
     )
-    
+
     def handle(self, options, global_options, *args):
         from uliweb.utils.common import is_pyfile_exist
         from uliweb.core.SimpleFrame import get_app_dir
 
         if not args:
-            print_("Error: There is no command module name behind call command.")
+            print("Error: There is no command module name behind call command.")
             return
         else:
             command = args[0]
-            
+
         if options.gevent:
             from gevent import monkey
 
@@ -689,24 +689,58 @@ class CallCommand(Command):
                 else:
                     print("Can't find call() or main() function in module {}".format(mod_name))
                 exe_flag = True
-            
+
         if not exe_flag:
             print("Error: Can't import the [{}], please check the file and try again.".format(command))
 register_command(CallCommand)
- 
+
+class InstallCommand(Command):
+    name = 'install'
+    help = 'install [appname,...] extra modules listed in requirements.txt'
+    args = '[appname]'
+
+    def handle(self, options, global_options, *args):
+        from uliweb.core.SimpleFrame import get_app_dir
+
+        #check pip or setuptools
+        try:
+            import pip
+        except:
+            print("Error: can't import pip module, please install it first")
+            sys.exit(1)
+
+        apps = args or self.get_apps(global_options)
+
+        def get_requirements():
+            for app in apps:
+                path = get_app_dir(app)
+                r_file = os.path.join(path, 'requirements.txt')
+                if os.path.exists(r_file):
+                    yield r_file
+            r_file = os.path.join(global_options.project, 'requirements.txt')
+            if os.path.exists(r_file):
+                yield r_file
+
+        for r_file in get_requirements():
+            if global_options.verbose:
+                print("Processing... {}".format(r_file))
+            os.system('pip install -r %s' % r_file)
+
+register_command(InstallCommand)
+
 class MakeCmdCommand(Command):
     name = 'makecmd'
     help = 'Created a commands.py to the apps or current directory.'
     args = 'appname'
     check_apps = False
     check_apps_dirs = False
-    
+
     def handle(self, options, global_options, *args):
         from uliweb.core.commands import get_input, get_answer
         from uliweb.core.template import template_file
         from uliweb.utils.common import extract_dirs
         from uliweb import get_app_dir
-        
+
         if not args:
             path = '.'
         else:
@@ -800,7 +834,7 @@ class RunserverCommand(Command):
     )
     develop = False
     check_apps_dirs = False
-    
+
     def handle(self, options, global_options, *args):
         import logging
         from logging import StreamHandler
@@ -829,7 +863,7 @@ class RunserverCommand(Command):
         check_apps_dir(global_options.apps_dir)
 
         extra_files = collect_files(global_options, global_options.apps_dir, self.get_apps(global_options, include_apps))
-        
+
         if options.color:
             def format(self, record):
                 if not hasattr(self, 'new_formatter'):
@@ -982,7 +1016,7 @@ class RunserverCommand(Command):
 
         if options.ssl:
             ctx = 'adhoc'
-            
+
             default = False
             if not os.path.exists(options.ssl_key):
                 log.info(' * SSL key file (%s) not found, will use default ssl config' % options.ssl_key)
@@ -990,7 +1024,7 @@ class RunserverCommand(Command):
             if not os.path.exists(options.ssl_cert) and not default:
                 log.info(' * SSL cert file (%s) not found, will use default ssl config' % options.ssl_cert)
                 default = True
-                
+
             if not default:
                 ctx = (options.ssl_key, options.ssl_cert)
         else:
@@ -1151,14 +1185,14 @@ from code import interact, InteractiveConsole
 class MyInteractive(InteractiveConsole):
     def interact(self, banner=None, call=None):
         """Closely emulate the interactive Python console.
-    
+
         The optional banner argument specify the banner to print
         before the first interaction; by default it prints a banner
         similar to the one printed by the real Python interpreter,
         followed by the current class name in parentheses (so as not
         to confuse this with the real interpreter -- since it's so
         close!).
-    
+
         """
         try:
             sys.ps1
@@ -1199,7 +1233,7 @@ class MyInteractive(InteractiveConsole):
                 self.write("\nKeyboardInterrupt\n")
                 self.resetbuffer()
                 more = 0
-    
+
 from uliweb import __version__
 
 class ShellCommand(Command):
@@ -1217,19 +1251,19 @@ class ShellCommand(Command):
     )
     banner = "Uliweb %s Command Shell" % __version__
     skip_options = True
-    
+
     def make_shell_env(self, global_options):
         from uliweb import functions, settings
         from uliweb.core.SimpleFrame import Dispatcher
 
         application = self.get_application(global_options)
-        
+
         if global_options.project not in sys.path:
             sys.path.insert(0, global_options.project)
 
         env = {'application':application, 'settings':settings, 'functions':functions}
         return env
-    
+
     def handle(self, options, global_options, *args):
         import subprocess as sub
 
@@ -1279,15 +1313,15 @@ class ShellCommand(Command):
             if not IPython and not options.no_ipython:
                 print("Error: Can't import IPython, please install it first")
 
-        from code import interact, InteractiveConsole
-        Interpreter = MyInteractive(namespace)
-        if args or options.module:
-            def call():
-                mod = __import__(options.module or args[0], {}, {}, ['*'])
-                namespace.update(vars(mod))
-        else:
-            call = None
-        Interpreter.interact(self.banner, call=call)
+            from code import interact, InteractiveConsole
+            Interpreter = MyInteractive(namespace)
+            if args or options.module:
+                def call():
+                    mod = __import__(options.module or args[0], {}, {}, ['*'])
+                    namespace.update(vars(mod))
+            else:
+                call = None
+            Interpreter.interact(self.banner, call=call)
 register_command(ShellCommand)
 
 class FindCommand(Command):
@@ -1319,7 +1353,7 @@ class FindCommand(Command):
         make_option('--comment', dest='comment', action='store_true',
             help='Output generated python source code of template and also output comment for each line.'),
     )
-    
+
     def handle(self, options, global_options, *args):
         self.get_application(global_options)
 
@@ -1337,7 +1371,7 @@ class FindCommand(Command):
             self._find_model(global_options, options.model)
         elif options.option:
             self._find_option(global_options, options.option)
-        
+
     def _find_url(self, url):
         from uliweb.core.SimpleFrame import get_rule
         result = get_rule(url)
@@ -1351,7 +1385,7 @@ class FindCommand(Command):
     def _search_url(self, pattern):
         from uliweb.core.SimpleFrame import url_map
         import fnmatch
-        
+
         urls = []
         for r in url_map.iter_rules():
             if r.methods:
@@ -1360,7 +1394,7 @@ class FindCommand(Command):
                 methods = ''
             urls.append((r.rule, methods, r.subdomain, r.endpoint))
         urls.sort()
-        
+
         n = 0
         for url in urls:
             if fnmatch.fnmatch(url[0], pattern):
@@ -1375,7 +1409,7 @@ class FindCommand(Command):
         """
         from uliweb import application
         from uliweb.core.template import _format_code
-            
+
         def get_rel_filename(filename, path):
             f1 = os.path.splitdrive(filename)[1]
             f2 = os.path.splitdrive(path)[1]
@@ -1384,15 +1418,15 @@ class FindCommand(Command):
                 return filename.replace('\\', '/')
             else:
                 return f
-                
+
         template_file = None
-                    
+
         if not tree:
             application.template_loader.comment = comment
             files = application.template_loader.find_templates(template)
             if files:
                 template_file = files[0]
-                
+
                 for x in files:
                     print(x)
                     
@@ -1411,15 +1445,15 @@ class FindCommand(Command):
                 print('Not Found')
         else:
             application.template_loader.print_tree(template)
-                    
+
         if template_file and blocks:
             application.template_loader.print_blocks(template, with_filename)
-                
+
     def _find_static(self, global_options, static):
         from uliweb import get_app_dir
-        
+
         apps = self.get_apps(global_options)
-        
+
         for appname in reversed(apps):
             path = os.path.join(get_app_dir(appname), 'static', static)
             if os.path.exists(path):
@@ -1429,7 +1463,7 @@ class FindCommand(Command):
         
     def _find_model(self, global_options, model):
         from uliweb import settings
-        
+
         model_path = settings.MODELS.get(model, 'Not Found')
         print(model_path)
 
@@ -1514,12 +1548,12 @@ register_command(ValidateTemplateCommand)
 def collect_files(options, apps_dir, apps):
     files = [os.path.join(apps_dir, options.settings),
         os.path.join(apps_dir, options.local_settings)]
-    
+
     def f(path):
         if not os.path.exists(path):
             log.error("Path %s is not existed!" % path)
             return
-        
+
         for r in os.listdir(path):
             if r in ['.svn', '_svn', '.git'] or r.startswith('.'):
                 continue
@@ -1530,7 +1564,9 @@ def collect_files(options, apps_dir, apps):
                 ext = os.path.splitext(fpath)[1]
                 if ext in ['.py', '.ini']:
                     files.append(fpath)
-    
+                if ext == '.html' and 'taglibs' in fpath:
+                    files.append(fpath)
+
     from uliweb import get_app_dir
     for p in apps:
         path = get_app_dir(p)
@@ -1541,25 +1577,25 @@ def collect_files(options, apps_dir, apps):
 
 def call(args=None):
     from uliweb.core.commands import execute_command_line
-    
+
     def callback(global_options):
         apps_dir = os.path.abspath(global_options.apps_dir or os.path.join(os.getcwd(), 'apps'))
         if os.path.exists(apps_dir) and apps_dir not in sys.path:
             sys.path.insert(0, apps_dir)
-           
+
         install_config(apps_dir)
-    
+
     from uliweb.i18n.i18ntool import I18nCommand
     register_command(I18nCommand)
-    
+
     if isinstance(args, string_types):
         import shlex
         args = shlex.split(args)
-    
+
     execute_command_line(args or sys.argv, get_commands, 'uliweb', callback)
 
 def main():
     call()
-    
+
 if __name__ == '__main__':
     main()
