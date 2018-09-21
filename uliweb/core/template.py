@@ -458,10 +458,7 @@ _HTML_UNICODE_MAP = _build_unicode_map()
 BEGIN_TAG = '{{'
 END_TAG = '}}'
 
-try:
-    from cStringIO import StringIO  # py2
-except ImportError:
-    from io import StringIO  # py3
+from io import StringIO  # py3
 
 _DEFAULT_AUTOESCAPE = "xhtml_escape"
 _UNSET = object()
@@ -613,7 +610,7 @@ class Template(object):
         # we've generated a new template (mainly for this module's
         # unittests, where different tests reuse the same name).
         linecache.clearcache()
-        return execute()
+        return native_str(execute())
 
     def _generate_python(self, loader, compress_whitespace):
         buffer = StringIO()
@@ -627,7 +624,7 @@ class Template(object):
             writer = _CodeWriter(buffer, named_blocks, loader, ancestors[0].template,
                                  compress_whitespace, comment=self.comment)
             ancestors[0].generate(writer, self.has_links)
-            code =  buffer.getvalue()
+            code = buffer.getvalue()
             if self.multilines:
                 return reindent(code, self.filename)
             else:

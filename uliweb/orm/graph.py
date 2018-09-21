@@ -102,7 +102,7 @@ tail_template = """
 """
 def get_model_tables(tables, appname):
     t = []
-    for tablename, m in tables.iteritems():
+    for tablename, m in tables.items():
         if hasattr(m, '__appname__') and m.__appname__ == appname:
             t.append(tablename)
     return t

@@ -1074,7 +1074,7 @@ class SQLHtmlCommand(SQLCommandMixin, Command):
     check_apps = True
     
     def handle(self, options, global_options, *args):
-        from gendoc import generate_html
+        from .gendoc import generate_html
     
         engine = get_engine(options, global_options)
         

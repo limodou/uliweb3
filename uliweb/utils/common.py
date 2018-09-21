@@ -310,8 +310,10 @@ def safe_unicode(s, encoding='utf-8'):
     
     if isinstance(s, LazyString):
         return text_type(s)
-    else:
+    elif isinstance(s, string_types):
         return u(s, encoding)
+    else:
+        return u(str(s), encoding)
 
 def safe_str(s, encoding='utf-8'):
     from uliweb.i18n.lazystr import LazyString

@@ -1,7 +1,9 @@
 #coding=utf-8
+from __future__ import print_function, absolute_import, unicode_literals
 from uliweb.core.js import simple_value, json_dumps
 from uliweb.core.html import *
 from uliweb.core.html import to_attrs
+import json
 
 def test_simple_value():
     """
@@ -25,21 +27,21 @@ def test_simple_value():
 
 def testto_attrs():
     """
-    >>> print to_attrs({'name':'title'})
+    >>> print(to_attrs({'name':'title'}))
      name="title"
-    >>> print to_attrs({'_class':'color', 'id':'title'})
+    >>> print(to_attrs({'_class':'color', 'id':'title'}))
      class="color" id="title"
-    >>> print to_attrs({'_class':'color', 'id':None})
+    >>> print(to_attrs({'_class':'color', 'id':None}))
      class="color"
-    >>> print to_attrs({'_class':'color', 'checked':None})
+    >>> print(to_attrs({'_class':'color', 'checked':None}))
      class="color" checked
-    >>> print to_attrs({'_class':'color', '_for':None})
+    >>> print(to_attrs({'_class':'color', '_for':None}))
      class="color"
-    >>> print to_attrs({'action': '', '_class': 'yform', 'method': 'POST'})
+    >>> print(to_attrs({'action': '', '_class': 'yform', 'method': 'POST'}))
      class="yform" action="" method="POST"
-    >>> print to_attrs({'action': '"hello"'})
+    >>> print(to_attrs({'action': '"hello"'}))
      action="&quot;hello&quot;"
-    >>> print to_attrs({'action': ''})
+    >>> print(to_attrs({'action': ''}))
      action=""
     """
     
@@ -47,24 +49,24 @@ def test_json_dumps():
     """
     >>> import datetime
     >>> a = {'name':u'limodou', 'date':datetime.datetime(2010, 10, 25), 'data':{'name':'aaa', 'total': 100, 'has':True}}
-    >>> json_dumps(a)
-    '{"date":"2010-10-25 00:00:00","data":{"has":true,"total":100,"name":"aaa"},"name":"limodou"}'
-    
+    >>> s = json_dumps(a)
+    >>> json.loads(s) == {'date': "2010-10-25 00:00:00", 'name': 'limodou', 'data': {'total': 100,'name': 'aaa', 'has': True}}
+    True
     """
     
 def test_tag():
     """
-    >>> print Tag('a', 'Link', href='#')
+    >>> print(Tag('a', 'Link', href='#'))
     <a href="#">Link</a>
-    >>> print Tag('a', 'Link', href='http://localhost:8000?a=b&c=d')
+    >>> print(Tag('a', 'Link', href='http://localhost:8000?a=b&c=d'))
     <a href="http://localhost:8000?a=b&c=d">Link</a>
-    >>> print Tag('p', 'Hello', attrs={'data-link':'ok'}, newline=False)
+    >>> print(Tag('p', 'Hello', attrs={'data-link':'ok'}, newline=False))
     <p data-link="ok">Hello</p>
     >>> html = Buf()
     >>> with html.html:
     ...     with html.head:
     ...         html.title('Test')
-    >>> print html
+    >>> print(html)
     <html>
         <head>
             <title>Test</title>
@@ -74,7 +76,7 @@ def test_tag():
     >>> div_group = Tag('div', _class='div', newline=True)
     >>> with div_group: 
     ...     div_group << Tag('label', 'Hello')
-    >>> print div_group
+    >>> print(div_group)
     <div class="div">
         <label>Hello</label>
     </div>
@@ -82,7 +84,7 @@ def test_tag():
     >>> div = Tag('div', newline=True)
     >>> with div:
     ...     div.span('test', attrs={'data-target':"Hello"})
-    >>> print div
+    >>> print(div)
     <div>
         <span data-target="Hello">test</span>
     </div>
@@ -91,7 +93,7 @@ def test_tag():
 
 def test_other():
     """
-    >>> print Div('Test', _class='data-group')
+    >>> print(Div('Test', _class='data-group'))
     <div class="data-group">
     Test
     </div>

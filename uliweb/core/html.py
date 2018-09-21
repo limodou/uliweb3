@@ -1,28 +1,14 @@
-
+from __future__ import print_function, absolute_import, unicode_literals
 import cgi
-from six.moves import StringIO
+from io import StringIO
 from uliweb.utils.common import safe_unicode, safe_str
-import six
+from ..utils._compat import import_, python_2_unicode_compatible
 
 __noescape_attrs__ = ['href', 'src']
 class DefaultValue(object):pass
 
-def u_str(v, encoding='utf-8'):
-    if isinstance(v, str):
-        pass
-    elif isinstance(v, six.text_type):
-        v = v.encode(encoding)
-    else:
-        v = str(v)
-    return v
 
-def str_u(v, encoding='utf-8'):
-    if isinstance(v, six.text_type):
-        return v
-    else:
-        return six.text_type(v, encoding)
-
-def to_attrs(args, nocreate_if_none=['id', 'for']):
+def to_attrs(args, nocreate_if_none=['id', 'for', 'class']):
     """
     Make python dict to k="v" format
     """
@@ -37,18 +23,19 @@ def to_attrs(args, nocreate_if_none=['id', 'for']):
                 s.append(k)
         else:
             if k.lower() in __noescape_attrs__:
-                t = u_str(v)
+                t = safe_str(v)
             else:
-                t = cgi.escape(u_str(v))
+                t = cgi.escape(safe_str(v))
             t = '"%s"' % t.replace('"', '&quot;')
             s.append('%s=%s' % (k, t))
     return ' '.join(s)
 
 __tags__ = {}
 
+@python_2_unicode_compatible
 class Buf(object):
     def __init__(self, encoding='utf-8', newline=True):
-        self._document = StringIO.StringIO()
+        self._document = StringIO()
         self._indentation = 0
         self._indent = ' '*4
         self._encoding = encoding
@@ -66,13 +53,13 @@ class Buf(object):
     __getitem__ = __getattr__
     
     def __str__(self):
-        return u_str(self._document.getvalue(), self._encoding)
+        return safe_str(self._document.getvalue(), self._encoding)
     
     def __unicode__(self):
-        return str_u(self._document.getvalue(), self._encoding)
+        return safe_unicode(self._document.getvalue(), self._encoding)
     
     def _write(self, line):
-        line = line.decode(self._encoding)
+        line = safe_str(line, self._encoding)
         if self._newline:
             n = '\n'
         else:
@@ -82,9 +69,9 @@ class Buf(object):
     def __lshift__(self, obj):
         if isinstance(obj, (tuple, list)):
             for x in obj:
-                self._builder._write(u_str(x, self._encoding))
+                self._builder._write(safe_str(x, self._encoding))
         else:
-            self._builder._write(u_str(obj, self._encoding))
+            self._builder._write(safe_str(obj, self._encoding))
 
 class Tag(Buf):
     def __init__(self, tag_name, _value=DefaultValue, encoding='utf-8', newline=False, attrs=None, **kwargs):
@@ -114,9 +101,9 @@ class Tag(Buf):
             self._builder._write('<%s%s />' % (self.name, to_attrs(self.attributes)))
         elif _value != DefaultValue:
             if self._newline:
-               self._builder._write('<%s%s>\n%s\n</%s>' % (self.name, to_attrs(self.attributes), u_str(_value, self._encoding), self.name))
+               self._builder._write('<%s%s>\n%s\n</%s>' % (self.name, to_attrs(self.attributes), safe_str(_value, self._encoding), self.name))
             else:
-                self._builder._write('<%s%s>%s</%s>' % (self.name, to_attrs(self.attributes), u_str(_value, self._encoding), self.name))
+                self._builder._write('<%s%s>%s</%s>' % (self.name, to_attrs(self.attributes), safe_str(_value, self._encoding), self.name))
             return
         return self
     
@@ -172,24 +159,42 @@ def begin_tag(tag, **kwargs):
 def end_tag(tag):
     return '</%s>' % tag
 
+def Table(data, head=None, **kwargs):
+    header = head or []
+    table = Tag('table', newline=True, **kwargs)
+    with table:
+        if head:
+            with table.thead as thead:
+                with thead.tr as tr:
+                    for h in header:
+                        tr.th(h)
+        if data:
+            with table.tbody as tbody:
+                for row in data:
+                    with tbody.tr as tr:
+                        for t in row:
+                            tr.td(t)
+    return table
+
+
 if __name__ == '__main__':
     b = Buf()
     with b.html(name='xml'):
         b.head('Hello')
-    six.print_(str(b))
+    print(str(b))
     div = Tag('div', _class="demo", style="display:none")
     with div:
         with div.span:
             div.a('Test', href='#')
-    six.print_(div)
-    six.print_(Tag('a', 'Link', href='#'))
-    six.print_(Tag('br', None))
+    print(div)
+    print(Tag('a', 'Link', href='#'))
+    print(Tag('br', None))
     with div:
         with div.span:
             div.a('Test', href='#')
         div << '<p>This is a paragraph</p>'
-    six.print_(div)
+    print(div)
     b = Buf()
     b << 'hello'
     b << [Tag('a', 'Link', href='#'), Tag('a', 'Link', href='#')]
-    six.print_(str(b))
+    print(str(b))

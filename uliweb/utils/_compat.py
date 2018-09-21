@@ -55,7 +55,7 @@ if not PY2:
         if isinstance(s, str):
             return s
         else:
-            return str(s)
+            return str(s, encoding)
 
     def b(s, encoding='utf8'):
         if isinstance(s, bytes):
