@@ -1,7 +1,6 @@
 #!/usr/bin/env python
-
+from __future__ import print_function, absolute_import, unicode_literals
 import os, sys
-import six
 
 def parse_translation(f, lineno):
     """Read a single translation entry from the file F and return a
@@ -17,7 +16,7 @@ def parse_translation(f, lineno):
         key, value = line.split(' ', 1)
         # Parse msgid
         if key not in need_keys:
-            six.print_('Error Line, need %r: %d, line=' % (need_keys, lineno, line))
+            print('Error Line, need %r: %d, line=' % (need_keys, lineno, line))
             raise RuntimeError("parse error")
         v = value
         while 1:
@@ -54,7 +53,7 @@ def parse_translation(f, lineno):
         msgstr = value
         
     if line != '':
-        six.print_('File: %s Error Line: %s' % (f.name, line))
+        print('File: %s Error Line: %s' % (f.name, line))
         raise RuntimeError("parse error")
 
     return lineno, comments, msgid, msgstr
@@ -102,7 +101,7 @@ def merge(file1, file2, exact=False):
         return
     # Read the source po file into a hash
     source = {}
-    f2 = file(file2)
+    f2 = open(file2)
     lineno = 1
     while 1:
         lineno, comments, msgid, msgstr = parse_translation(f2, lineno)
@@ -124,7 +123,7 @@ def merge(file1, file2, exact=False):
     update_count = 0
     untranslated = 0
     removed = 0
-    f1 = file(infile)
+    f1 = open(infile)
     lineno = 1
     while 1:
         lineno, comments, msgid, msgstr = parse_translation(f1, lineno)
@@ -162,7 +161,7 @@ def merge(file1, file2, exact=False):
     if _len:
         update_count += _len
         string_count += _len
-        for msgid, _v in six.iteritems(source):
+        for msgid, _v in source.items():
             msgstr, comments = _v
             outfile.write(write_msg(comments, msgid, msgstr))
             
@@ -173,9 +172,9 @@ def merge(file1, file2, exact=False):
     outfile.close()
     # We're done.  Tell the user what we did.
     if string_count == 0:
-        six.print_('0 strings updated.')
+        print('0 strings updated.')
     else:
-        six.print_(('%d strings updated. %d strings removed. '
+        print(('%d strings updated. %d strings removed. '
             '%d of %d strings are still untranslated (%.0f%%).' %
             (update_count, removed, untranslated, string_count,
             100.0 * untranslated / string_count)))

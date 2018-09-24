@@ -1,13 +1,14 @@
+from __future__ import print_function, absolute_import, unicode_literals
 import os
 from optparse import make_option
 from uliweb.core import SimpleFrame
 from uliweb.utils.common import pkg
 from uliweb.core.commands import Command
-import six
+
 
 #def getfiles(path):
 #    files_list = []
-#    if os.path.exists(os.path.abspath(os.path.normcase(path))):
+#    if os.path.exists(os.path.abspath(os.path.normpath(path))):
 #        if os.path.isfile(path):
 #            files_list.append(path)
 #        else:
@@ -23,12 +24,13 @@ def _get_outputfile(path, locale='en'):
     output = os.path.normpath(os.path.join(path, 'locale', locale, 'LC_MESSAGES', 'uliweb.pot'))
     return output
 
-def _process(path, locale, options):
+def _process(path, locale, options, output_dir=None):
     from .pygettext import extrace_files
     from .po_merge import merge
     from uliweb.utils import pyini
 
-    output = _get_outputfile(path, locale=locale)
+    output_dir = output_dir or path
+    output = _get_outputfile(output_dir, locale=locale)
     try:
         if options['template']:
             x = pyini.Ini(options['template'])
@@ -44,7 +46,7 @@ def _process(path, locale, options):
         vars['Plural_Forms'] = x.get_var('I18N/Plural_Forms', 'nplurals=1; plural=0;')
         
         extrace_files(path, output, {'verbose':options['verbose']}, vars=vars)
-        six.print_('Success! output file is %s' % output)
+        print('Success! output file is %s' % output)
         merge(output[:-4]+'.po', output, options['exact'])
     except:
         raise
@@ -73,11 +75,18 @@ class I18nCommand(Command):
     )
     
     def handle(self, options, global_options, *args):
+        from uliweb.utils.common import check_apps_dir
         opts = {'verbose':global_options.verbose, 'template':options.template,
             'exact':options.exact}
         if options.project:
-            _process(global_options.project, options.locale, opts)
+            check_apps_dir(global_options.apps_dir)
+            app = self.get_application(global_options)
+            
+            _process(global_options.apps_dir, options.locale, opts, output_dir=global_options.project)
         elif options.apps or args:
+            check_apps_dir(global_options.apps_dir)
+            
+            app = self.get_application(global_options)
             if options.apps:
                 _apps = SimpleFrame.get_apps(global_options.apps_dir)
             else:
@@ -86,7 +95,7 @@ class I18nCommand(Command):
             for appname in _apps:
                 path = SimpleFrame.get_app_dir(appname)
                 if global_options.verbose:
-                    six.print_('Processing... app=>[%s] path=>[%s]' % (appname, path))
+                    print('Processing... app=>[%s] path=>[%s]' % (appname, path))
                 _process(path, options.locale, opts)
         elif options.uliweb:
             path = pkg.resource_filename('uliweb', '')

@@ -26,16 +26,17 @@
 # as only the first two arguments are evaluated.
 # Advanced version number from 1.5 to 1.6
 #
-
+from __future__ import print_function, absolute_import, unicode_literals
 # for selftesting
 import sys
-import six
 sys.path.insert(0, '..')
 try:
     import fintl
     _ = fintl.gettext
 except ImportError:
     _ = lambda s: s
+from uliweb.utils.common import walk_dirs
+from ..utils._compat import text_type, b, u
 
 __doc__ = """pygettext -- Python equivalent of xgettext(1)
 
@@ -212,9 +213,9 @@ msgstr ""
 '''
 
 def usage(code, msg=''):
-    six.print_(__doc__ % globals(), file=sys.stderr)
+    print(__doc__ % globals(), file=sys.stderr)
     if msg:
-        six.print_(msg, file=sys.stderr)
+        print(msg, file=sys.stderr)
     sys.exit(code)
 
 
@@ -249,12 +250,11 @@ __escapes__['\"'] = '\\"'
 
 def escape(s):
 #    global escapes
-    if isinstance(s, six.text_type):
-        s = s.encode('utf-8')
-    s = list(s)
-    for i in range(len(s)):
-        s[i] = __escapes__.get(s[i], s[i])
-    return EMPTYSTRING.join(s)
+    s = u(s)
+    r = []
+    for c in s:
+        r.append(__escapes__.get(c, c))
+    return EMPTYSTRING.join(r)
 
 
 def safe_eval(s):
@@ -286,7 +286,7 @@ def containsAny(str, set):
 def _visit_pyfiles(list, dirname, names):
     """Helper for getFilesForName()."""
     # get extension for python source files
-    if '_py_ext' not in globals():
+    if not globals().has_key('_py_ext'):
         global _py_ext
 #        _py_ext = [triple[0] for triple in imp.get_suffixes()
 #                   if triple[2] == imp.PY_SOURCE][0]
@@ -302,6 +302,9 @@ def _visit_pyfiles(list, dirname, names):
 
     if '.git' in names:
         names.remove('.git')
+
+    if 'static' in names:
+        names.remove('static')
     
     # add all *.py files to list
     list.extend(
@@ -356,10 +359,10 @@ def getFilesForName(name):
         # check for glob chars
         if containsAny(name, "*?[]"):
             files = glob.glob(name)
-            list = []
+            alist = []
             for file in files:
-                list.extend(getFilesForName(file))
-            return list
+                alist.extend(getFilesForName(file))
+            return alist
 
         # try to find module or package
         name = _get_modpkg_path(name)
@@ -368,9 +371,7 @@ def getFilesForName(name):
 
     if os.path.isdir(name):
         # find all python files in directory
-        list = []
-        os.path.walk(name, _visit_pyfiles, list)
-        return list
+        return list(walk_dirs(name, include_ext=['.py', '.ini', '.html'], file_only=True))
     elif os.path.exists(name):
         # a single file
         return [name]
@@ -406,14 +407,14 @@ class TokenEater:
                     try:
                         s = safe_eval(tstring)
                     except Exception as e:
-                        six.print_((
+                        print((
                             '*** %(file)s:%(lineno)s: could not evaluate argument "%(arg)s"'
                             ) % {
                             'arg': tstring,
                             'file': self.__curfile,
                             'lineno': self.__lineno
                             }, file=sys.stderr)
-                        six.print_(str(e), file=sys.stderr)
+                        print(str(e), file=sys.stderr)
                     else:
                         self.__addentry([s], lineno, isdocstring=1)
                     self.__freshmodule = 0
@@ -438,14 +439,14 @@ class TokenEater:
             try:
                 s = safe_eval(tstring)
             except Exception as e:
-                six.print_((
+                print((
                     '*** %(file)s:%(lineno)s: could not evaluate argument "%(arg)s"'
                     ) % {
                     'arg': tstring,
                     'file': self.__curfile,
                     'lineno': self.__lineno
                     }, file=sys.stderr)
-                six.print_(str(e), file=sys.stderr)
+                print(str(e), file=sys.stderr)
             else:
                 self.__addentry(s, lineno, isdocstring=1)
             self.__state = self.__waiting
@@ -475,21 +476,21 @@ class TokenEater:
                 try:
                     s = safe_eval(self.__args[-1])
                 except Exception as e:
-                    six.print_((
+                    print((
                         '*** %(file)s:%(lineno)s: could not evaluate argument "%(arg)s"'
                         ) % {
                         'arg': self.__args[-1],
                         'file': self.__curfile,
                         'lineno': self.__lineno
                         }, file=sys.stderr)
-                    six.print_(str(e), file=sys.stderr)
+                    print(str(e), file=sys.stderr)
                     self.__state = self.__waiting
                     return
-                if type(s) == str or type(s) == six.text_type:
+                if type(s) == str or type(s) == text_type:
                     self.__args[-1] = s
                     self.__addentry(self.__args)
                 else:
-                    six.print_((
+                    print((
                         '*** %(file)s:%(lineno)s: argument is no str or unicode object "%(arg)s"'
                         ) % {
                         'arg': s,
@@ -502,22 +503,22 @@ class TokenEater:
             try:
                 s = safe_eval(self.__args[-1])
             except Exception as e:
-                six.print_((
+                print((
                     '*** %(file)s:%(lineno)s: could not evaluate argument "%(arg)s"'
                     ) % {
                     'arg': self.__args[-1],
                     'file': self.__curfile,
                     'lineno': self.__lineno
                     }, file=sys.stderr)
-                six.print_(str(e), file=sys.stderr)
+                print(str(e), file=sys.stderr)
                 self.__state = self.__waiting
                 return
-            if type(s) == str or type(s) == six.text_type:
+            if type(s) == str or type(s) == text_type:
                 self.__args[-1] = s
                 self.__args.append('') # next argument.
                 self.__state = self.__scanstring2
             else:
-                six.print_((
+                print((
                     '*** %(file)s:%(lineno)s: argument 1 is no str or unicode object "%(arg)s"'
                     ) % {
                     'arg': s,
@@ -536,7 +537,7 @@ class TokenEater:
             # End of list of arguments for the current function call.
             # This is an error if we expect either one or three arguments but
             # never two.
-            six.print_((
+            print((
                 '*** %(file)s:%(lineno)s: unexpected number of arguments (2)"'
                 ) % {
                 'file': self.__curfile,
@@ -549,14 +550,14 @@ class TokenEater:
             try:
                 s = safe_eval(self.__args[-1])
             except Exception as e:
-                six.print_((
+                print((
                     '*** %(file)s:%(lineno)s: could not evaluate argument "%(arg)s"'
                     ) % {
                     'arg': self.__args[-1],
                     'file': self.__curfile,
                     'lineno': self.__lineno
                     }, file=sys.stderr)
-                six.print_(str(e), file=sys.stderr)
+                print(str(e), file=sys.stderr)
                 self.__state = self.__waiting
                 return
             s = safe_eval(self.__args[-1])
@@ -565,7 +566,7 @@ class TokenEater:
                 self.__addentry(self.__args)
                 self.__state = self.__waiting
             else:
-                six.print_((
+                print((
                     '*** %(file)s:%(lineno)s: argument 2 is no str or unicode object "%(arg)s"'
                     ) % {
                     'arg': s,
@@ -611,20 +612,17 @@ class TokenEater:
         # generated by xgettext...
         d = self.__vars.copy()
         d.update({'time': timestamp, 'version': __version__})
-        six.print_(pot_header.format(**d), file=fp)
+        print(pot_header.format(**d), file=fp)
         # Sort the entries.  First sort each particular entry's keys, then
         # sort all the entries by their first item.
         reverse = {}
         for k, v in self.__messages.items():
-            keys = v.keys()
-            keys.sort()
+            keys = sorted(v.keys())
             reverse.setdefault(tuple(keys), []).append((k, v))
         rkeys = reverse.keys()
-        rkeys.sort()
-        for rkey in rkeys:
+        for rkey in sorted(rkeys):
             rentries = reverse[rkey]
-            rentries.sort()
-            for k, v in rentries:
+            for k, v in sorted(rentries):
                 # If the entry was gleaned out of a docstring, then add a
                 # comment stating so.  This is to aid translators who may wish
                 # to skip translating some unimportant docstrings.
@@ -632,15 +630,14 @@ class TokenEater:
                 # k is the message string, v is a dictionary-set of (filename,
                 # lineno) tuples.  We want to sort the entries in v first by
                 # file name and then by line number.
-                v = v.keys()
-                v.sort()
+                v = sorted(v.keys())
                 if not options.writelocations:
                     pass
                 # location comments are different b/w Solaris and GNU:
                 elif options.locationstyle == options.SOLARIS:
                     for filename, lineno in v:
                         d = {'filename': filename, 'lineno': lineno}
-                        six.print_((
+                        print((
                             '# File: %(filename)s, line: %(lineno)d') % d, file=fp)
                 elif options.locationstyle == options.GNU:
                     # fit as many locations on one line, as long as the
@@ -652,19 +649,19 @@ class TokenEater:
                         if len(locline) + len(s) <= options.width:
                             locline = locline + s
                         else:
-                            six.print_(locline, file=fp)
+                            print(locline, file=fp)
                             locline = "#:" + s
                     if len(locline) > 2:
-                        six.print_(locline, file=fp)
+                        print(locline, file=fp)
                 if isdocstring:
-                    six.print_('#, docstring', file=fp)
-                six.print_('msgid', normalize(k[0]), file=fp)
+                    print('#, docstring', file=fp)
+                print('msgid', normalize(k[0]), file=fp)
                 if len(k) > 1:
-                    six.print_('msgid_plural', normalize(k[1]), file=fp)
-                    six.print_('msgstr[0] ""', file=fp)
-                    six.print_('msgstr[1] ""\n', file=fp)
+                    print('msgid_plural', normalize(k[1]), file=fp)
+                    print('msgstr[0] ""', file=fp)
+                    print('msgstr[1] ""\n', file=fp)
                 else:
-                    six.print_('msgstr ""\n', file=fp)
+                    print('msgstr ""\n', file=fp)
 
 def main():
     global default_keywords
@@ -738,7 +735,7 @@ def main():
         elif opt in ('-v', '--verbose'):
             options.verbose = 1
         elif opt in ('-V', '--version'):
-            six.print_(('pygettext.py (xgettext for Python) %s') % __version__)
+            print(('pygettext.py (xgettext for Python) %s') % __version__)
             sys.exit(0)
         elif opt in ('-w', '--width'):
             try:
@@ -773,7 +770,7 @@ def main():
             options.toexclude = fp.readlines()
             fp.close()
         except IOError:
-            six.print_((
+            print((
                 "Can't read --exclude-file: %s") % options.excludefilename, file=sys.stderr)
             sys.exit(1)
     else:
@@ -803,17 +800,11 @@ def main():
             closep = 0
         else:
             if options.verbose:
-                six.print_(('Working on %s') % filename)
+                print(('Working on %s') % filename)
             if filename.endswith('.html'):
-                from uliweb.core import template
-                from six.moves import cStringIO
-                import re
-                re_include=re.compile('\{\{\s*include\s+(?P<name>.+?)\s*\}\}',re.DOTALL)
-                re_extend=re.compile('\s*\{\{\s*extend\s+(?P<name>.+?)\s*\}\}',re.DOTALL)
-                text = file(filename, 'rb').read()
-                text = re_include.sub('', text)
-                text = re_extend.sub('', text)
-                text = template.render_text(text)
+                from uliweb.core.template import template_file_py
+                from io import StringIO
+                text = template_file_py(filename, skip_extern=True, multilines=True)
                 fp = StringIO(text)
             else:
                 fp = open(filename)
@@ -823,7 +814,7 @@ def main():
             try:
                 tokenize.tokenize(fp.readline, eater)
             except tokenize.TokenError as e:
-                six.print_('%s: %s, line %d, column %d' % (
+                print('%s: %s, line %d, column %d' % (
                     e[0], filename, e[1][0], e[1][1]), file=sys.stderr)
         finally:
             if closep:
@@ -853,6 +844,10 @@ def main():
 
 def extrace_files(files, outputfile, opts=None, vars=None):
     global _py_ext
+    import logging
+    from io import StringIO, BytesIO
+
+    log = logging.getLogger('pygettext')
     
     opts = opts or {}
     vars = vars or {}
@@ -876,7 +871,7 @@ def extrace_files(files, outputfile, opts=None, vars=None):
         docstrings = 0
         nodocstrings = {}
         toexclude = []
-    
+
     options = Options()
 
 #    make_escapes(options.escape)
@@ -896,31 +891,26 @@ def extrace_files(files, outputfile, opts=None, vars=None):
     eater = TokenEater(options, vars=vars)
     for filename in files:
         if options.verbose:
-            six.print_(('Working on %s') % filename)
+            print(('Working on %s') % filename)
         if not os.path.exists(filename):
             continue
         if filename.endswith('.html'):
             from uliweb.core import template
-            from six.moves import cStringIO
-            import re
-            re_include=re.compile('\{\{\s*include\s+(?P<name>.+?)\s*\}\}',re.DOTALL)
-            re_extend=re.compile('\s*\{\{\s*extend\s+(?P<name>.+?)\s*\}\}',re.DOTALL)
-            text = file(filename, 'rb').read()
-            text = re_include.sub('', text)
-            text = re_extend.sub('', text)
-            text = template.Template(text, skip_error=True).parse()
-            fp = StringIO(text)
+            from uliweb.core.template import template_file_py
+            text = template_file_py(filename, skip_extern=True, log=log, multilines=True)
+            fp = BytesIO(b(text))
             closep = 0
         else:
-            fp = open(filename)
+            fp = BytesIO(b(open(filename).read()))
             closep = 1
         
         try:
             eater.set_filename(filename)
             try:
-                tokenize.tokenize(fp.readline, eater)
+                for v in tokenize.tokenize(fp.readline):
+                    eater(*v)
             except tokenize.TokenError as e:
-                six.print_('%s: %s, line %d, column %d' % (
+                print('%s: %s, line %d, column %d' % (
                     e[0], filename, e[1][0], e[1][1]), file=sys.stderr)
         finally:
             if closep:

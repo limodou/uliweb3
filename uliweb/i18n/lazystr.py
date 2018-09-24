@@ -1,9 +1,13 @@
-import six
+from ..utils._compat import python_2_unicode_compatible, u
+
+
 def lazy(func):
     def f(message):
         return LazyString(func, message)
     return f
-    
+
+
+@python_2_unicode_compatible
 class LazyString(object):
     """
     >>> from uliweb.i18n import gettext_lazy as _
@@ -15,23 +19,11 @@ class LazyString(object):
         self.msg = message
         self._format = []
         
-    def __unicode__(self):
-        if not self.msg:
-            return ''
-        value = self.getvalue()
-        if isinstance(value, six.text_type):
-            return value
-        else:
-            return six.text_type(self.getvalue(), 'utf-8')
-        
     def __str__(self):
         if not self.msg:
             return ''
         value = self.getvalue()
-        if isinstance(value, six.text_type):
-            return value.encode('utf-8')
-        else:
-            return str(value)
+        return u(value, 'utf8')
     
     def format(self, *args, **kwargs):
         self._format.append((args, kwargs))

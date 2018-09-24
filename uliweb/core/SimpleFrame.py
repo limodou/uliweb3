@@ -537,7 +537,8 @@ def collect_settings(project_dir, include_apps=None, settings_file='settings.ini
 
 def get_settings(project_dir, include_apps=None, settings_file='settings.ini', 
     local_settings_file='local_settings.ini', default_settings=None):
-    
+
+    default_settings = default_settings or {}
     settings = collect_settings(project_dir, include_apps, settings_file,
         local_settings_file)
 

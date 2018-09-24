@@ -17,6 +17,7 @@ StingIO, BytesIO
 from io import StringIO, BytesIO
 
 """
+import os
 import sys
 import inspect
 
@@ -24,7 +25,7 @@ PY3 = sys.version_info[0] == 3
 PY2 = sys.version_info[0] == 2
 PY26 = sys.version_info[0:2] == (2, 6)
 PYPY = hasattr(sys, 'pypy_translation_info')
-_identity = lambda x:x
+_identity = lambda x: x
 
 if not PY2:
     unichr = chr
@@ -79,6 +80,8 @@ if not PY2:
     ismethod = lambda f: callable(f) and not inspect.isclass(f) and '.' in f.__qualname__
     isfunction = lambda f: callable(f) and not inspect.isclass(f) and '.' not in f.__qualname__
 
+    import builtins
+    from os import walk
 
     def get_class(meth):
         if inspect.ismethod(meth):
@@ -152,6 +155,10 @@ else:
     from io import open
 
     from inspect import ismethod, isfunction
+
+    builtins = __builtins__
+
+    from os.path import walk
 
     def get_class(meth):
         if inspect.ismethod(meth):

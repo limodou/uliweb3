@@ -1,6 +1,7 @@
 from __future__ import with_statement
 from alembic import context
 from sqlalchemy import engine_from_config, pool
+import logging
 from logging.config import fileConfig
 
 # this is the Alembic Config object, which provides
@@ -21,6 +22,8 @@ fileConfig(config.config_file_name)
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
+log = logging.getLogger('alembic')
+
 def run_migrations_offline():
     """Run migrations in 'offline' mode.
 
@@ -38,6 +41,21 @@ def run_migrations_offline():
 
     with context.begin_transaction():
         context.run_migrations()
+
+def uliweb_include_object(object, name, type_, reflected, compare_to):
+    if type_ == 'table':
+        if hasattr(object, '__mapping_only__') and object.__mapping_only__:
+            log.info("{{white|red:Skipped}} added table %r", name)
+            return False
+    return True
+
+def uliweb_compare_server_default(context, inspected_column,
+            metadata_column, inspected_default, metadata_default,
+            rendered_metadata_default):
+    # return True if the defaults are different,
+    # False if not, or None to allow the default implementation
+    # to compare these defaults
+    pass
 
 def run_migrations_online():
     """Run migrations in 'online' mode.
@@ -57,13 +75,15 @@ def run_migrations_online():
     name = config.get_main_option("engine_name")
     make_simple_application(project_dir='.')
     target_metadata = orm.get_metadata(name)
-    connection = orm.get_connection(engine_name=name).connect()
+    connection = orm.get_connection(name).connect()
 #    connection = engine.connect()
     
     context.configure(
                 connection=connection, 
                 target_metadata=target_metadata,
-                compare_server_default=True
+                compare_server_default=True,
+                include_object=uliweb_include_object,
+#                compare_server_default=uliweb_compare_server_default,
                 )
 
     try:

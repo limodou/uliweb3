@@ -1,6 +1,6 @@
 from .base import BaseStorage, KeyError
 import redis
-import six
+from uliweb.utils._compat import integer_types
 
 #connection pool format should be: (options, connection object)
 __connection_pool__ = None
@@ -26,11 +26,7 @@ class Storage(BaseStorage):
                 __connection_pool__ = (d, redis.ConnectionPool(**d))
             self.client = redis.Redis(connection_pool=__connection_pool__[1])
     
-    def _key(self, key):
-        return 'session:'+key
-    
     def get(self, key):
-        key = self._key(key)
         v = self.client.get(key)
         if v is not None:
             if not v.isdigit():
@@ -41,27 +37,23 @@ class Storage(BaseStorage):
             raise KeyError("Cache key [%s] not found" % key)
     
     def set(self, key, value, expiry_time):
-        key = self._key(key)
-        if not isinstance(value, six.integer_types):
+        if not isinstance(value, integer_types):
             v = self._dump(value)
         else:
             v = value
-        pipe = self.client.pipeline()
-        r = pipe.set(key, v).expire(key, expiry_time).execute()
-        return r[0]
+        r = self.client.setex(key, v, expiry_time)
+        return r
     
     def delete(self, key):
-        key = self._key(key)
-        return self.client.delete(key)
+        self.client.delete(key)
+        return True
         
     def inc(self, key, step, expiry_time):
-        key = self._key(key)
         pipe = self.client.pipeline()
         r = pipe.incr(key, step).expire(key, expiry_time).execute()
         return r[0]
     
     def dec(self, key, step, expiry_time):
-        key = self._key(key)
         pipe = self.client.pipeline()
         r = pipe.decr(key, step).expire(key, expiry_time).execute()
         return r[0]

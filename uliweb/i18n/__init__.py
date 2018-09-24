@@ -11,7 +11,8 @@ import locale
 from uliweb.utils.common import safe_unicode
 
 from .lazystr import lazy, LazyString
-import six
+from ..utils._compat import PY2, builtins
+
 
 def lazystr_convertor(v):
     from uliweb.utils.pyini import uni_prt
@@ -120,7 +121,6 @@ def install(domain, localedir=None, use_unicode=True, codeset='utf-8', names=Non
     _domain = domain
     _localedir = localedir
     
-    from six.moves import builtins
     builtins.__dict__['_'] = use_unicode and ugettext_lazy or gettext_lazy
     
 def dgettext(domain, message):
@@ -174,7 +174,10 @@ def ugettext(message):
         t = translation(_domain)
     except IOError:
         return message
-    return t.ugettext(safe_unicode(message))
+    if PY2:
+        return t.ugettext(safe_unicode(message))
+    else:
+        return t.gettext(safe_unicode(message))
 
 def ungettext(msgid1, msgid2, n):
     try:

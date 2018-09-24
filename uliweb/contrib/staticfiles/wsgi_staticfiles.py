@@ -2,7 +2,6 @@ import os
 from werkzeug.wsgi import SharedDataMiddleware
 from uliweb import settings
 from uliweb.utils.filedown import filedown
-import six
 
 class StaticFilesMiddleware(SharedDataMiddleware):
     """
@@ -13,8 +12,8 @@ class StaticFilesMiddleware(SharedDataMiddleware):
     def __init__(self, app, STATIC_URL, disallow=None, cache=True,
                  cache_timeout=60 * 60 * 12):
         self.app = app
-        self.url_suffix = STATIC_URL.rstrip('/') + '/'
-        
+        self.url_suffix = settings.DOMAINS.static.get('url_prefix', '')+STATIC_URL.rstrip('/') + '/'
+
         self.app = app
         self.exports = {}
         self.cache = cache
@@ -35,11 +34,11 @@ class StaticFilesMiddleware(SharedDataMiddleware):
         return True
 
     def loader(self, dir):
-        
+
         def _loader(filename):
             from werkzeug.exceptions import Forbidden, NotFound
             from uliweb.utils.common import pkg
-            
+
             app = self.app
             if dir:
                 fname = os.path.normpath(os.path.join(dir, filename)).replace('\\', '/')
@@ -47,19 +46,19 @@ class StaticFilesMiddleware(SharedDataMiddleware):
                     return Forbidden("You can only visit the files under static directory."), None
                 if os.path.exists(fname):
                     return fname, self._opener(fname)
-                    
+
             for p in reversed(app.apps):
                 fname = os.path.normpath(os.path.join('static', filename)).replace('\\', '/')
                 if not fname.startswith('static/'):
                     return Forbidden("You can only visit the files under static directory."), None
-                
+
                 f = pkg.resource_filename(p, fname)
                 if os.path.exists(f):
                     return f, self._opener(f)
-            
+
             return NotFound("Can't found the file %s" % filename), None
         return _loader
-    
+
     def __call__(self, environ, start_response):
         from werkzeug.exceptions import Forbidden
 
@@ -72,7 +71,7 @@ class StaticFilesMiddleware(SharedDataMiddleware):
                                 if x and x != '..'])
         file_loader = None
         flag = False
-        for search_path, loader in six.iteritems(self.exports):
+        for search_path, loader in self.exports.items():
             if search_path == path:
                 flag = True
                 real_filename, file_loader = loader(None)
@@ -90,10 +89,10 @@ class StaticFilesMiddleware(SharedDataMiddleware):
                 return real_filename(environ, start_response)
             else:
                 return self.app(environ, start_response)
-        
+
         if not self.is_allowed(real_filename):
             return Forbidden("You can not visit the file %s." % real_filename)(environ, start_response)
-    
+
         res = filedown(environ, real_filename, self.cache, self.cache_timeout)
         return res(environ, start_response)
-        
+

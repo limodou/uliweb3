@@ -1,7 +1,7 @@
+from __future__ import print_function
 from uliweb.core.commands import Command
 from uliweb.contrib.orm.commands import SQLCommandMixin
-import six
-from six.moves import input
+from ...utils._compat import input
 
 class CreateSuperUserCommand(SQLCommandMixin, Command):
     name = 'createsuperuser'
@@ -12,26 +12,24 @@ class CreateSuperUserCommand(SQLCommandMixin, Command):
         from uliweb import orm
         from getpass import getpass
         
-        app = make_simple_application(apps_dir=global_options.apps_dir, 
-            settings_file=global_options.settings, local_settings_file=global_options.local_settings)
-        db = orm.get_connection()
-        
+        self.get_application(global_options)
+
         username = ''
         while not username:
             username = input("Please enter the super user's name: ")
         email = ''
         while not email:
-            email = input("Please enter the email of [%s]: " % username)
+            email = input("Please enter the email of [{}]: ".format(username))
             
         password = ''
         while not password:
-            password = getpass("Please enter the password for [%s(%s)]: " % (username, email))
+            password = getpass("Please enter the password for [{}({})]: ".format(username, email))
         repassword = ''
         while not repassword:
             repassword = getpass("Please enter the password again: ")
         
         if password != repassword:
-            six.print_("The password is not matched, can't create super user!")
+            print("The password is not matched, can't create super user!")
             return
         
         orm.set_dispatch_send(False)
@@ -45,21 +43,18 @@ class CreateSuperUserCommand(SQLCommandMixin, Command):
 class EncryptPasswordCommand(Command):
     name = 'encryptpassword'
     help = 'Encrypt password.'
-    has_options = False
-    
+
     def handle(self, options, global_options, *args):
         from uliweb import functions
-        from uliweb.core.SimpleFrame import get_settings, __global__
         import getpass
-        
-        settings = get_settings(global_options.project, settings_file=global_options.settings, 
-            local_settings_file=global_options.local_settings)
-        __global__.settings = settings
+
+        self.get_application(global_options)
+
         password = getpass.getpass('Input your password(Blank will quit):')
         if not password:
             return
         password1 = getpass.getpass('Enter your password twice:')
         if password != password1:
-            six.print_("Your password is not matched, please run the command again")
+            print("Your password is not matched, please run the command again")
         else:
-            six.print_(functions.encrypt_password(password))
+            print(functions.encrypt_password(password))

@@ -2,7 +2,7 @@ import os
 import time
 from .base import BaseStorage, KeyError
 import weto.lockfile as lockfile
-import six
+from uliweb.utils._compat import text_type
 
 try:
     from hashlib import md5
@@ -10,7 +10,7 @@ except ImportError:
     from md5 import md5
     
 def _get_key(key):
-    if isinstance(key, six.text_type):
+    if isinstance(key, text_type):
         key = key.encode('ascii', 'backslashreplace')
     
     return md5(key).hexdigest()
