@@ -85,6 +85,3 @@ class LocalProxy(object):
             cache[klass] = theclass = cls._create_class_proxy(klass)
         ins = object.__new__(theclass)
         return ins
-
-    def __bool__(self):
-        return self.__nonzero__()

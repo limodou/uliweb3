@@ -23,3 +23,17 @@ There are difference between uliweb and uliweb3:
 [X] Remove soap
 [X] Remove xmlrpc
 [X] Remove dbupload
+[X] Remove generic command, remain MultiView
+[X] Remove objcache
+[X] Remove develop
+[X] Remove template combine support
+[X] Remove qqmail support
+
+Unfinished modules:
+
+[ ] upload
+[ ] utils/generic.py
+[ ] uliweb-ui
+[ ] uliweb-layout
+[ ] uliweb-apps
+[ ] Werkzeug upgrade

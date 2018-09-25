@@ -1,5 +1,4 @@
 import os
-import six
 
 QUALITY = 95
 
@@ -17,10 +16,10 @@ def fix_filename(filename, suffix=''):
         return f+suffix+ext
     else:
         return filename
-        
+
 def resize_image(fobj, size=(50, 50), quality=None):
     from PIL import Image
-    from six.moves import StringIO
+    from io import StringIO
     
     image = Image.open(fobj)
     if image.mode not in ('L', 'RGB'):
@@ -64,7 +63,7 @@ def thumbnail_image(realfile, filename, size=(200, 75), suffix=True, quality=Non
     return ofile, ofile1
 
 def resize_image_string(buf, size=(50, 50)):
-    from six.moves import StringIO
+    from io import StringIO
     f = StringIO(buf)
     return resize_image(f, size).getvalue()
     
@@ -74,6 +73,25 @@ def image_size(filename):
     image = Image.open(filename)
     return image.size
 
+def test_image(filename, strong=False):
+    """
+    If strong is true, it'll really open the file, but with strong is false,
+    it'll only test the file suffix
+    """
+    if strong:
+        from PIL import Image
+        if not os.path.exists(filename):
+            return False
+        try:
+            image = Image.open(filename)
+            return True
+        except:
+            return False
+    else:
+        ext = os.path.splitext(filename)[1]
+        if ext.lower() in ['.jpg', '.bmp', '.png', '.ico', 'jpeg', 'gif']:
+            return True
+    
 def crop_resize(fobj, outfile, x, y, w, h, size=(50, 50), quality=None):
     from PIL import Image
 

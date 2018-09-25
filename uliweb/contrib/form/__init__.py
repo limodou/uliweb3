@@ -1,6 +1,6 @@
 from uliweb import Finder, UliwebError, settings
 from uliweb.utils.common import import_attr
-import six
+from uliweb.utils._compat import string_types
 
 validators = Finder('VALIDATORS')
 
@@ -13,7 +13,7 @@ def get_form(formcls):
     
     if inspect.isclass(formcls) and issubclass(formcls, Form):
         return formcls
-    elif isinstance(formcls, six.string_types):
+    elif isinstance(formcls, string_types):
         path = settings.FORMS.get(formcls)
         if path:
             _cls = import_attr(path)
@@ -22,4 +22,12 @@ def get_form(formcls):
             raise UliwebError("Can't find formcls name %s in settings.FORMS" % formcls)
     else:
         raise UliwebError("formcls should be Form class object or string path format, but %r found!" % formcls)
-        
+
+def startup_installed(sender):
+    from uliweb import settings
+    import uliweb.form.uliform as form
+    from uliweb.utils.common import import_attr
+
+    for k, v in settings.get_var('FORM_FIELDS_MAP', {}).items():
+        form.fields_mapping[k] = import_attr(v)
+

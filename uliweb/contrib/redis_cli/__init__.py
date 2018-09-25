@@ -60,7 +60,8 @@ def after_init_apps(sender):
     """
     from uliweb import settings
     from uliweb.utils.common import log
-        check = settings.get_var('REDIS/check_version')
+    
+    check = settings.get_var('REDIS/check_version')
     if check:
         client = get_redis()
         try:

@@ -54,7 +54,7 @@ Features
   * Developers can directly use Python code in a template, the Python code does not neede to be indented
     as long as a pass statement is added at the end of each code block.
     Uliweb also supports child template inclusion and inheritance.
-
+    
 * ORM
 
   * Uliorm is based on SQLAlchemy package, so you can use Model layer and SQL
@@ -82,7 +82,7 @@ Features
     function named __begin__, it'll be processed before any view function can be processed,
     this allows developers to do some module level processing at that point, for example:
     check the user authentication, etc.
-  
+    
 * Command Line Tools
 
   * Creates project, creates apps, and include the basic essential directory 

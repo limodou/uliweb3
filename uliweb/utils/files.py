@@ -1,8 +1,8 @@
 #coding=utf-8
 import os
 import sys
-from .common import log
-import six
+from common import log
+from .compat import u
 
 def save_file(fname, fobj, replace=False, buffer_size=4096):
     assert hasattr(fobj, 'read'), "fobj parameter should be a file-like object"
@@ -22,26 +22,20 @@ def save_file(fname, fobj, replace=False, buffer_size=4096):
             i += 1
         
     out = open(fname, 'wb')
-    size = 0
     try:
         while 1:
             text = fobj.read(buffer_size)
             if text:
-                size += len(text)
                 out.write(text)
             else:
                 break
         return os.path.basename(fname)
     finally:
         out.close()
-    return size
-        
+
 def unicode_filename(filename, encoding=None):
     encoding = encoding or sys.getfilesystemencoding()
-    if isinstance(filename, six.text_type):
-        return filename
-    else:
-        return six.text_type(filename, encoding)
+    return u(filename, encoding)
     
 def encode_filename(filename, from_encoding='utf-8', to_encoding=None):
     """
@@ -61,15 +55,7 @@ def encode_filename(filename, from_encoding='utf-8', to_encoding=None):
     import sys
     to_encoding = to_encoding or sys.getfilesystemencoding()
     from_encoding = from_encoding or sys.getfilesystemencoding()
-    if not isinstance(filename, six.text_type):
-        try:
-            f = six.text_type(filename, from_encoding)
-        except UnicodeDecodeError:
-            try:
-                f = six.text_type(filename, 'utf-8')
-            except UnicodeDecodeError:
-                raise Exception("Unknown encoding of the filename %s" % filename)
-        filename = f
+    filename = unicode_filename(filename, from_encoding)
     if to_encoding:
         return filename.encode(to_encoding)
     else:

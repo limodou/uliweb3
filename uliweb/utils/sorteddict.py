@@ -27,7 +27,7 @@ class SortedDict(dict):
         else:
             dict_delitem(self, key)
             self._fields.remove(key)
-    
+
     def __iter__(self):
         'od.__iter__() <==> iter(od)'
         for k in self._fields:
@@ -43,19 +43,19 @@ class SortedDict(dict):
             return self.__getitem__(key)
         except KeyError as k:
             return None
-        
+
     def __setattr__(self, key, value):
         if key.startswith('_'):
             self.__dict__[key] = value
         else:
             self.__setitem__(key, value)
-            
+
     def __delattr__(self, key):
         try:
             self.__delitem__(key)
         except KeyError as k:
             raise AttributeError(k)
-        
+
     def keys(self):
         return self._fields
     
@@ -79,7 +79,7 @@ class SortedDict(dict):
     def iteritems(self):
         for k in self:
             yield (k, self[k])
-    
+
     def pop(self, key, default=None):
         v = dict.pop(self, key, default)
         if key in self._fields:
@@ -104,6 +104,7 @@ class SortedDict(dict):
         else:
             self[key] = value
             return value
+
     def clear(self):
         dict.clear(self)
         self._fields = []

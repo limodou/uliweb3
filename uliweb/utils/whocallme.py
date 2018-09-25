@@ -1,4 +1,5 @@
-import six
+from __future__ import print_function, absolute_import, unicode_literals
+
 def who_called_me(show_filename=True, out=None, indent=' '):
     def _wrapper(fn):
         def _inner_wrapper(*args, **kwargs):
@@ -20,7 +21,7 @@ def who_called_me(show_filename=True, out=None, indent=' '):
                     descr = frame.f_code.co_filename
                 else:
                     descr = frame.f_globals["__name__"]
-                six.print_('%sFile "%s", line %d, in %s' % (indent*index, descr, line, func_name), file=output)
+                print('%sFile "%s", line %d, in %s' % (indent*index, descr, line, func_name), file=output)
 #                print >>output, '%s%s@%s:%d' % (indent*index, descr, func_name, line)
                 # to be safe explicitly delete the stack frame reference
                 # @see http://docs.python.org/lib/inspect-stack.html
