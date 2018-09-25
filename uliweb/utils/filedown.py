@@ -8,7 +8,7 @@ import mimetypes
 from werkzeug.http import http_date, is_resource_modified
 from werkzeug import Response, wrap_file
 from werkzeug.exceptions import NotFound
-from .compat import import_
+from ._compat import import_
 
 quote = import_('urllib.parse', ['quote'])
 

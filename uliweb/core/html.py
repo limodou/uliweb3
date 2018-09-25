@@ -55,9 +55,6 @@ class Buf(object):
     def __str__(self):
         return safe_str(self._document.getvalue(), self._encoding)
     
-    def __unicode__(self):
-        return safe_unicode(self._document.getvalue(), self._encoding)
-    
     def _write(self, line):
         line = safe_str(line, self._encoding)
         if self._newline:
@@ -113,6 +110,8 @@ class Div(Tag):
 
 __tags__['Div'] = Div
 
+
+@python_2_unicode_compatible
 class Builder(object):
     """
     Builder can be used to create multiple parts of code, such as
@@ -148,10 +147,8 @@ class Builder(object):
         return ''.join(txt)
     
     def __str__(self):
-        return safe_str(self.text)
-        
-    def __unicode__(self):
         return safe_unicode(self.text)
+        
 
 def begin_tag(tag, **kwargs):
     return '<%s%s>' % (tag, to_attrs(kwargs))

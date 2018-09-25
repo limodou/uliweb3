@@ -1,8 +1,8 @@
 #coding=utf-8
 import os
 import sys
-from common import log
-from .compat import u
+from .common import log
+from ._compat import u
 
 def save_file(fname, fobj, replace=False, buffer_size=4096):
     assert hasattr(fobj, 'read'), "fobj parameter should be a file-like object"

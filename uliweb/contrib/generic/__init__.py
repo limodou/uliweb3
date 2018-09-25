@@ -1,7 +1,7 @@
 #coding=utf8
 from uliweb import functions, url_for
 import logging
-from forms import QueryForm
+from .forms import QueryForm
 
 log = logging.getLogger(__name__)
 class Default(object):pass
@@ -191,7 +191,7 @@ class MultiView(object):
                 result.update({'query_form':queryform or queryview.form})
             else:
                 result.update({'query_form':''})
-            result.update({'table':view})
+            result.update({'view': view})
 
             if post_run:
                 post_run(view, result)

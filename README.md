@@ -31,9 +31,11 @@ There are difference between uliweb and uliweb3:
 
 Unfinished modules:
 
-[ ] upload
-[ ] utils/generic.py
 [ ] uliweb-ui
 [ ] uliweb-layout
 [ ] uliweb-apps
 [ ] Werkzeug upgrade
+
+Bugs
+
+[ ] Werkzeug Debug seems failed

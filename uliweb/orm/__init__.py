@@ -1974,7 +1974,7 @@ class TextProperty(Property):
     def convert(self, value):
         if not value:
             return u('')
-        if isinstance(value, str):
+        if PY2 and isinstance(value, str):
             return text_type(value, __default_encoding__)
         else:
             return self.data_type(value)

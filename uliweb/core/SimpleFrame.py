@@ -1059,13 +1059,13 @@ class Dispatcher(object):
                     layout = layout()
             else:
                 layout = None
-            if hasattr(response, 'template'):
+            if hasattr(response, 'template') and response.template:
                 tmpfile = response.template
             else:
                 args = handler.__dict__.get('__template__')
                 if not args:
                     args = {'function':request.function, 'view_class':request.view_class, 'appname':request.appname}
-                    
+
                 if isinstance(args, dict):
                     #TEMPLATE_TEMPLATE should be two elements tuple or list, the first one will be used for view_class is not empty
                     #and the second one will be used for common functions
