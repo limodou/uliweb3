@@ -1,9 +1,8 @@
-
+from __future__ import print_function, absolute_import, unicode_literals
 from uliweb.i18n import gettext_lazy as _
-import six
-from functools import reduce
+from uliweb.utils._compat import string_types
 
-__all__ = ['Layout', 'TableLayout', 'CSSLayout', 'YamlLayout',
+__all__ = ['Layout', 'TableLayout', 'CSSLayout', 
     'BootstrapLayout', 'BootstrapTableLayout']
 
 from uliweb.core.html import Buf, Tag, Div
@@ -28,23 +27,35 @@ class Layout(object):
         self.form = form
         self.layout = layout
         self.kwargs = kwargs
-        
+        self.init()
+
+    def init(self):
+        pass
+
     def html(self):
-        return '\n'.join([x for x in [self.begin(), self.body(), self.buttons_line(), self.end()] if x])
+        return '\n'.join([x for x in [self.begin(), self.hiddens(), self.body(), self.buttons_line(), self.end()] if x])
     
     def __str__(self):
         return self.html()
     
     def get_widget_name(self, f):
         return f.build.__name__
-    
+
     def is_hidden(self, f):
-        return self.get_widget_name(f) == 'Hidden'
+        return f.type_name == 'hidden' or f.hidden
     
     def begin(self):
         if not self.form.html_attrs['class'] and self.form_class:
             self.form.html_attrs['class'] = self.form_class
         return self.form.form_begin
+    
+    def hiddens(self):
+        s = []
+        for name, obj in self.form.fields_list:
+            f = getattr(self.form, name)
+            if self.is_hidden(obj):
+                s.append(str(f))
+        return ''.join(s)
     
     def body(self):
         return ''
@@ -71,7 +82,7 @@ class TableLayout(Layout):
     form_class = 'tform'
     buttons_line_class = 'type-button'
     
-    def __init__(self, form, layout=None, label_fix=False, table_class='table width100'):
+    def __init__(self, form, layout=None, label_fix=False, table_class='table table-layout width100'):
         self.form = form
         self.layout = layout
         self.label_fix = label_fix
@@ -89,7 +100,7 @@ class TableLayout(Layout):
     def line(self, fields, n):
         _x = 0
         for _f in fields:
-            if isinstance(_f, six.string_types):
+            if isinstance(_f, string_types):
                 _x += 1
             elif isinstance(_f, dict):
                 _x += _f.get('colspan', 1)
@@ -99,8 +110,8 @@ class TableLayout(Layout):
         tr = Tag('tr', newline=True)
         with tr:
             for x in fields:
-                _span = n / _x
-                if isinstance(x, six.string_types):
+                _span = int(n / _x)
+                if isinstance(x, string_types):
                     name = x
                 elif isinstance(x, dict):
                     name = x['name']
@@ -111,7 +122,7 @@ class TableLayout(Layout):
                 
                 #process hidden field
                 if self.is_hidden(obj):
-                    tr << f
+                    #tr << f
                     continue
                 
                 _class = self.get_class(obj)
@@ -155,7 +166,7 @@ class TableLayout(Layout):
                 if isinstance(line, (tuple, list)):
                     _x = 0
                     for f in line:
-                        if isinstance(f, six.string_types):
+                        if isinstance(f, string_types):
                             _x += 1
                         elif isinstance(f, dict):
                             _x += f.get('colspan', 1)
@@ -176,7 +187,7 @@ class TableLayout(Layout):
         cls = self.table_class
         for fields in self.layout:
             if not isinstance(fields, (tuple, list)):
-                if isinstance(fields, six.string_types) and fields.startswith('--') and fields.endswith('--'):
+                if isinstance(fields, string_types) and fields.startswith('--') and fields.endswith('--'):
                     #THis is a group line
                     if table:
                         buf << '</tbody></table>'
@@ -207,72 +218,6 @@ class TableLayout(Layout):
         
         return str(buf)
         
-class BootstrapTableLayout(TableLayout):
-    field_classes = {
-        ('Text', 'Password', 'TextArea'):'input-xlarge',
-        ('Button', 'Submit', 'Reset', 'Checkbox', 'Hidden', 'File'):'',
-        ('Select', 'RadioSelect'):'',
-        ('Radio',):'radio',
-        }
-    
-    form_class = 'form-horizontal'
-    buttons_line_class = 'form-actions'
-    
-    def line(self, fields, n):
-        _x = 0
-        for _f in fields:
-            if isinstance(_f, six.string_types):
-                _x += 1
-            elif isinstance(_f, dict):
-                _x += _f.get('colspan', 1)
-            else:
-                raise Exception('Colume definition is not right, only support string or dict')
-
-        tr = Tag('tr', newline=True)
-        with tr:
-            for x in fields:
-                _span = n / _x
-                if isinstance(x, six.string_types):
-                    name = x
-                elif isinstance(x, dict):
-                    name = x['name']
-                    _span = _span * x.get('colspan', 1)
-
-                f = getattr(self.form, name)
-                obj = self.form.fields[name]
-                
-                #process hidden field
-                if self.is_hidden(obj):
-                    tr << f
-                    continue
-                
-                _class = "control-group"
-                if f.error:
-                    _class = _class + ' error'
-                
-                with tr.td(colspan=_span, width='%d%%' % (100*_span/n,), valign='top'):
-                    with tr.Div(_class=_class, id='div_'+obj.id):
-                        if self.get_widget_name(obj) == 'Checkbox':
-                            tr << "&nbsp"
-                        else:
-                            if self.label_fix:
-                                tr << f.field.get_label(_class='field label_fix')
-                            else:
-                                tr << f.get_label(_class='control-label')                            
-                            
-                        div = Div(_class='controls')
-                        with div:
-                            if self.get_widget_name(obj) == 'Checkbox':
-                                div << f
-                                div << f.label
-                            else:
-                                div << f                    
-                            div << Div(_class="help help-block", _value= f.help_string or '')
-                            if f.error:
-                                div << Div(_class="message help-block", _value=f.error)
-                        tr << str(div)
-        return tr
-    
 class CSSLayout(Layout):
     def line(self, obj, label, input, help_string='', error=None):
         div = Div()
@@ -285,7 +230,7 @@ class CSSLayout(Layout):
 
     def _buttons_line(self, buttons):
         div = Div()
-        div << Tag('label', '&nbsp;', _class='field')
+        div << Tag('label', '&nbsp;')
         div << buttons
         div << Tag('br/')
         return div
@@ -303,7 +248,8 @@ class CSSLayout(Layout):
         for name, obj in self.form.fields_list:
             f = getattr(self.form, name)
             if self.is_hidden(obj):
-                form << f
+                #form << f
+                pass
             else:
                 form << self.line(obj, f.label, f, f.help_string, f.error)
         
@@ -344,7 +290,8 @@ class QueryLayout(Layout):
                             if f:
                                 obj = self.form.fields[x]
                                 if self.is_hidden(obj):
-                                    buf << f
+                                    #buf << f
+                                    pass
                                 else:
                                     buf << self.line(obj, f.label, f, f.help_string, f.error)
                             elif x:
@@ -354,13 +301,14 @@ class QueryLayout(Layout):
                             with buf.td:
                                 buf << self.form.get_buttons()
                                 if more:
-                                    buf << '<a href="javascript:void(0)" id="more_query">%s</a>' % _('more')
+                                    buf << self.get_more_button()
                             
             else:
                 f = getattr(self.form, line)
                 obj = self.form.fields.get(line)
                 if obj and self.is_hidden(obj):
-                    buf << f
+                    #buf << f
+                    pass
                 else:
                     with buf.table(_class='query'):
                         with buf.tr:
@@ -373,7 +321,7 @@ class QueryLayout(Layout):
                                 with buf.td:
                                     buf << self.form.get_buttons()
                                     if more:
-                                        buf << '<a href="#" id="more_query">%s</a>' % _('more')
+                                        buf << self.get_more_button()
                                     
         if not self.layout:
             self.layout = [[name for name, obj in self.form.fields_list]]
@@ -387,102 +335,13 @@ class QueryLayout(Layout):
                 with buf.Div(id='query_div'):
                     for line in layout:
                         output(buf, line)
-
-from .widgets import RadioSelect, Radio
-
-class YamlRadioSelect(RadioSelect):
-    def html(self):
-        s = Buf()
-        for v, caption in self.choices:
-            args = {'value': v}
-            id = args.setdefault('id', 'radio_%d' % self.get_id())
-            args['name'] = self.kwargs.get('name')
-            if v == self.value:
-                args['checked'] = None
-            div = Div(_class='type-check')
-            div << Radio(**args)
-            div << Tag('label', caption, _for=id)
-            s << div
-        return str(s)
+                buf << self.post_layout()
+                
+    def get_more_button(self):
+        return '<a href="#" id="more_query">%s</a>' % _('more')
     
-class YamlLayout(Layout):
-    form_class = 'yform'
-
-    field_classes = {
-        ('Text', 'Password', 'TextArea'):'type-text',
-        ('Button', 'Submit', 'Reset'):'type-button',
-        ('Select', 'RadioSelect'):'type-select',
-        ('Radio', 'Checkbox'):'type-check',
-        }
-
-    def get_class(self, f):
-        name = f.build.__name__
-        _class = 'type-text'
-        for k, v in self.field_classes.items():
-            if name in k:
-                _class = v
-                break
-        return _class
-    
-    def line(self, obj, label, input, help_string='', error=None):
-        _class = self.get_class(obj)
-        if error:
-            _class = _class + ' error'
-        
-        if self.get_widget_name(obj) == 'RadioSelect':
-            obj.build = YamlRadioSelect
-            fs = Tag('fieldset')
-            fs << input
-            return fs
-        else:
-            div = Div(_class=_class, id='div_'+obj.id)
-            with div:
-                if error:
-                    div.strong(error, _class="message")
-                if self.get_widget_name(obj) == 'Checkbox':
-                    div << input
-                    div << label
-                    div << help_string
-                else:
-                    div << label
-                    div << help_string
-                    div << input
-            return div
-
-    def _buttons_line(self, buttons):
-        div = Div(_class='line')
-        with div:
-            with div.Div(_class='type-button'):
-                div << buttons
-        return str(div)
-
-    def body(self):
-        buf = Buf()
-        if not self.layout:
-            self.layout = [name for name, obj in self.form.fields_list]
-        self.process_layout(buf)
-        return str(buf)
-
-    def process_layout(self, buf):
-        for line in self.layout:
-            if isinstance(line, (tuple, list)):
-                with buf.Div(_class='line'):
-                    for x in line:
-                        f = getattr(self.form, x)
-                        obj = self.form.fields[x]
-                        if self.is_hidden(obj):
-                            buf << f
-                        else:
-                            buf << self.line(obj, f.label, f, f.help_string, f.error)
-            else:
-                f = getattr(self.form, line)
-                obj = self.form.fields[line]
-                if self.is_hidden(obj):
-                    buf << f
-                else:
-                    buf << self.line(obj, f.label, f, f.help_string, f.error)
-                    
-                    
+    def post_layout(self):
+        return ''
 
 class BootstrapLayout(Layout):
     form_class = 'form-horizontal'
@@ -535,15 +394,84 @@ class BootstrapLayout(Layout):
                         f = getattr(self.form, x)
                         obj = self.form.fields[x]
                         if self.is_hidden(obj):
-                            buf << f
+                            #buf << f
+                            pass
                         else:
                             buf << self.line(obj, f.label, f, f.help_string, f.error)
             else:
                 f = getattr(self.form, line)
                 obj = self.form.fields[line]
                 if self.is_hidden(obj):
-                    buf << f
+                    #buf << f
+                    pass
                 else:
                     buf << self.line(obj, f.label, f, f.help_string, f.error)
         if self.form.form_title:
             buf << '</fieldset>'
+
+class BootstrapTableLayout(TableLayout):
+    field_classes = {
+        ('Text', 'Password', 'TextArea'):'input-xlarge',
+        ('Button', 'Submit', 'Reset', 'Checkbox', 'Hidden', 'File'):'',
+        ('Select', 'RadioSelect'):'',
+        ('Radio',):'radio',
+        }
+    
+    form_class = 'form-horizontal'
+    buttons_line_class = 'form-actions'
+    
+    def line(self, fields, n):
+        _x = 0
+        for _f in fields:
+            if isinstance(_f, string_types):
+                _x += 1
+            elif isinstance(_f, dict):
+                _x += _f.get('colspan', 1)
+            else:
+                raise Exception('Colume definition is not right, only support string or dict')
+            
+        tr = Tag('tr', newline=True)
+        with tr:
+            for x in fields:
+                _span = int(n / _x)
+                if isinstance(x, string_types):
+                    name = x
+                elif isinstance(x, dict):
+                    name = x['name']
+                    _span = _span * x.get('colspan', 1)
+
+                f = getattr(self.form, name)
+                obj = self.form.fields[name]
+                
+                #process hidden field
+                if self.is_hidden(obj):
+                    #tr << f
+                    continue
+                
+                _class = "control-group"
+                if f.error:
+                    _class = _class + ' error'
+                
+                with tr.td(colspan=_span, width='%d%%' % (100*_span/n,), valign='top'):
+                    with tr.Div(_class=_class, id='div_'+obj.id):
+                        if self.get_widget_name(obj) == 'Checkbox':
+                            tr << "&nbsp"
+                        else:
+                            if self.label_fix:
+                                tr << f.field.get_label(_class='label_fix')
+                            else:
+                                tr << f.get_label(_class='control-label')                            
+                            
+                        div = Div(_class='controls')
+                        with div:
+                            if self.get_widget_name(obj) == 'Checkbox':
+                                div << f
+                                div << f.label
+                            else:
+                                div << f                    
+                            div << Div(_class="help help-block", _value= f.help_string or '')
+                            if f.error:
+                                div << Div(_class="message help-block", _value=f.error)
+                        tr << str(div)
+        return tr
+    

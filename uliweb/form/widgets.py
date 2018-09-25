@@ -1,11 +1,6 @@
+from __future__ import print_function, absolute_import, unicode_literals
 from uliweb.core.html import Tag, begin_tag, end_tag
-import six
-
-def safe_str(s, encoding='utf-8'):
-    if isinstance(s, six.text_type):
-        return s.encode(encoding)
-    else:
-        return str(s)
+from uliweb.utils.common import safe_str
 
 class Build(object):
     def __init__(self, **kwargs):
@@ -62,7 +57,7 @@ class File(Text): type = 'file'
 class Radio(Text): type = 'radio'
 class Select(Build):
     def __init__(self, choices, value=None, multiple=False, size=10, **kwargs):
-        self.choices = choices
+        self.choices = choices or []
         self.value = value
         self.multiple = multiple
         self.size = size

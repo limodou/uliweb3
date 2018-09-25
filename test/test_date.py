@@ -1,3 +1,4 @@
+from __future__ import print_function, absolute_import, unicode_literals
 from uliweb.utils import date
 from datetime import datetime
 
@@ -68,7 +69,7 @@ def test_microsecond():
     >>> date.to_datetime('2012-08-01 16:41:12.5200')
     datetime.datetime(2012, 8, 1, 16, 41, 12, 520000, tzinfo=<tzinfo UTC>)
     >>> a = datetime(2012,8,1,16,41,12,5200)
-    >>> print a
+    >>> print(a)
     2012-08-01 16:41:12.005200
     >>> b = date.to_datetime(a)
     >>> b
