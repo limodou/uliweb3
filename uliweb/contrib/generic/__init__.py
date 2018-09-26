@@ -191,7 +191,7 @@ class MultiView(object):
                 result.update({'query_form':queryform or queryview.form})
             else:
                 result.update({'query_form':''})
-            result.update({'view': view})
+            result.update({'table': view})
 
             if post_run:
                 post_run(view, result)

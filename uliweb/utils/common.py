@@ -20,6 +20,7 @@ def safe_import(path):
         else:
             s.append(i)
             g = __import__('.'.join(s), fromlist=['*'])
+    mod = inspect.getmodule(g)
     return mod, g
    
 def import_mod_attr(path):
@@ -551,7 +552,7 @@ class Serial(object):
         import json
         
         if not protocal:
-            return cPickle.loads(s)
+            return pickle.loads(s)
         elif protocal == 'json':
             return json.loads(s)
         else:
@@ -562,7 +563,7 @@ class Serial(object):
         from uliweb import json_dumps
         
         if not protocal:
-            return cPickle.dumps(v, cPickle.HIGHEST_PROTOCOL)
+            return pickle.dumps(v, pickle.HIGHEST_PROTOCOL)
         elif protocal == 'json':
             return json_dumps(v)
         else:
@@ -666,7 +667,7 @@ def request_url(req=None):
     r = req or request
     if request:
         if r.query_string:
-            return r.path + '?' + r.query_string
+            return r.path + '?' + u(r.query_string)
         else:
             return r.path
     else:
@@ -676,14 +677,13 @@ def quote_url(url):
     parse = import_('urllib', 'parse')
 
     scheme, netloc, path, qs, anchor = parse.urlsplit(safe_str(url))
-    return parse.urlunsplit((scheme, netloc, urllib.quote(urllib.unquote(path)), qs, anchor))
+    return parse.urlunsplit((scheme, netloc, parse.quote(parse.unquote(path)), qs, anchor))
 
 def unquote_url(url):
-    import urllib
-    import urlparse
+    parse = import_('urllib', 'parse')
 
-    scheme, netloc, path, qs, anchor = urlparse.urlsplit(safe_str(url))
-    return urlparse.urlunsplit((scheme, netloc, urllib.unquote(path), qs, anchor))
+    scheme, netloc, path, qs, anchor = parse.urlsplit(safe_str(url))
+    return parse.urlunsplit((scheme, netloc, parse.unquote(path), qs, anchor))
 
 def flat_list(*alist):
     """
@@ -832,7 +832,7 @@ def get_configrable_object(key, section, cls=None):
 
     if inspect.isclass(key) and cls and issubclass(key, cls):
         return key
-    elif isinstance(key, (str, unicode)):
+    elif isinstance(key, string_types):
         path = settings[section].get(key)
         if path:
             _cls = import_attr(path)

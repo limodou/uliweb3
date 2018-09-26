@@ -14,6 +14,7 @@ except ImportError:
     from md5 import md5
  
 from .backends.base import KeyError
+from uliweb.utils._compat import b
 
 class SessionException(Exception):pass
 class NValue(object): pass
@@ -21,9 +22,9 @@ class NValue(object): pass
 getpid = hasattr(os, 'getpid') and os.getpid or (lambda : '')
 
 def _get_id():
+    seed = "%f%s%f%s" % (time.time(), id({}), random.random(), getpid())
     return md5(
-                md5("%f%s%f%s" % (time.time(), id({}), random.random(),
-                                  getpid())).hexdigest(), 
+                b(md5(b(seed)).hexdigest()),
             ).hexdigest()
 
 class SessionCookie(object):

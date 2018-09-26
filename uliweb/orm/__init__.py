@@ -1072,7 +1072,7 @@ def get_model(model, engine_name=None, signal=True, reload=False):
     if isinstance(model, type) and issubclass(model, Model):
         return model
     if not isinstance(model, string_types):
-        raise Error("Model {!r} should be string or unicode type".format(model))
+        raise Error("Model {!r} should be string type".format(model))
     
     #make model name is lower case
     model = model.lower()
@@ -1748,10 +1748,11 @@ class Property(object):
             v = u(v, __default_encoding__)
             return v
         else:
-            if isinstance(value, Model):
-                return text_type(value)
-            else:
-                return self.to_unicode(value)
+            return u(value, __default_encoding__)
+            # if isinstance(value, Model):
+            #     return text_type(value)
+            # else:
+            #     return self.to_unicode(value)
 
     def _validate(self, value, from_dump=False):
         if self.empty(value):
@@ -1840,7 +1841,7 @@ class Property(object):
             return v
         else:
             if v is None:
-                return u''
+                return ''
             return text_type(v)
 
     def to_column_info(self):
@@ -2016,7 +2017,7 @@ class JsonProperty(TextProperty):
 
     def get_value_for_datastore(self, model_instance):
         from uliweb import json_dumps
-        return json_dumps(getattr(model_instance, self._attr_name(), None)).decode("utf8")
+        return u(json_dumps(getattr(model_instance, self._attr_name(), None)))
 
     def make_value_from_datastore(self, value):
         return self.convert_dump(value)
@@ -2079,7 +2080,7 @@ class DateTimeProperty(Property):
     
     def to_unicode(self, v):
         if isinstance(v, self.data_type):
-            return text_type(date.to_string(v, timezone=False))
+            return text_type(_date.to_string(v, timezone=False))
         else:
             if not v:
                 return u''
@@ -4722,7 +4723,7 @@ class Model(with_metaclass(ModelMetaclass)):
             else:
                 value = getattr(row, value_field)
             if not text_field:
-                text = unicode(row)
+                text = u(row)
             else:
                 text = getattr(row, text_field)
             result.append((value, text))
@@ -4906,8 +4907,8 @@ class Bulk(object):
                         fields[i] = i
                 else:
                     fields[i] = i
-            self.sqles[name] = {'fields':fields, 'raw_sql':unicode(x), 'data':[],
-                                'positional':x.positional}
+            self.sqles[name] = {'fields': fields, 'raw_sql': u(x), 'data': [],
+                                'positional': x.positional}
             self.keys.append(name)
         except:
             if self.transcation:

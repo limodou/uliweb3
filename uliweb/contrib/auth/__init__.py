@@ -171,7 +171,7 @@ def create_user(username, password, **kwargs):
 
 def default_authenticate(username, password):
     User = get_model('user')
-    if isinstance(username, (str, unicode)):
+    if isinstance(username, string_types):
         user = User.get(User.c.username==username)
     else:
         user = username

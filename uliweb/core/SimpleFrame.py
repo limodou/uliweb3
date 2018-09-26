@@ -32,7 +32,7 @@ from . import rules
 
 CONTENT_TYPE_JSON = 'application/json; charset=utf-8'
 CONTENT_TYPE_TEXT = 'text/plain; charset=utf-8'
-from ..utils._compat import string_types, callable, import_, get_class, ismethod
+from ..utils._compat import string_types, callable, import_, get_class, ismethod, import_
 
 try:
     set
@@ -133,7 +133,7 @@ def redirect(location, code=302):
             '<a href="%s">%s</a>.  If not click the link.' %
             (cgi.escape(location), cgi.escape(location)), status=code, content_type='text/html')
         response.headers['Location'] = location
-        return response
+    return response
 
 class RedirectException(Exception):
     """
@@ -362,7 +362,7 @@ def _sub(matcher):
     return '{%s}' % matcher.group().strip('<>').strip().split(':')[-1]
 
 def url_for(endpoint, **values):
-    from urlparse import urljoin
+    urljoin = import_('urllib.parse', 'urljoin')
 
     point = rules.get_endpoint(endpoint)
     
@@ -944,6 +944,7 @@ class Dispatcher(object):
             mod, handler = safe_import(endpoint)
             if ismethod(handler):
                 _klass = get_class(handler)()
+                handler = getattr(_klass, endpoint.split('.')[-1])
 
         elif callable(endpoint):
             handler = endpoint
@@ -1015,11 +1016,11 @@ class Dispatcher(object):
                 
         if not hasattr(request, '_invokes'):
             request._invokes = {'begin':[], 'end':[]}
-            
+
         result = _process_begin(mod)
         if result is not None:
             return wrap(handler, result, request, response, env)
-        
+
         result = _process_begin(cls)
         if result is not None:
             return wrap(handler, result, request, response, env)
@@ -1461,7 +1462,7 @@ class Dispatcher(object):
         try:
             rule, values = url_adapter.match(return_rule=True)
             mod, handler_cls, handler = self.prepare_request(req, rule)
-            
+
             #process static
             if rule.endpoint in static_views:
                 response = self.call_view(mod, handler_cls, handler, req, res, kwargs=values)

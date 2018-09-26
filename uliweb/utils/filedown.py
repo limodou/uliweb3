@@ -8,7 +8,7 @@ import mimetypes
 from werkzeug.http import http_date, is_resource_modified
 from werkzeug import Response, wrap_file
 from werkzeug.exceptions import NotFound
-from ._compat import import_
+from ._compat import import_, b
 
 quote = import_('urllib.parse', ['quote'])
 
@@ -26,7 +26,7 @@ def _generate_etag(mtime, file_size, real_filename):
     return 'wzsdm-%d-%s-%s' % (
         mktime(mtime.timetuple()),
         file_size,
-        adler32(real_filename) & 0xffffffff
+        adler32(b(real_filename)) & 0xffffffff
     )
 
 def _get_download_filename(env, filename):

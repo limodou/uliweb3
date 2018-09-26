@@ -55,17 +55,18 @@ if not PY2:
     def u(s, encoding='utf8'):
         if isinstance(s, str):
             return s
-        else:
+        elif isinstance(s, bytes):
             return str(s, encoding)
+        else:
+            return str(s)
 
     def b(s, encoding='utf8'):
         if isinstance(s, bytes):
             return s
+        elif isinstance(s, str):
+            return s.encode(encoding)
         else:
-            if isinstance(s, str):
-                return s.encode(encoding)
-            else:
-                return bytes(s)
+            return bytes(s)
 
     import builtins
     exec_ = getattr(builtins, "exec")
@@ -127,12 +128,16 @@ else:
     def u(s, encoding='utf8'):
         if isinstance(s, unicode):
             return s
+        elif isinstance(s, str):
+            return unicode(s, encoding)
         else:
-            return unicode(str(s), encoding)
+            return unicode(s)
 
     def b(s, encoding='utf8'):
         if isinstance(s, unicode):
             return s.decode(encoding)
+        elif isinstance(s, str):
+            return s
         else:
             return str(s)
 

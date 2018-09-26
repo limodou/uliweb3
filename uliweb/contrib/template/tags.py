@@ -1,3 +1,4 @@
+from __future__ import print_function, absolute_import, unicode_literals
 import os
 import re
 from uliweb.utils.common import log
@@ -5,6 +6,7 @@ from uliweb.core.template import *
 from uliweb import functions
 import warnings
 import inspect
+from uliweb.utils._compat import string_types, u
 
 r_links = re.compile('<link\s+.*?\s*href\s*=\s*"?(.*?)["\s>]|<script\s+.*?\s*src\s*=\s*"?(.*?)["\s>]', re.I)
 r_head = re.compile('(?i)<head>(.*?)</head>', re.DOTALL)
@@ -93,7 +95,7 @@ def find(plugin, *args, **kwargs):
                     links = c[t]
                     if isinstance(links, (tuple, list)):
                         c[t] = [x.format(**config) for x in c[t]]
-                    elif isinstance(links, (str, unicode)):
+                    elif isinstance(links, string_types):
                         m = import_attr(links)
                         c[t] = [x for x in m(**config)]
             mod = c
@@ -172,22 +174,22 @@ def find(plugin, *args, **kwargs):
     
 class HtmlMerge(object):
     def __init__(self, text, links):
-        self.text = text
+        self.text = u(text)
         self.links = links
         self.init()
         
     def init(self):
         global __static_combine__, __static_mapping__
-        from . import init_static_combine
+        # from . import init_static_combine
         from uliweb import settings
         from uliweb.utils.common import import_attr
 
-        if __static_combine__ is None:
-            func = settings.get_var('STATIC_COMBINE_CONFIG/init_static_combine', init_static_combine)
-            __static_combine__ = import_attr(func)()
-            for k, v in __static_combine__.items():
-                for x in v:
-                    __static_mapping__[x] = k
+        # if __static_combine__ is None:
+        #     func = settings.get_var('STATIC_COMBINE_CONFIG/init_static_combine', init_static_combine)
+        #     __static_combine__ = import_attr(func)()
+        #     for k, v in __static_combine__.items():
+        #         for x in v:
+        #             __static_mapping__[x] = k
 
     def __call__(self):
         result = self.assemble(self._clean_collection([]))
@@ -245,21 +247,13 @@ class HtmlMerge(object):
                 else:
                     link_key = link
                     link_value = {}
-                new_link = __static_mapping__.get(link_key, link_key)
-                if new_link.endswith('.js') or new_link.endswith('.css'):
-                    _link = functions.url_for_static(new_link)
+                if link_key.endswith('.js') or link_key.endswith('.css'):
+                    _link = functions.url_for_static(link_key)
                 else:
-                    _link = new_link
-                if not new_link in r[_type] and not _link in existlinks:
+                    _link = link_key
+                if not link_key in r[_type] and not _link in existlinks:
                     link_value['link'] = _link
-                    _js_file, ext = os.path.splitext(new_link)
-                    if new_link in __static_combine__ and ext == '.js':
-                        _css_file = _js_file + '.css'
-                        if _css_file in __static_combine__:
-                            _new_link_value = link_value.copy()
-                            _new_link_value['link'] = functions.url_for_static(_css_file)
-                            r[_type][_css_file] = _new_link_value
-                    r[_type][new_link] = link_value
+                    r[_type][link_key] = link_value
                     existlinks.append(_link)
         return r
 

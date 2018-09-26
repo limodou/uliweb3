@@ -187,7 +187,10 @@ def ungettext(msgid1, msgid2, n):
             return msgid1
         else:
             return msgid2
-    return t.ungettext(safe_unicode(msgid1), safe_unicode(msgid2), n)
+    if PY2:
+        return t.ungettext(safe_unicode(msgid1), safe_unicode(msgid2), n)
+    else:
+        return t.ngettext(safe_unicode(msgid1), safe_unicode(msgid2), n)
 
 ngettext_lazy = lazy(ngettext)
 gettext_lazy = lazy(gettext)

@@ -6,7 +6,7 @@ from uliweb.utils.common import log
 from uliweb.utils.sorteddict import SortedDict
 from uliweb.utils.date import now
 import copy
-from ..utils._compat import string_types, iterkeys, ismethod, isfunction
+from ..utils._compat import string_types, iterkeys, ismethod, isfunction, get_class
 
 class ReservedKeyError(Exception):pass
 
@@ -105,13 +105,9 @@ def set_urlroute_rules(rules=None):
         __url_route_rules__.append((re.compile(k), v))
 
 def get_endpoint(f):
-    if inspect.ismethod(f):
-        # if not f.im_self:    #instance method
-        #     clsname = f.im_class.__name__
-        # else:                       #class method
-        #     clsname = f.im_self.__name__
-        clsname = f.im_class.__name__
-        endpoint = '.'.join([f.im_class.__module__, clsname, f.__name__])
+    if ismethod(f):
+        _class = get_class(f)
+        endpoint = '.'.join([_class.__module__, _class.__name__, f.__name__])
     elif inspect.isfunction(f):
         endpoint = '.'.join([f.__module__, f.__name__])
     else:
@@ -120,11 +116,9 @@ def get_endpoint(f):
 
 def get_template_args(appname, f):
     viewname, clsname = '', ''
-    if inspect.ismethod(f):
-        if not f.im_self:    #instance method
-            clsname = f.im_class.__name__
-        else:                       #class method
-            clsname = f.im_self.__name__
+    if ismethod(f):
+        _class = get_class(f)
+        clsname = _class.__name__
         viewname = f.__name__
     else:
         viewname = f.__name__
