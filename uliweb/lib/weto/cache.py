@@ -4,16 +4,15 @@
 # storage class will ensure the sync when load and save a session from 
 # and to the storage.
 #########################################################################
-from six.moves import cPickle
 from .backends.base import KeyError
 import json
-import six
+from uliweb.utils._compat import pickle, callable
 
 __modules__ = {}
 
 def wrap_func(des, src):
     des.__name__ = src.__name__
-    six.get_function_globals(des).update(six.get_function_globals(src))
+    des.__globals__.update(src.__globals__)
     des.__doc__ = src.__doc__
     des.__module__ = src.__module__
     des.__dict__.update(src.__dict__)
@@ -28,10 +27,10 @@ class NoSerial(object):
     
 class Serial(NoSerial):
     def load(self, s):
-        return cPickle.loads(s)
+        return pickle.loads(s)
     
     def dump(self, v):
-        return cPickle.dumps(v, cPickle.HIGHEST_PROTOCOL)
+        return pickle.dumps(v, pickle.HIGHEST_PROTOCOL)
 
 class JsonSerial(Serial):
     def load(self, s):
@@ -81,7 +80,7 @@ class Cache(object):
             return self.storage.get(key)
         except KeyError as e:
             if creator is not Empty:
-                if six.callable(creator):
+                if callable(creator):
                     v = creator()
                 else:
                     v = creator
@@ -89,7 +88,7 @@ class Cache(object):
                 return v
             else:
                 if default is not Empty:
-                    if six.callable(default):
+                    if callable(default):
                         v = default()
                         return v
                     return default
@@ -97,7 +96,7 @@ class Cache(object):
                     raise
             
     def set(self, key, value=None, expire=None):
-        if six.callable(value):
+        if callable(value):
             value = value()
         return self.storage.set(key, value, expire or self.expiry_time)
         
@@ -108,7 +107,7 @@ class Cache(object):
         return self.get(key)
     
     def __setitem__(self, key, value):
-        if six.callable(value):
+        if callable(value):
             value = value()
         return self.set(key, value)
     
