@@ -6,6 +6,8 @@ def get_cache(**kwargs):
     serial_cls_path = settings.get_var('CACHE/serial_cls')
     if serial_cls_path:
         serial_cls = import_attr(serial_cls_path)
+        if settings.GLOBAL.PICKLE_PROTOCAL_LEVEL is not None:
+            serial_cls.protocal_level = settings.GLOBAL.PICKLE_PROTOCAL_LEVEL
     else:
         serial_cls = None
         

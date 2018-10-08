@@ -26,11 +26,12 @@ class NoSerial(object):
         return v
     
 class Serial(NoSerial):
+    protocal_level = pickle.HIGHEST_PROTOCOL
     def load(self, s):
         return pickle.loads(s)
     
     def dump(self, v):
-        return pickle.dumps(v, pickle.HIGHEST_PROTOCOL)
+        return pickle.dumps(v, self.protocal_level)
 
 class JsonSerial(Serial):
     def load(self, s):

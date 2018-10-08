@@ -286,7 +286,7 @@ def wraps(src):
             return des(*args, **kwargs)
         
         f.__name__ = src.__name__
-        src.__globals__.update(six.get_function_globals(src))
+        f.__globals__.update(src.__globals__)
         f.__doc__ = src.__doc__
         f.__module__ = src.__module__
         f.__dict__.update(src.__dict__)
@@ -547,6 +547,7 @@ class Serial(object):
     For json protocal, datetime will convert to string, and convert reversed be 
     be not datetime
     """
+    protocal_level = None
     @classmethod
     def load(cls, s, protocal=None):
         import json
@@ -563,7 +564,8 @@ class Serial(object):
         from uliweb import json_dumps
         
         if not protocal:
-            return pickle.dumps(v, pickle.HIGHEST_PROTOCOL)
+            pl = cls.protocal_level if cls.protocal_level is not None else pickle.HIGHEST_PROTOCOL
+            return pickle.dumps(v, pl)
         elif protocal == 'json':
             return json_dumps(v)
         else:
