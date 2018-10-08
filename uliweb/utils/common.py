@@ -5,6 +5,7 @@ import logging
 from ._compat import pickle, import_, string_types, text_type, iteritems, u, PY2, callable
 import inspect
 import types
+import six
 
 log = logging
 class _Default(object): pass
@@ -22,7 +23,7 @@ def safe_import(path):
             g = __import__('.'.join(s), fromlist=['*'])
     mod = inspect.getmodule(g)
     return mod, g
-   
+
 def import_mod_attr(path):
     """
     Import string format module, e.g. 'uliweb.orm' or an object
@@ -56,7 +57,7 @@ def myimport(module):
 
 def install(packages):
     from pkg_resources import load_entry_point
-    
+
     load = load_entry_point('setuptools', 'console_scripts', 'easy_install')
     load(packages)
 
@@ -69,12 +70,12 @@ class MyPkg(object):
             return os.path.join(p, path)
         else:
             return p
-    
+
     @staticmethod
     def resource_listdir(module, path):
         d = MyPkg.resource_filename(module, path)
         return os.listdir(d)
-    
+
     @staticmethod
     def resource_isdir(module, path):
         d = MyPkg.resource_filename(module, path)
@@ -108,7 +109,7 @@ def extract_file(module, path, dist, verbose=False, replace=True):
         shutil.copy2(inf, dfile)
         if verbose:
             print('Copy {} to {}'.format(inf, dfile))
-  
+
 def extract_dirs(mod, path, dst, verbose=False, exclude=None, exclude_ext=None, recursion=True, replace=True):
     """
     mod name
@@ -140,12 +141,12 @@ def extract_dirs(mod, path, dst, verbose=False, exclude=None, exclude_ext=None, 
 
 def match(f, patterns):
     from fnmatch import fnmatch
-    
+
     flag = False
     for x in patterns:
         if fnmatch(f, x):
             return True
-        
+
 def walk_dirs(path, include=None, include_ext=None, exclude=None,
         exclude_ext=None, recursion=True, file_only=False,
         use_default_pattern=True, patterns=None):
@@ -200,21 +201,21 @@ def copy_dir(src, dst, verbose=False, check=False, processor=None):
         except ImportError:
             import md5
             a = md5.new()
-            
+
         a.update(file(filename, 'rb').read())
         return a.digest()
-    
+
     if not os.path.exists(dst):
         os.makedirs(dst)
 
     if verbose:
         print("Processing {}".format(src))
-        
+
     for r in os.listdir(src):
         if r in ['.svn', '_svn', '.git']:
             continue
         fpath = os.path.join(src, r)
-        
+
         if os.path.isdir(fpath):
             if os.path.abspath(fpath) != os.path.abspath(dst):
                 copy_dir(fpath, os.path.join(dst, r), verbose, check, processor)
@@ -239,7 +240,7 @@ def copy_dir(src, dst, verbose=False, check=False, processor=None):
                     shutil.copy2(fpath, dst)
                     if verbose:
                         print("Copy {} to {}".format(fpath, dst))
-                    
+
             else:
                 if processor:
                     if processor(fpath, dst, df):
@@ -272,7 +273,7 @@ def is_pyfile_exist(dir, pymodule):
             if not os.path.exists(path):
                 return False
     return True
-    
+
 def wraps(src):
     def _f(des):
         def f(*args, **kwargs):
@@ -281,17 +282,17 @@ def wraps(src):
                 env = application.get_view_env()
                 for k, v in iteritems(env):
                     src.__globals__[k] = v
-                
+
                 src.__globals__['env'] = env
             return des(*args, **kwargs)
-        
+
         f.__name__ = src.__name__
         src.__globals__.update(six.get_function_globals(src))
         f.__doc__ = src.__doc__
         f.__module__ = src.__module__
         f.__dict__.update(src.__dict__)
         return f
-    
+
     return _f
 
 def timeit(func):
@@ -308,7 +309,7 @@ def timeit(func):
 
 def safe_unicode(s, encoding='utf-8'):
     from uliweb.i18n.lazystr import LazyString
-    
+
     if isinstance(s, LazyString):
         return text_type(s)
     elif isinstance(s, string_types):
@@ -328,7 +329,7 @@ def safe_str(s, encoding='utf-8'):
 def get_var(key):
     def f():
         from uliweb import settings
-        
+
         return settings.get_var(key)
     return f
 
@@ -340,7 +341,7 @@ def get_choice(choices, value, default=None):
 def simple_value(v, encoding='utf-8', none=False):
     import datetime
     import decimal
-    
+
     if callable(v):
         v = v()
     if isinstance(v, datetime.datetime):
@@ -373,11 +374,11 @@ def simple_value(v, encoding='utf-8', none=False):
             return ''
     else:
         return v
-    
+
 def str_value(v, encoding='utf-8', bool_int=True, none='NULL'):
     import datetime
     import decimal
-    
+
     if callable(v):
         v = v()
     if isinstance(v, datetime.datetime):
@@ -514,13 +515,13 @@ def expand_path(path):
     for $[PROJECT] will be replaced with uliweb application apps_dir directory
     and others will be treated as a normal python package, so uliweb will
     use pkg_resources to get the path of the package
-    
+
     update: 0.2.5 changed from ${} to $[]
 
     Also apply with os.path.expandvars(os.path.expanduser(path))
     """
     from uliweb import application
-    
+
     def replace(m):
         txt = m.groups()[0]
         if txt == 'PROJECT':
@@ -544,24 +545,24 @@ def date_in(d, dates):
 
 class Serial(object):
     """
-    For json protocal, datetime will convert to string, and convert reversed be 
+    For json protocal, datetime will convert to string, and convert reversed be
     be not datetime
     """
     @classmethod
     def load(cls, s, protocal=None):
         import json
-        
+
         if not protocal:
             return pickle.loads(s)
         elif protocal == 'json':
             return json.loads(s)
         else:
             raise Exception("Can't support this protocal %s" % protocal)
-    
+
     @classmethod
     def dump(cls, v, protocal=None):
         from uliweb import json_dumps
-        
+
         if not protocal:
             return pickle.dumps(v, pickle.HIGHEST_PROTOCOL)
         elif protocal == 'json':
@@ -575,16 +576,16 @@ class QueryString(object):
         self.url = safe_str(url)
         self.scheme, self.netloc, self.script_root, qs, self.anchor = self.parse()
         self.qs = parse.parse_qs(qs, True)
-        
+
     def parse(self):
         return parse.urlsplit(self.url)
-    
+
     def __getitem__(self, name):
         return self.qs.get(name, [])
-    
+
     def __setitem__(self, name, value):
         self.qs[name] = [value]
-    
+
     def set(self, name, value, replace=False):
         v = self.qs.setdefault(name, [])
         if replace:
@@ -594,11 +595,11 @@ class QueryString(object):
         return self
 
     def __str__(self):
-        
-        
+
+
         qs = parse.urlencode(self.qs, True)
         return parse.urlunsplit((self.scheme, self.netloc, self.script_root, qs, self.anchor))
-    
+
 def query_string(url, replace=True, **kwargs):
     q = QueryString(url)
     for k, v in kwargs.items():
@@ -611,7 +612,7 @@ def camel_to_(s):
     """
     s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', s)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
-    
+
 def application_path(path):
     """
     Join application project_dir and path
@@ -624,7 +625,7 @@ def get_uuid(type=4):
     Get uuid value
     """
     import uuid
-    
+
     name = 'uuid'+str(type)
     u = getattr(uuid, name)
     return u().hex
@@ -632,21 +633,21 @@ def get_uuid(type=4):
 def pretty_dict(d, leading=' ', newline='\n', indent=0, tabstop=4, process=None):
     """
     Output pretty formatted dict, for example:
-        
+
         d = {"a":"b",
             "c":{
                 "d":"e",
                 "f":"g",
                 }
             }
-        
+
     will output:
-        
+
         a : 'b'
-        c : 
+        c :
             d : 'e'
             f : 'g'
-        
+
     """
     for k, v in d.items():
         if process:
@@ -689,7 +690,7 @@ def flat_list(*alist):
     """
     Flat a tuple, list, single value or list of list to flat list
     e.g.
-    
+
     >>> flat_list(1,2,3)
     [1, 2, 3]
     >>> flat_list(1)
@@ -708,14 +709,14 @@ def flat_list(*alist):
         else:
             a.append(x)
     return a
-    
+
 def compare_dict(da, db):
     """
     Compare differencs from two dicts
     """
     sa = set(da.items())
     sb = set(db.items())
-    
+
     diff = sa & sb
     return dict(sa - diff), dict(sb - diff)
 
@@ -739,8 +740,8 @@ def get_caller(skip=None):
         ptn = [os.path.splitext(s.replace('\\', '/'))[0] for s in skip]
         for frame in stack:
             #see doc: inspect
-            #the frame object, the filename, the line number of the current line, 
-            #the function name, a list of lines of context from the source code, 
+            #the frame object, the filename, the line number of the current line,
+            #the function name, a list of lines of context from the source code,
             #and the index of the current line within that list
             if isinstance(frame, tuple):
                 filename, funcname, lineno = frame[1], frame[3], frame[2]
@@ -760,7 +761,7 @@ class classonlymethod(classmethod):
     """
     Use to limit the class method can only be called via class object, but not instance
     object
-    
+
     >>> class A(object):
     ...     @classonlymethod
     ...     def p(cls):
@@ -769,7 +770,7 @@ class classonlymethod(classmethod):
     call p()
     >>> a = A()
     >>> try:
-    ...     a.p()        
+    ...     a.p()
     ... except Exception as e:
     ...     print e
     This method can only be called with class object.
@@ -785,7 +786,7 @@ def trim_path(path, length=30):
     >>> a = '/project/apps/default/settings.ini'
     >>> trim_path(a)
     '.../apps/default/settings.ini'
-    
+
     The real length will be length-4, it'll left '.../' for output.
     """
     s = path.replace('\\', '/').split('/')
@@ -795,7 +796,7 @@ def trim_path(path, length=30):
         if t > length-4:
             break
     return '.../' + '/'.join(s[i+1:])
-  
+
 class cached_property(object):
     """
     cached function return value
