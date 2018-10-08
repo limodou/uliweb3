@@ -5,7 +5,6 @@ import logging
 from ._compat import pickle, import_, string_types, text_type, iteritems, u, PY2, callable
 import inspect
 import types
-import six
 
 log = logging
 class _Default(object): pass
