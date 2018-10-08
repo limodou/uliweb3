@@ -1,5 +1,5 @@
 """
-Compatible with py2 and py3, inspired by jinjin2, future, etc
+Compatible with py2 and py3, inspired by jinjia2, future, etc
 
 common types & functions:
 
@@ -39,6 +39,8 @@ if not PY2:
     iteritems = lambda d: iter(d.items())
 
     import pickle
+    from io import BytesIO, StringIO
+    NativeStringIO = StringIO
 
     def reraise(tp, value, tb=None):
         if value.__traceback__ is not tb:
@@ -109,7 +111,8 @@ else:
     iteritems = lambda d: d.iteritems()
 
     import cPickle as pickle
-    from io import BytesIO, StringIO
+    from cStringIO import StringIO as BytesIO, StringIO
+    NativeStringIO = BytesIO
 
     exec('def reraise(tp, value, tb=None):\n raise tp, value, tb')
 
