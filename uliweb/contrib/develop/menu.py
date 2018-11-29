@@ -1,7 +1,7 @@
 import copy
 from uliweb.core.SimpleFrame import url_for
 from uliweb.core.dispatch import bind, call
-from uliweb.utils._compat import StringIO
+from io import StringIO
 
 __weight = 0
 

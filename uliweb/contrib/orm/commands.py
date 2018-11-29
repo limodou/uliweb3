@@ -22,8 +22,8 @@ from ...utils._compat import string_types, u, import_
 def get_engine(options, global_options):
     from uliweb.manage import make_simple_application
     settings = {'ORM/DEBUG_LOG':False, 'ORM/AUTO_CREATE':False, 'ORM/AUTO_DOTRANSACTION':False}
-    app = make_simple_application(apps_dir=global_options.apps_dir, 
-        settings_file=global_options.settings, 
+    app = make_simple_application(apps_dir=global_options.apps_dir,
+        settings_file=global_options.settings,
         local_settings_file=global_options.local_settings,
         default_settings=settings)
     #because set_auto_set_model will be invoked in orm initicalization, so
@@ -34,14 +34,14 @@ def get_engine(options, global_options):
     engine.engine_name = engine_name
     if global_options.verbose:
         print_engine(engine)
-        
+
     return engine
 
 def print_engine(engine):
     url = re.sub(r'(?<=//)(.*?):.*@', r'\1:***@', str(engine.url))
     print('Connection [Engine:%s]:%s' % (engine.engine_name, url))
     print()
-    
+
 def reflect_table(engine, tablename):
     meta = MetaData()
     table = Table(tablename, meta)
@@ -54,7 +54,7 @@ def get_tables(apps_dir, apps=None, engine_name=None, tables=None,
     all=False):
     from uliweb.core.SimpleFrame import get_apps, get_app_dir
     from uliweb import orm
-    
+
     engine = orm.engine_manager[engine_name]
     e = engine.options['connection_string']
 
@@ -142,12 +142,12 @@ def get_tables(apps_dir, apps=None, engine_name=None, tables=None,
 
 def get_sorted_tables(tables):
     return sorted(tables.items(), key=lambda x: x[1].__appname__)
-    
-def dump_table(table, filename, con, std=None, delimiter=',', format=None, 
+
+def dump_table(table, filename, con, std=None, delimiter=',', format=None,
     encoding='utf-8', inspector=None, engine_name=None):
     from uliweb.utils.common import str_value
     import csv
-    
+
     b = time()
     if not std:
         if isinstance(filename, string_types):
@@ -161,7 +161,7 @@ def dump_table(table, filename, con, std=None, delimiter=',', format=None,
         meta = MetaData()
         table = Table(table.name, meta)
         inspector.reflecttable(table, None)
-        
+
     result = do_(table.select(), engine_name)
     fields = [x.name for x in table.c]
     if not format:
@@ -179,7 +179,7 @@ def dump_table(table, filename, con, std=None, delimiter=',', format=None,
             fw.writerow([str_value(x, encoding=encoding, newline_escape=True) for x in r])
         else:
             raise Exception("Can't support the text format %s" % format)
-  
+
     return 'OK (%d/%lfs)' % (n, time()-b)
 
 # class ProcessManager(object):
@@ -226,7 +226,7 @@ def dump_table(table, filename, con, std=None, delimiter=',', format=None,
 #             p = psutil.Process(pid)
 #             p.wait()
 
-def load_table(table, filename, con, delimiter=',', format=None, 
+def load_table(table, filename, con, delimiter=',', format=None,
     encoding='utf-8', delete=True, bulk=100, engine_name=None):
     import csv
     from uliweb.utils.date import to_date, to_datetime
@@ -235,14 +235,14 @@ def load_table(table, filename, con, delimiter=',', format=None,
         return "Skipped (data not found)"
 
     table = reflect_table(con, table.name)
-    
+
     if delete:
         table.drop(con, checkfirst=True)
         table.create(con)
 
     b = time()
     bulk = max(1, bulk)
-    f = fin = open(filename, 'rb')
+    f = fin = open(filename, 'r')
 
     try:
         first_line = f.readline()
@@ -291,14 +291,14 @@ def load_table(table, filename, con, delimiter=',', format=None,
                 traceback.print_exc()
                 log.error('Error: Line %d of %s' % (n, filename))
                 raise
-        
+
         if buf:
             do_(table.insert(), engine_name, args=buf)
 
         return 'OK (%d/%lfs)' % (n, time()-b)
     finally:
         f.close()
-  
+
 def show_table(name, table, i, total):
     """
     Display table info,
@@ -318,12 +318,12 @@ class SQLCommandMixin(object):
 class SyncdbCommand(SQLCommandMixin, Command):
     name = 'syncdb'
     help = 'Sync models with database. But all models should be defined in settings.ini.'
-    
+
     def handle(self, options, global_options, *args):
         engine = get_engine(options, global_options)
-        
-        tables = get_sorted_tables(get_tables(global_options.apps_dir, 
-            engine_name=options.engine, settings_file=global_options.settings, 
+
+        tables = get_sorted_tables(get_tables(global_options.apps_dir,
+            engine_name=options.engine, settings_file=global_options.settings,
             local_settings_file=global_options.local_settings))
         _len = len(tables)
         for i, (name, t) in enumerate(tables):
@@ -346,7 +346,7 @@ class ResetCommand(SQLCommandMixin, Command):
     args = '<appname, appname, ...>'
     help = 'Reset the apps models(drop and recreate). If no apps, then reset the whole database.'
     check_apps = True
-    
+
     def handle(self, options, global_options, *args):
 
         engine = get_engine(options, global_options)
@@ -379,7 +379,7 @@ class ResetTableCommand(SQLCommandMixin, Command):
     name = 'resettable'
     args = '<tablename, tablename, ...>'
     help = 'Reset the tables(drop and recreate). If no tables, then will do nothing.'
-    
+
     def handle(self, options, global_options, *args):
 
         if not args:
@@ -414,7 +414,7 @@ class DropTableCommand(SQLCommandMixin, Command):
     name = 'droptable'
     args = '<tablename, tablename, ...>'
     help = 'Drop the tables. If no tables, then will do nothing.'
-    
+
     def handle(self, options, global_options, *args):
 
         if not args:
@@ -449,14 +449,14 @@ class SQLCommand(SQLCommandMixin, Command):
     args = '<appname, appname, ...>'
     help = 'Display the table creation sql statement. If no apps, then process the whole database.'
     check_apps = True
-    
+
     def handle(self, options, global_options, *args):
         from sqlalchemy.schema import CreateTable, CreateIndex
-        
+
         engine = get_engine(options, global_options)
-        
-        tables = get_sorted_tables(get_tables(global_options.apps_dir, args, 
-            engine_name=options.engine, settings_file=global_options.settings, 
+
+        tables = get_sorted_tables(get_tables(global_options.apps_dir, args,
+            engine_name=options.engine, settings_file=global_options.settings,
             local_settings_file=global_options.local_settings))
         for name, t in tables:
             if t.__mapping_only__:
@@ -465,7 +465,7 @@ class SQLCommand(SQLCommandMixin, Command):
             print("{};".format(safe_str(u(CreateTable(t).compile(dialect=engine.dialect)))))
             for x in t.indexes:
                 print("{};".format(CreateIndex(x)))
-            
+
 class SQLTableCommand(SQLCommandMixin, Command):
     name = 'sqltable'
     args = '<tablename, tablename, ...>'
@@ -486,9 +486,9 @@ class SQLTableCommand(SQLCommandMixin, Command):
 
         engine = get_engine(options, global_options)
 
-        tables = get_sorted_tables(get_tables(global_options.apps_dir, 
-            tables=args, engine_name=options.engine, 
-            settings_file=global_options.settings, 
+        tables = get_sorted_tables(get_tables(global_options.apps_dir,
+            tables=args, engine_name=options.engine,
+            settings_file=global_options.settings,
             local_settings_file=global_options.local_settings))
         for name, t in tables:
             if t.__mapping_only__:
@@ -514,34 +514,34 @@ class DumpCommand(SQLCommandMixin, Command):
             help='delimiter character used in text file. Default is ",".'),
         make_option('--encoding', dest='encoding', default='utf-8',
             help='Character encoding used in text file. Default is "utf-8".'),
-        make_option('-z', dest='zipfile', 
+        make_option('-z', dest='zipfile',
             help='Compress table files into a zip file.'),
         make_option('-p', '--project', dest='all', default=True, action='store_false',
             help='Process all tables only defined in project. Default is False, it will include all the tables defined in database maybe outside of project.'),
     )
     check_apps = True
-    
+
     def handle(self, options, global_options, *args):
         from zipfile import ZipFile, ZIP_DEFLATED
 
         output_dir = os.path.join(options.output_dir, options.engine)
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
-        
+
         engine = get_engine(options, global_options)
-        
+
         zipfile = None
         if options.zipfile:
             path = os.path.dirname(options.zipfile)
             if path and not os.path.exists(path):
                 os.makedirs(path)
             zipfile = ZipFile(options.zipfile, 'w', compression=ZIP_DEFLATED)
-            
+
         inspector = Inspector.from_engine(engine)
 
-        tables = get_sorted_tables(get_tables(global_options.apps_dir, args, 
-            engine_name=options.engine, 
-            settings_file=global_options.settings, 
+        tables = get_sorted_tables(get_tables(global_options.apps_dir, args,
+            engine_name=options.engine,
+            settings_file=global_options.settings,
             local_settings_file=global_options.local_settings, all=options.all))
         _len = len(tables)
         for i, (name, t) in enumerate(tables):
@@ -558,7 +558,7 @@ class DumpCommand(SQLCommandMixin, Command):
                 filename = os.path.basename(filename)
             else:
                 fileobj = filename
-            t = dump_table(t, fileobj, engine, delimiter=options.delimiter, 
+            t = dump_table(t, fileobj, engine, delimiter=options.delimiter,
                 format=format, encoding=options.encoding, inspector=inspector,
                 engine_name=engine.engine_name)
             #write zip content
@@ -566,10 +566,10 @@ class DumpCommand(SQLCommandMixin, Command):
                 zipfile.writestr(filename, fileobj.getvalue())
             if global_options.verbose:
                 print(t)
-            
+
         if zipfile:
             zipfile.close()
-            
+
 class DumpTableCommand(SQLCommandMixin, Command):
     name = 'dumptable'
     args = '<tablename, tablename, ...>'
@@ -583,23 +583,23 @@ class DumpTableCommand(SQLCommandMixin, Command):
             help='delimiter character used in text file. Default is ",".'),
         make_option('--encoding', dest='encoding', default='utf-8',
             help='Character encoding used in text file. Default is "utf-8".'),
-        make_option('-z', dest='zipfile', 
+        make_option('-z', dest='zipfile',
             help='Compress table files into a zip file.'),
    )
 
     def handle(self, options, global_options, *args):
         from zipfile import ZipFile, ZIP_DEFLATED
-        
+
         output_dir = os.path.join(options.output_dir, options.engine)
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
-        
+
         engine = get_engine(options, global_options)
 
         if not args:
             print("Failed! You should pass one or more tables name.")
             sys.exit(1)
-            
+
         zipfile = None
         if options.zipfile:
             path = os.path.dirname(options.zipfile)
@@ -608,9 +608,9 @@ class DumpTableCommand(SQLCommandMixin, Command):
             zipfile = ZipFile(options.zipfile, 'w', compression=ZIP_DEFLATED)
 
         inspector = Inspector.from_engine(engine)
-        
+
         tables = get_sorted_tables(get_tables(global_options.apps_dir, tables=args,
-            engine_name=options.engine, settings_file=global_options.settings, 
+            engine_name=options.engine, settings_file=global_options.settings,
             local_settings_file=global_options.local_settings))
         _len = len(tables)
 
@@ -628,8 +628,8 @@ class DumpTableCommand(SQLCommandMixin, Command):
                 filename = os.path.basename(filename)
             else:
                 fileobj = filename
-                
-            t = dump_table(t, fileobj, engine, delimiter=options.delimiter, 
+
+            t = dump_table(t, fileobj, engine, delimiter=options.delimiter,
                 format=format, encoding=options.encoding, inspector=inspector,
                 engine_name=engine.engine_name)
 
@@ -638,10 +638,10 @@ class DumpTableCommand(SQLCommandMixin, Command):
                 zipfile.writestr(filename, fileobj.getvalue())
             if global_options.verbose:
                 print(t)
-            
+
         if zipfile:
             zipfile.close()
-            
+
 class DumpTableFileCommand(SQLCommandMixin, Command):
     name = 'dumptablefile'
     args = 'tablename text_filename'
@@ -656,18 +656,18 @@ class DumpTableFileCommand(SQLCommandMixin, Command):
     )
 
     def handle(self, options, global_options, *args):
-        
+
         engine = get_engine(options, global_options)
 
         if len(args) != 2:
             print(self.print_help(self.prog_name, 'dumptablefile'))
             sys.exit(1)
-            
+
         inspector = Inspector.from_engine(engine)
 
         name = args[0]
         tables = get_tables(global_options.apps_dir, tables=[name],
-            engine_name=options.engine, settings_file=global_options.settings, 
+            engine_name=options.engine, settings_file=global_options.settings,
             local_settings_file=global_options.local_settings)
         t = tables[name]
         if global_options.verbose:
@@ -676,12 +676,12 @@ class DumpTableFileCommand(SQLCommandMixin, Command):
             format = 'txt'
         else:
             format = None
-        t = dump_table(t, args[1], engine, delimiter=options.delimiter, 
+        t = dump_table(t, args[1], engine, delimiter=options.delimiter,
             format=format, encoding=options.encoding, inspector=inspector,
             engine_name=engine.engine_name)
         if global_options.verbose:
             print(t)
-        
+
 class LoadCommand(SQLCommandMixin, Command):
     name = 'load'
     args = '<appname, appname, ...>'
@@ -701,21 +701,21 @@ class LoadCommand(SQLCommandMixin, Command):
             help='Character encoding used in text file. Default is "utf-8".'),
         make_option('-p', '--project', dest='all', default=True, action='store_false',
             help='Process all tables only defined in project. Default is False, it will include all the tables defined in database maybe outside of project.'),
-        make_option('-z', dest='zipfile', 
+        make_option('-z', dest='zipfile',
             help='Extract zip file into directory which can be combined with -d option.'),
     )
     check_apps = True
-    
+
     def handle(self, options, global_options, *args):
         from uliweb import orm
         from zipfile import ZipFile
         import shutil
 
         if args:
-            message = """This command will delete all data of [%s]-[%s] before loading, 
+            message = """This command will delete all data of [%s]-[%s] before loading,
 are you sure to load data""" % (options.engine, ','.join(args))
         else:
-            message = """This command will delete whole database [%s] before loading, 
+            message = """This command will delete whole database [%s] before loading,
 are you sure to load data""" % options.engine
 
         ans = 'Y' if global_options.yes else get_answer(message)
@@ -747,9 +747,9 @@ are you sure to load data""" % options.engine
 
         engine = get_engine(options, global_options)
 
-        tables = get_sorted_tables(get_tables(global_options.apps_dir, args, 
-            engine_name=options.engine, 
-            settings_file=global_options.settings, 
+        tables = get_sorted_tables(get_tables(global_options.apps_dir, args,
+            engine_name=options.engine,
+            settings_file=global_options.settings,
             local_settings_file=global_options.local_settings, all=options.all))
         _len = len(tables)
 
@@ -816,7 +816,7 @@ class LoadTableCommand(SQLCommandMixin, Command):
             help='delimiter character used in text file. Default is ",".'),
         make_option('--encoding', dest='encoding', default='utf-8',
             help='Character encoding used in text file. Default is "utf-8".'),
-        make_option('-z', dest='zipfile', 
+        make_option('-z', dest='zipfile',
             help='Extract zip file into directory which can be combined with -d option.'),
     )
 
@@ -826,7 +826,7 @@ class LoadTableCommand(SQLCommandMixin, Command):
         import shutil
 
         if args:
-            message = """This command will delete all data of [%s]-[%s] before loading, 
+            message = """This command will delete all data of [%s]-[%s] before loading,
 are you sure to load data""" % (options.engine, ','.join(args))
         else:
             print("Failed! You should pass one or more tables name.")
@@ -859,8 +859,8 @@ are you sure to load data""" % (options.engine, ','.join(args))
 
         engine = get_engine(options, global_options)
 
-        tables = get_sorted_tables(get_tables(global_options.apps_dir, 
-            engine_name=options.engine, 
+        tables = get_sorted_tables(get_tables(global_options.apps_dir,
+            engine_name=options.engine,
             settings_file=global_options.settings, tables=args,
             local_settings_file=global_options.local_settings))
         _len = len(tables)
@@ -924,11 +924,11 @@ class LoadTableFileCommand(SQLCommandMixin, Command):
 
     def handle(self, options, global_options, *args):
         from uliweb import orm
-        
+
         if len(args) != 2:
             print(self.print_help(self.prog_name, 'loadtablefile'))
             sys.exit(1)
-            
+
         if args:
             message = """Do you want to delete all data of [%s]-[%s] before loading, if you choose N, the data will not be deleted""" % (options.engine, args[0])
         else:
@@ -940,7 +940,7 @@ class LoadTableFileCommand(SQLCommandMixin, Command):
         engine = get_engine(options, global_options)
 
         name = args[0]
-        tables = get_tables(global_options.apps_dir, engine_name=options.engine, 
+        tables = get_tables(global_options.apps_dir, engine_name=options.engine,
             settings_file=global_options.settings, tables=[name],
             local_settings_file=global_options.local_settings)
         t = tables[name]
@@ -949,7 +949,7 @@ class LoadTableFileCommand(SQLCommandMixin, Command):
                 msg = 'SKIPPED(Mapping Table)'
                 print('[%s] Loading %s...%s' % (options.engine, show_table(name, t, i, _len), msg))
             return
-        
+
         if global_options.verbose:
             print('[%s] Loading %s...' % (options.engine, show_table(name, t, 0, 1)))
         try:
@@ -958,8 +958,8 @@ class LoadTableFileCommand(SQLCommandMixin, Command):
                 format = 'txt'
             else:
                 format = None
-            t = load_table(t, args[1], engine, delimiter=options.delimiter, 
-                format=format, encoding=options.encoding, delete=ans=='Y', 
+            t = load_table(t, args[1], engine, delimiter=options.delimiter,
+                format=format, encoding=options.encoding, delete=ans=='Y',
                 bulk=int(options.bulk), engine_name=engine.engine_name)
             orm.Commit()
             if global_options.verbose:
@@ -984,7 +984,7 @@ class DbinitCommand(SQLCommandMixin, Command):
             apps_list = self.get_apps(global_options)
         else:
             apps_list = args
-        
+
         for p in apps_list:
             if not is_pyfile_exist(get_app_dir(p), 'dbinit'):
                 continue
@@ -1072,22 +1072,22 @@ class SQLHtmlCommand(SQLCommandMixin, Command):
     args = '<appname, appname, ...>'
     help = "Create database documentation in HTML format. If no apps, then process the whole database."
     check_apps = True
-    
+
     def handle(self, options, global_options, *args):
         from .gendoc import generate_html
-    
+
         engine = get_engine(options, global_options)
-        
+
         if args:
             apps = args
         else:
             apps = self.get_apps(global_options)
-        
-        tables = get_tables(global_options.apps_dir, args, engine_name=options.engine, 
-            settings_file=global_options.settings, 
+
+        tables = get_tables(global_options.apps_dir, args, engine_name=options.engine,
+            settings_file=global_options.settings,
             local_settings_file=global_options.local_settings)
         print(generate_html(tables, apps))
-    
+
 class SQLShellCommand(SQLCommandMixin, Command):
     name = 'sqlshell'
     args = ''
@@ -1156,20 +1156,20 @@ class ValidatedbCommand(SQLCommandMixin, Command):
     check_apps = True
 
     def handle(self, options, global_options, *args):
-        
+
         engine = get_engine(options, global_options)
 
         if args:
             apps = args
         else:
             apps = self.get_apps(global_options)
-        
-        tables = get_sorted_tables(get_tables(global_options.apps_dir, apps, 
-            engine_name=options.engine, 
-            settings_file=global_options.settings, 
+
+        tables = get_sorted_tables(get_tables(global_options.apps_dir, apps,
+            engine_name=options.engine,
+            settings_file=global_options.settings,
             local_settings_file=global_options.local_settings))
         _len = len(tables)
-        
+
         for i, (name, t) in enumerate(tables):
             exist = engine.dialect.has_table(engine.connect(), t.name)
             if not exist:
@@ -1183,7 +1183,7 @@ class ValidatedbCommand(SQLCommandMixin, Command):
                         import traceback
                         traceback.print_exc()
                     flag = 'FAILED'
-                
+
             if global_options.verbose or flag!='OK':
                 print('Validating [%s] %s...%s' % (options.engine, show_table(name, t, i, _len), flag))
 
@@ -1196,4 +1196,4 @@ class AlembicCommand(SQLCommandMixin, CommandManager):
         import subcommands
         cmds = get_commands(subcommands)
         return cmds
-    
+
