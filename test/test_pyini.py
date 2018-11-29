@@ -26,12 +26,12 @@ def test_sorteddict():
     True
     >>> 'other' in d
     False
-    >>> print d.other
+    >>> print (d.other)
     None
     >>> try:
     ...     d['other']
-    ... except Exception, e:
-    ...     print e
+    ... except Exception as e:
+    ...     print (e)
     'other'
     >>> del d['class']
     >>> del d['name']
@@ -51,21 +51,21 @@ def test_sorteddict():
 def test_section():
     """
     >>> s = Section('default', "#comment")
-    >>> print s
+    >>> print (s)
     #comment
     [default]
     <BLANKLINE>
     >>> s.name = 'limodou'
     >>> s.add_comment('name', '#name')
     >>> s.add_comment(comments='#change')
-    >>> print s
+    >>> print (s)
     #change
     [default]
     #name
     name = 'limodou'
     <BLANKLINE>
     >>> del s.name
-    >>> print s
+    >>> print (s)
     #change
     [default]
     <BLANKLINE>
@@ -75,12 +75,12 @@ def test_ini1():
     """
     >>> x = Ini()
     >>> s = x.add('default')
-    >>> print x
+    >>> print (x)
     #coding=utf-8
     [default]
     <BLANKLINE>
     >>> s['abc'] = 'name'
-    >>> print x
+    >>> print (x)
     #coding=utf-8
     [default]
     abc = 'name'
@@ -94,7 +94,7 @@ def test_ini2():
     >>> x.default.name = 'limodou'
     >>> x.default['class'] = 'py'
     >>> x.default.list = ['abc']
-    >>> print x
+    >>> print (x)
     #coding=utf-8
     #comment
     [default]
@@ -103,11 +103,11 @@ def test_ini2():
     list = ['abc']
     <BLANKLINE>
     >>> x.default.list = ['cde'] #for mutable object will merge the data, including dict type
-    >>> print x.default.list
+    >>> print (x.default.list)
     ['abc', 'cde']
     >>> x.default.d = {'a':'a'}
     >>> x.default.d = {'b':'b'}
-    >>> print x.default.d
+    >>> print (x.default.d)
     {'a': 'a', 'b': 'b'}
     """  
 
@@ -118,7 +118,7 @@ def test_gettext():
     >>> x['default'] = Section('default')
     >>> x.default.option = _('Hello')
     >>> x.keys()
-    ['set', '_', 'gettext_lazy', 'default']
+    ['_', 'gettext_lazy', 'set', 'default']
     """
     
 def test_replace():
@@ -134,7 +134,7 @@ def test_replace():
     >>> x.default.add('option', ['c'], replace=True)
     >>> x.default.option
     ['c']
-    >>> print x.default
+    >>> print (x.default)
     [default]
     option <= ['c']
     <BLANKLINE>
@@ -146,14 +146,14 @@ def test_set_var():
     >>> x = Ini()
     >>> x.set_var('default/key', 'name')
     True
-    >>> print x
+    >>> print (x)
     #coding=utf-8
     [default]
     key = 'name'
     <BLANKLINE>
     >>> x.set_var('default/key/name', 'hello')
     True
-    >>> print x
+    >>> print (x)
     #coding=utf-8
     [default]
     key = 'name'
@@ -166,7 +166,7 @@ def test_set_var():
     'no'
     >>> x.del_var('default/key')
     True
-    >>> print x
+    >>> print (x)
     #coding=utf-8
     [default]
     key/name = 'hello'
@@ -184,7 +184,7 @@ def test_update():
     True
     >>> d = {'default/key':'limodou', 'default/b':123}
     >>> x.update(d)
-    >>> print x
+    >>> print (x)
     #coding=utf-8
     [default]
     key = 'limodou'
@@ -205,7 +205,7 @@ def test_uni_print():
 
 def test_triple_string():
     """
-    >>> from StringIO import StringIO
+    >>> from io import StringIO
     >>> buf = StringIO(\"\"\"
     ... #coding=utf8
     ... [DEFAULT]
@@ -215,14 +215,14 @@ def test_triple_string():
     ... \"\"\")
     >>> x = Ini()
     >>> x.read(buf)
-    >>> print repr(x.DEFAULT.a)
-    u'hello\\n\\u4e2d\\u6587\\n'
+    >>> print (repr(x.DEFAULT.a))
+    'hello\\n\\u4e2d\\u6587\\n'
     """
 
 def test_save():
     """
     >>> from uliweb.i18n import gettext_lazy as _, i18n_ini_convertor
-    >>> from StringIO import StringIO
+    >>> from io import StringIO
     >>> x = Ini(env={'_':_}, convertors=i18n_ini_convertor)
     >>> buf = StringIO(\"\"\"
     ... [default]
@@ -233,7 +233,7 @@ def test_save():
     ... int = 1
     ... list = [1, 'str', 0.12]
     ... dict = {'a':'b', 1:2}
-    ... s = u'English'
+    ... s = 'English'
     ... [other]
     ... option = 'default'
     ... options1 = '{{option}} xxx'
@@ -241,11 +241,11 @@ def test_save():
     ... options3 = option
     ... options4 = '-- {{default.option}} --'
     ... options5 = '-- {{default.s}} --'
-    ... options6 = u'English {{default.s}} --'
+    ... options6 = 'English {{default.s}} --'
     ... options7 = default.str + default.str1
     ... \"\"\")
     >>> x.read(buf)
-    >>> print x
+    >>> print (x)
     #coding=UTF-8
     <BLANKLINE>
     [default]
@@ -256,7 +256,7 @@ def test_save():
     int = 1
     list = [1, 'str', 0.12]
     dict = {'a': 'b', 1: 2}
-    s = u'English'
+    s = 'English'
     [other]
     option = 'default'
     options1 = 'default xxx'
@@ -264,7 +264,7 @@ def test_save():
     options3 = 'default'
     options4 = '-- English --'
     options5 = '-- English --'
-    options6 = u'English English --'
+    options6 = 'English English --'
     options7 = 'strstr'
     <BLANKLINE>
     """
@@ -275,20 +275,20 @@ def test_merge_data():
     >>> a = [[1,2,3], [2,3,4], [4,5]]
     >>> b = [{'a':[1,2], 'b':{'a':[1,2]}}, {'a':[2,3], 'b':{'a':['b'], 'b':2}}]
     >>> c = [set([1,2,3]), set([2,4])]
-    >>> print merge_data(a)
+    >>> print (merge_data(a))
     [1, 2, 3, 4, 5]
-    >>> print merge_data(b)
+    >>> print (merge_data(b))
     {'a': [1, 2, 3], 'b': {'a': [1, 2, 'b'], 'b': 2}}
-    >>> print merge_data(c)
-    set([1, 2, 3, 4])
-    >>> print merge_data([2])
+    >>> print (merge_data(c))
+    {1, 2, 3, 4}
+    >>> print (merge_data([2]))
     2
     """
     
 def test_lazy():
     """
     >>> from uliweb.i18n import gettext_lazy as _, i18n_ini_convertor
-    >>> from StringIO import StringIO
+    >>> from io import StringIO
     >>> x = Ini(env={'_':_}, convertors=i18n_ini_convertor, lazy=True)
     >>> buf = StringIO(\"\"\"
     ... [default]
@@ -299,7 +299,7 @@ def test_lazy():
     ... int = 1
     ... list = [1, 'str', 0.12]
     ... dict = {'a':'b', 1:2}
-    ... s = u'English'
+    ... s = 'English'
     ... [other]
     ... option = 'default'
     ... options1 = '{{option}} xxx'
@@ -307,12 +307,12 @@ def test_lazy():
     ... options3 = option
     ... options4 = '-- {{default.option}} --'
     ... options5 = '-- {{default.s}} --'
-    ... options6 = u'English {{default.s}} --'
+    ... options6 = 'English {{default.s}} --'
     ... options7 = default.str + default.str1
     ... \"\"\")
     >>> x.read(buf)
     >>> x.freeze()
-    >>> print x
+    >>> print (x)
     #coding=UTF-8
     <BLANKLINE>
     [default]
@@ -323,7 +323,7 @@ def test_lazy():
     int = 1
     list = [1, 'str', 0.12]
     dict = {'a': 'b', 1: 2}
-    s = u'English'
+    s = 'English'
     [other]
     option = 'default'
     options1 = 'default xxx'
@@ -331,7 +331,7 @@ def test_lazy():
     options3 = 'default'
     options4 = '-- English --'
     options5 = '-- English --'
-    options6 = u'English English --'
+    options6 = 'English English --'
     options7 = 'strstr'
     <BLANKLINE>
     """
@@ -339,7 +339,7 @@ def test_lazy():
 def test_multiple_read():
     """
     >>> from uliweb.i18n import gettext_lazy as _, i18n_ini_convertor
-    >>> from StringIO import StringIO
+    >>> from io import StringIO
     >>> x = Ini(env={'_':_}, convertors=i18n_ini_convertor, lazy=True)
     >>> buf = StringIO(\"\"\"
     ... [default]
@@ -357,7 +357,7 @@ def test_multiple_read():
     ... \"\"\")
     >>> x.read(buf1)
     >>> x.freeze()
-    >>> print x
+    >>> print (x)
     #coding=UTF-8
     <BLANKLINE>
     [default]
@@ -373,41 +373,39 @@ def test_multiple_read():
 def test_chinese():
     """
     >>> from uliweb.i18n import gettext_lazy as _, i18n_ini_convertor
-    >>> from StringIO import StringIO
+    >>> from io import StringIO
     >>> x = Ini(env={'_':_}, convertors=i18n_ini_convertor)
     >>> buf = StringIO(\"\"\"#coding=utf-8
     ... [default]
     ... option = '中文'
-    ... option1 = u'中文'
     ... option2 = _('中文')
     ... option3 = '{{option}}'
     ... [other]
     ... x = '中文 {{default.option}}'
-    ... x1 = u'中文 {{default.option}}'
-    ... x2 = u'xbd {{default.option}}'
+    ... x1 = '中文 {{default.option}}'
+    ... x2 = 'xbd {{default.option}}'
     ... \"\"\")
     >>> x.read(buf)
-    >>> print x
+    >>> print (x)
     #coding=utf-8
     [default]
-    option = '\xe4\xb8\xad\xe6\x96\x87'
-    option1 = u'\xe4\xb8\xad\xe6\x96\x87'
-    option2 = _('\xe4\xb8\xad\xe6\x96\x87')
-    option3 = '\xe4\xb8\xad\xe6\x96\x87'
+    option = '中文'
+    option2 = _('中文')
+    option3 = '中文'
     [other]
-    x = '\xe4\xb8\xad\xe6\x96\x87 \xe4\xb8\xad\xe6\x96\x87'
-    x1 = u'\xe4\xb8\xad\xe6\x96\x87 \xe4\xb8\xad\xe6\x96\x87'
-    x2 = u'xbd \xe4\xb8\xad\xe6\x96\x87'
+    x = '中文 中文'
+    x1 = '中文 中文'
+    x2 = 'xbd 中文'
     <BLANKLINE>
-    >>> print repr(x.other.x1)
-    u'\u4e2d\u6587 \u4e2d\u6587'
+    >>> print (repr(x.other.x1))
+    '中文 中文'
     >>> x.keys()
-    ['set', '_', 'gettext_lazy', 'default', 'other']
+    ['_', 'gettext_lazy', 'set', 'default', 'other']
     """
 
 def test_set():
     """
-    >>> from StringIO import StringIO
+    >>> from io import StringIO
     >>> x = Ini()
     >>> buf = StringIO(\"\"\"#coding=utf-8
     ... [default]
@@ -415,17 +413,17 @@ def test_set():
     ... set2 = set([1,2,3])
     ... \"\"\")
     >>> x.read(buf)
-    >>> print x
+    >>> print (x)
     #coding=utf-8
     [default]
-    set1 = set([1, 2, 3])
-    set2 = set([1, 2, 3])
+    set1 = {1, 2, 3}
+    set2 = {1, 2, 3}
     <BLANKLINE>
     >>> buf2 = StringIO(\"\"\"#coding=utf-8
     ... [default]
     ... set1 = {5,3}
     ... \"\"\")
     >>> x.read(buf2)
-    >>> print x.default.set1
-    set([1, 2, 3, 5])
+    >>> print (x.default.set1)
+    {1, 2, 3, 5}
     """

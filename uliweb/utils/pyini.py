@@ -27,7 +27,7 @@ import token
 from .sorteddict import SortedDict
 from traceback import print_exc
 from ._compat import string_types, u, b, text_type, PY2, get_next
-from io import StringIO
+from io import StringIO, BytesIO
 
 
 __all__ = ['SortedDict', 'Section', 'Ini', 'uni_prt']
@@ -168,7 +168,7 @@ def uni_prt(a, encoding='utf-8', beautiful=False, indent=0, convertors=None):
 def eval_value(value, globals, locals, encoding, include_env):
     #process {{format}}
     def sub_(m):
-        txt = filter(None, m.groups())[0].strip()
+        txt = list(filter(None, m.groups()))[0].strip()
         try:
             v = eval_value(txt, globals, locals, encoding, include_env)
             _type = type(txt)
@@ -380,7 +380,7 @@ class Section(SortedDict):
                 buf = f + op + uni_prt(self[f], self._encoding, convertors=convertors)
                 if len(buf) > 79:
                     buf = f + op + uni_prt(self[f], self._encoding, True, convertors=convertors)
-                    print(buf, file=out)
+                print(buf, file=out)
             
     def __delitem__(self, key):
         super(Section, self).__delitem__(key)
@@ -475,20 +475,20 @@ class Ini(SortedDict):
         encoding = None
         
         if isinstance(fobj, string_types):
-            f = open(fobj, 'rb')
+            f = open(fobj, 'r')
             text = f.read()
             f.close()
         else:
             text = fobj.read()
-            
-        text = text + b('\n')
+
+        text = text + '\n'
         begin = 0
-        if text.startswith(codecs.BOM_UTF8):
-            begin = 3
-            encoding = 'UTF-8'
-        elif text.startswith(codecs.BOM_UTF16):
-            begin = 2
-            encoding = 'UTF-16'
+        # if text.startswith(codecs.BOM_UTF8):
+        #     begin = 3
+        #     encoding = 'UTF-8'
+        # elif text.startswith(codecs.BOM_UTF16):
+        #     begin = 2
+        #     encoding = 'UTF-16'
             
         if not encoding:
             try:
@@ -499,8 +499,8 @@ class Ini(SortedDict):
                 
         self._encoding = encoding
         
-        if not PY2:
-            text = text.decode(encoding)
+        # if not PY2:
+        #     text = text.decode(encoding)
             
         f = StringIO(text)
         f.seek(begin)
@@ -576,22 +576,22 @@ class Ini(SortedDict):
                         except Exception as e:
                             print_exc()
                             raise Exception("Parsing ini file error in %s:%d:%s" % (filename or self._inifile, lineno, line))
-                        if self._lazy:
-                            if iden_existed:
-                                v = EvalValue(value, filename or self._inifile, lineno, line)
-                            else:
-                                v = value
+                    if self._lazy:
+                        if iden_existed:
+                            v = EvalValue(value, filename or self._inifile, lineno, line)
                         else:
-                            if self._raw:
-                                v = RawValue(self._inifile, lineno, value, replace_flag)
-                            else:
-                                try:
-                                    v = eval_value(value, self.env(), self[sec_name], self._encoding, self._import_env)
-                                except Exception as e:
-                                    print_exc()
-                                    raise Exception("Converting value (%s) error in %s:%d:%s" % (value, filename or self._inifile, lineno, line))
-                        section.add(keyname, v, comments, replace=replace_flag)
-                        comments = []
+                            v = value
+                    else:
+                        if self._raw:
+                            v = RawValue(self._inifile, lineno, value, replace_flag)
+                        else:
+                            try:
+                                v = eval_value(value, self.env(), self[sec_name], self._encoding, self._import_env)
+                            except Exception as e:
+                                print_exc()
+                                raise Exception("Converting value (%s) error in %s:%d:%s" % (value, filename or self._inifile, lineno, line))
+                    section.add(keyname, v, comments, replace=replace_flag)
+                    comments = []
             else:
                 comments.append(line)
                 
