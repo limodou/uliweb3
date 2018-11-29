@@ -290,6 +290,8 @@ def wraps(src):
         f.__doc__ = src.__doc__
         f.__module__ = src.__module__
         f.__dict__.update(src.__dict__)
+        if src.__qualname__:
+            f.__qualname__ = src.__qualname__
         return f
 
     return _f

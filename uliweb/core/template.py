@@ -847,7 +847,6 @@ class Loader(object):
                 _f = os.path.normpath(os.path.join(d, filename))
                 if os.path.exists(_f):
                     yield _f
-            raise StopIteration
 
         filename = os.path.normpath(filename)
         skip = os.path.normpath(skip)
