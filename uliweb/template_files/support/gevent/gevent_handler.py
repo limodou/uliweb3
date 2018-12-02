@@ -1,6 +1,9 @@
 import sys, os
 import getopt
-from gevent.wsgi import WSGIServer
+try:
+    from gevent.wsgi import WSGIServer
+except:
+    from gevent.pywsgi import WSGIServer
 from gevent import monkey
 
 monkey.patch_all()
