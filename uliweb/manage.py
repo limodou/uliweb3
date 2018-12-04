@@ -940,8 +940,14 @@ class RunserverCommand(Command):
         loop.start()
 
     def run_gevent(self, options, extra_files, get_app):
+        WSGIServer = None
         try:
             from gevent.wsgi import WSGIServer
+        except:
+            pass
+        try:
+            if not WSGIServer:
+                from gevent.pywsgi import WSGIServer
             from gevent import monkey
         except:
             print('Error: Please install gevent first')
