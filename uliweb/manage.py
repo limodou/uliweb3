@@ -305,7 +305,7 @@ class MakeModuleCommand(Command):
         if not args:
             module_name = ''
             while not module_name:
-                module_name = raw_input('Please enter module name:')
+                module_name = input('Please enter module name:')
         else:
             module_name = args[0]
 
