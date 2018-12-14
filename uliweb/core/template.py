@@ -1124,11 +1124,11 @@ class _NamedBlock(_Node):
     def generate(self, writer):
         block = writer.named_blocks[self.name]
         if self.template.debug:
-            writer.write_line('_tt_append("<!-- BLOCK %s (%s) -->")' % (self.name, block.template.filename), self.line)
+            writer.write_line('_tt_append(_tt_utf8("<!-- BLOCK %s (%s) -->"))' % (self.name, block.template.filename), self.line)
         with writer.include(block.template, self.line):
             block.body.generate(writer)
         if self.template.debug:
-            writer.write_line('_tt_append("<!-- END %s -->")' % self.name, self.line)
+            writer.write_line('_tt_append(_tt_utf8("<!-- END %s -->"))' % self.name, self.line)
 
     def find_named_blocks(self, loader, named_blocks):
         named_blocks[self.name] = self
