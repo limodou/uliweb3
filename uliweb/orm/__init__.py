@@ -1,6 +1,6 @@
 # This module is used for wrapping SqlAlchemy to a simple ORM
 # Author: limodou <limodou@gmail.com>
-from __future__ import print_function, absolute_import, unicode_literals
+from __future__ import print_function, absolute_import, unicode_literals, generator_stop
 
 
 __all__ = ['Field', 'get_connection', 'Model', 'do_',
@@ -72,7 +72,7 @@ import warnings
 import inspect
 from uliweb.utils.sorteddict import SortedDict
 from . import patch
-from ..utils._compat import (string_types, text_type, PY2, callable, u,
+from ..utils._compat import (string_types, text_type, PY2, callable, u, b,
                              integer_types, with_metaclass, exec_, pickle,
                              python_2_unicode_compatible)
 
@@ -1993,8 +1993,8 @@ class BlobProperty(Property):
     
     def convert(self, value):
         if not value:
-            return ''
-        return value
+            return b''
+        return b(value)
     
 class PickleProperty(BlobProperty):
     field_class = PickleType
@@ -2882,7 +2882,7 @@ class Result(object):
         while 1:
             result = self.result.fetchone()
             if not result:
-                raise StopIteration
+                return
             yield self.load(result)
 
     def iter_tree(self, parent_field='parent', children_name='children', fields=None,
