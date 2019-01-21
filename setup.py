@@ -115,7 +115,7 @@ Links
 * **Uliweb-doc Online** Document http://limodou.github.com/uliweb-doc/zh_CN/uliweb3
 """
 
-setup(name='Uliweb',
+setup(name='Uliweb3',
     version=uliweb.__version__,
     description="Easy python web framework",
     long_description=__doc__,
