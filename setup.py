@@ -51,7 +51,7 @@ Features
   * Environment execution mode. Each view function will be run in an environment,
     which eliminates the need to write many import statements. Plus there are already many
     objects that can be used directly, for example: request, response, etc. This is DRY and saves a lot of coding
-  * Developers can directly use Python code in a template, the Python code does not neede to be indented
+  * Developers can directly use Python code in a template, the Python code does not need to be indented
     as long as a pass statement is added at the end of each code block.
     Uliweb also supports child template inclusion and inheritance.
     
@@ -59,7 +59,7 @@ Features
 
   * Uliorm is based on SQLAlchemy package, so you can use Model layer and SQL
     expression layer both.
-  * Uliorm integrates with alembic package, you can use it to migirate database
+  * Uliorm integrates with alembic package, you can use it to migrate database
     automatically.
 
 * I18n
@@ -75,9 +75,9 @@ Features
   * Dispatch extension. This is a dispatch processing mechanism that utilizes different
     types of dispatch points. So you can write procedures to carry out
     special processes and bind them to these dispatch points. For example, database
-    initicalization, I18n process initialization, etc.
-  * middleware extension. It's similar to Djangos. You can configure it in configuration
-    files. Each middleware can process the request and response objets.
+    initialization, I18n process initialization, etc.
+  * middleware extension. It's similar to Django. You can configure it in configuration
+    files. Each middleware can process the request and response objects.
   * Special function calls in the views module initial process. If you write a special
     function named __begin__, it'll be processed before any view function can be processed,
     this allows developers to do some module level processing at that point, for example:
@@ -88,13 +88,12 @@ Features
   * Creates project, creates apps, and include the basic essential directory 
     structure, files and code.
   * Export static files, you can export all available apps' static files to a
-    special directory. Also supports css and js combinition and compress process.
-  * Startup a development web server thats supports debugging and autoreload.
+    special directory. Also supports css and js combination and compress process.
+  * Startup a development web server that's supports debugging and auto reload.
   * Apps can also have its own command line tools. For example: orm, auth, etc.
 
 * Deployment
 
-  * Supports mod_wsgi in Apache.
   * Supports uwsgi.
 
 * Development
@@ -111,10 +110,9 @@ Commuity
 Links
 --------
 
-* **Uliweb** Project Homepage https://github.com/limodou/uliweb
+* **Uliweb** Project Homepage https://github.com/limodou/uliweb3
 * **Uliweb-doc** Documentation Project http://github.com/limodou/uliweb-doc
-* **Uliweb-doc Online** Document http://limodou.github.com/uliweb-doc/
-* **plugs** Uliweb Apps Collection Project https://github.com/limodou/plugs
+* **Uliweb-doc Online** Document http://limodou.github.com/uliweb-doc/zh_CN/uliweb3
 """
 
 setup(name='Uliweb',
@@ -130,8 +128,7 @@ setup(name='Uliweb',
     "Topic :: Internet :: WWW/HTTP :: WSGI",
     "Programming Language :: Python",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 2.6",
-    "Programming Language :: Python :: 2.7",
+    "Programming Language :: Python :: 3.6",
     ],
     packages = ['uliweb'],
     platforms = 'any',
