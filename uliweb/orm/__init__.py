@@ -4486,6 +4486,16 @@ class Model(with_metaclass(ModelMetaclass)):
                 if t is not None:
                     cls.metadata.remove(t)
                 args = getattr(cls, '__table_args__', {})
+                # __table_args__ can be a tuple
+                # https://docs.sqlalchemy.org/en/latest/orm/extensions/declarative/table_config.html
+                if isinstance(args,tuple):
+                    d = {}
+                    for item in args:
+                        if isinstance(item,dict):
+                            d = item
+                        else:
+                            cols.append(item)
+                    args = d
                 args['mysql_charset'] = 'utf8'
                 if sa_version >= '1.2' and hasattr(cls, '__verbose_name__'):
                     args['comment'] = safe_unicode(cls.__verbose_name__)
