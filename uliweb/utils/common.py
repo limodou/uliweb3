@@ -2,7 +2,7 @@ from __future__ import print_function, absolute_import, unicode_literals
 import os, sys
 import re
 import logging
-from ._compat import pickle, import_, string_types, text_type, iteritems, u, PY2, callable
+from ._compat import pickle, import_, string_types, text_type, integer_types, iteritems, u, PY2, callable
 import inspect
 import types
 
@@ -406,7 +406,7 @@ def str_value(v, encoding='utf-8', bool_int=True, none='NULL'):
                 return '0'
         else:
             return str(v)
-    elif isinstance(v, long):
+    elif isinstance(v, integer_types):
         return int(v)
     else:
         return str(v)
@@ -485,12 +485,12 @@ def dumps(a, encoding='utf-8', beautiful=False, indent=0, convertors=None, bool_
             s.append('\n')
             s.append(indent_char*indent)
         s.append('}')
-    elif isinstance(a, str):
+    elif isinstance(a, string_types):
         t = a
         for i in escapechars:
             t = t.replace(i[0], i[1])
         s.append("'%s'" % t)
-    elif isinstance(a, unicode):
+    elif isinstance(a, text_type):
         t = a
         for i in escapechars:
             t = t.replace(i[0], i[1])
