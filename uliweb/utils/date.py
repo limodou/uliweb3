@@ -2,7 +2,7 @@ from __future__ import print_function, absolute_import, unicode_literals
 import time, re
 from datetime import tzinfo, timedelta, datetime, date, time as time_
 from .sorteddict import SortedDict
-from ._compat import string_types, PY2
+from ._compat import string_types, PY2, integer_types
 
 __timezone__ = None
 __local_timezone__ = None
@@ -250,7 +250,7 @@ def parse_time(t):
                 return v
         else:
             raise TimeFormatError(t)
-    elif isinstance(t, (int, long)):
+    elif isinstance(t, integer_types):
         return t
     else:
         raise TimeFormatError(t)
