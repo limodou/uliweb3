@@ -3276,7 +3276,7 @@ class ManyResult(Result):
     def __iter__(self):
         self.run()
         if not self.result:
-            raise StopIteration
+            return
 
         offset = 0
         if self.with_relation_name:
@@ -3285,7 +3285,7 @@ class ManyResult(Result):
         while 1:
             result = self.result.fetchone()
             if not result:
-                raise StopIteration
+                return
             if self._values_flag:
                 yield result
                 continue

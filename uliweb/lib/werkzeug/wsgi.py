@@ -739,7 +739,7 @@ class FileWrapper(object):
         data = self.file.read(self.buffer_size)
         if data:
             return data
-        raise StopIteration()
+        return
 
 
 def _make_chunk_iter(stream, limit, buffer_size):
@@ -1034,5 +1034,5 @@ class LimitedStream(object):
     def __next__(self):
         line = self.readline()
         if not line:
-            raise StopIteration()
+            return
         return line

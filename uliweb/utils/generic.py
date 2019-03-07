@@ -1760,7 +1760,11 @@ class SimpleListView(object):
             i = 0
             while (begin > 0 and i < begin) or (begin == -1):
                 try:
-                    result.append(next(data))
+                    ret = next(data)
+                    if ret == None:
+                        no_data_flag = True
+                        break
+                    result.append(ret)
                     i += 1
                     n += 1
                 except StopIteration:

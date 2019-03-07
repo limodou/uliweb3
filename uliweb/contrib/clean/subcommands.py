@@ -116,6 +116,8 @@ class ModelCommand(Command):
                     Begin()
                     try:
                         n = ret.next()
+                        if n == None:
+                            break
                         t += n
                         Commit()
                     except StopIteration:

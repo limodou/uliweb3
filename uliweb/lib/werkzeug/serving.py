@@ -165,7 +165,8 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
             application_iter = app(environ, start_response)
             try:
                 for data in application_iter:
-                    write(data)
+                    if data != None:
+                        write(data)
                 if not headers_sent:
                     write(b'')
             finally:
