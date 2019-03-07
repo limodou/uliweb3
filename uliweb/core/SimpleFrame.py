@@ -431,7 +431,7 @@ def get_app_depends(app, existed_apps=None, installed_apps=None):
         s = existed_apps
 
     if app in s:
-        raise StopIteration
+        return
 
     if isinstance(app, (tuple, list)):
         app, name = app
@@ -1095,6 +1095,8 @@ class Dispatcher(object):
             result_iter = iter(result)
             try:
                 x = result_iter.next()
+                if x == None:
+                    x = ''
             except StopIteration:
                 x = ''
             def f(x):

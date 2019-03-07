@@ -671,13 +671,18 @@ class OrderedMultiDict(MultiDict):
             iter2 = iteritems(other, multi=True)
             try:
                 for k1, v1 in iter1:
-                    k2, v2 = next(iter2)
+                    ret = next(iter2)
+                    if ret == None:
+                        return False
+                    k2, v2 = ret
                     if k1 != k2 or v1 != v2:
                         return False
             except StopIteration:
                 return False
             try:
-                next(iter2)
+                ret = next(iter2)
+                if ret == None:
+                    return True
             except StopIteration:
                 return True
             return False

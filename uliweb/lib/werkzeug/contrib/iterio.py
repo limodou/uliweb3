@@ -152,10 +152,10 @@ class IterIO(object):
 
     def __next__(self):
         if self.closed:
-            raise StopIteration()
+            return
         line = self.readline()
         if not line:
-            raise StopIteration()
+            return
         return line
 
 
@@ -258,6 +258,8 @@ class IterO(IterIO):
             tmp_end_pos = len(self._buf)
             while pos > tmp_end_pos:
                 item = self._gen.next()
+                if item == None:
+                    break
                 tmp_end_pos += len(item)
                 buf.append(item)
         except StopIteration:
@@ -280,6 +282,8 @@ class IterO(IterIO):
             tmp_end_pos = 0 if self._buf is None else len(self._buf)
             while new_pos > tmp_end_pos or (self._buf is None and not buf):
                 item = next(self._gen)
+                if item == None:
+                    break
                 tmp_end_pos += len(item)
                 buf.append(item)
         except StopIteration:
@@ -308,6 +312,8 @@ class IterO(IterIO):
             pos = self.pos
             while nl_pos < 0:
                 item = next(self._gen)
+                if item == None:
+                    break
                 local_pos = item.find(_newline(item))
                 buf.append(item)
                 if local_pos >= 0:

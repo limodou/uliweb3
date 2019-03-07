@@ -70,10 +70,10 @@ class FileIterator(object):
         return self
     def next(self):
         if self.length is not None and self.length <= 0:
-            raise StopIteration
+            return
         chunk = self.fileobj.read(self.chunk_size)
         if not chunk:
-            raise StopIteration
+            return
         if self.length is not None:
             self.length -= len(chunk)
             if self.length < 0:

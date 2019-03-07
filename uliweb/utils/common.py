@@ -161,7 +161,7 @@ def walk_dirs(path, include=None, include_ext=None, exclude=None,
     include = include or []
 
     if not os.path.exists(path):
-        raise StopIteration
+        return
 
     for r in os.listdir(path):
         if match(r, exclude) or (use_default_pattern and r in default_exclude):
@@ -914,6 +914,8 @@ def read_code_line(f):
     while 1:
         try:
             v = g.next()
+            if v == None:
+                return None
         except StopIteration:
             return None
         tokentype, t, start, end, line = v
