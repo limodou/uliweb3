@@ -21,6 +21,13 @@ class Role(Model):
     reserve = Field(bool)
     users = ManyToMany('user', collection_name='user_roles')
     permissions = ManyToMany('permission', through='role_perm_rel', collection_name='perm_roles')
+    usergroups = ManyToMany('usergroup', collection_name='usergroup_roles')
+    
+    def usergroups_has_user(self,user):
+        for usergroup in list(self.usergroups.all()):
+            if usergroup.users.has(user):
+                return usergroup
+        return False
     
 class Role_Perm_Rel(Model):
     role = Reference('role')
