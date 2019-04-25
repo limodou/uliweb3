@@ -57,6 +57,7 @@ import threading
 import datetime
 import copy
 import re
+import logging
 from uliweb.utils import date as _date
 from uliweb.utils.common import (flat_list, classonlymethod,
     safe_str, safe_unicode, import_attr, dumps)
@@ -75,6 +76,8 @@ from . import patch
 from ..utils._compat import (string_types, text_type, PY2, callable, u, b,
                              integer_types, with_metaclass, exec_, pickle,
                              python_2_unicode_compatible)
+
+log = logging.getLogger(__name__)
 
 Local = threading.local()
 Local.dispatch_send = True
@@ -1468,10 +1471,8 @@ import sqlalchemy as sa
     return script
 
 def run_migrate_script(context, script):
-    import logging
     from alembic.operations import Operations
 
-    log = logging.getLogger(__name__)
     op = Operations(context)
     code = compile(script, '<string>', 'exec', dont_inherit=True)
     env = {'op':op}
@@ -2051,7 +2052,13 @@ class DateTimeProperty(Property):
     
     @staticmethod
     def now():
-        return _date.now()
+        from uliweb import functions
+        server_timezone = functions.get_server_timezone()
+        if server_timezone == None:
+            return functions.now()
+        else:
+            #return UTC datetime for auto_now_add
+            return functions.utc_now()
 
     def make_value_from_datastore(self, value):
         if value is not None:
@@ -2060,7 +2067,20 @@ class DateTimeProperty(Property):
 
     @staticmethod
     def _convert_func(*args, **kwargs):
-        return _date.to_datetime(*args, **kwargs)
+        from uliweb import functions
+        dt = functions.to_datetime(*args, **kwargs)
+        server_timezone = functions.get_server_timezone()
+        if not server_timezone:
+            if functions.is_aware(dt):
+                log.error("receive a timezone-aware datetime (%s) when settings.GLOBAL.TIME_ZONE is None"%(dt))
+                raise ValueError("Timezone-aware datetimes are not accepted, when settings.GLOBAL.TIME_ZONE is None")
+        else:
+            from uliweb.utils.date import UTC
+            if functions.is_naive(dt):
+                log.warn("received a naive datetime (%s) while settings.GLOBAL.TIME_ZONE not None"%(dt))
+                value = server_timezone.convert(dt)
+            dt = functions.to_timezone(dt,UTC)
+        return dt
     
     def convert(self, value):
         if not value:

@@ -19,6 +19,7 @@ class User(Model):
     locked = Field(bool, verbose_name=_('Lock Status'))
     deleted = Field(bool, verbose_name=_('Deleted'))
     auth_type = Field(str, max_length=20, default='default', verbose_name=_('Auth type'))
+    timezone = Field(str, max_length=48, verbose_name=_('Time zone'))
 
     def set_password(self, raw_password):
         self.password = encrypt_password(raw_password)
