@@ -138,6 +138,9 @@ setup(name='Uliweb3',
     url=uliweb.__url__,
     license=uliweb.__license__,
     include_package_data=True,
+    install_requires=[
+      'pendulum',
+    ],
     zip_safe=False,
     entry_points = {
       'console_scripts': [
