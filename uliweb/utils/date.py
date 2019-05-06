@@ -3,109 +3,38 @@ import time, re
 from datetime import tzinfo, timedelta, datetime, date, time as time_
 from .sorteddict import SortedDict
 from ._compat import string_types, PY2, integer_types
+from pendulum import timezone, UTC, parse
 
-__timezone__ = None
+__server_timezone__ = None
 __local_timezone__ = None
 __timezones__ = SortedDict()
 
 class DateError(Exception):pass
 class TimeFormatError(Exception):pass
 
-DEFAULT_DATETIME_INPUT_FORMATS = (
-    '%Y-%m-%d %H:%M:%S',     # '2006-10-25 14:30:59'
-    '%Y-%m-%d %H:%M:%S.%f',  # '2006-10-25 14:30:59.5200'
-    '%Y-%m-%d %H:%M',        # '2006-10-25 14:30'
-    '%Y-%m-%d',              # '2006-10-25'
-    '%Y/%m/%d %H:%M:%S',     # '2006/10/25 14:30:59'
-    '%Y/%m/%d %H:%M:%S.%f',  # '2006/10/25 14:30:59.5200'
-    '%Y/%m/%d %H:%M',        # '2006/10/25 14:30'
-    '%Y/%m/%d',              # '2006/10/25 '
-    '%m/%d/%Y %H:%M:%S',     # '10/25/2006 14:30:59'
-    '%m/%d/%Y %H:%M:%S.%f',  # '10/25/2006 14:30:59.5200'
-    '%m/%d/%Y %H:%M',        # '10/25/2006 14:30'
-    '%m/%d/%Y',              # '10/25/2006'
-    '%m/%d/%y %H:%M:%S',     # '10/25/06 14:30:59'
-    '%m/%d/%y %H:%M:%S.%f',  # '10/25/06 14:30:59.5200'
-    '%m/%d/%y %H:%M',        # '10/25/06 14:30'
-    '%m/%d/%y',              # '10/25/06'
-    '%H:%M:%S',              # '14:30:59'
-    '%H:%M',                 # '14:30'
-)
-
 ZERO = timedelta(0)
 
-class UTCTimeZone(tzinfo):
-    """UTC"""
+def set_server_timezone(tz):
+    import os
+    global __server_timezone__
 
-    def utcoffset(self, dt):
-        return ZERO
-
-    def tzname(self, dt):
-        return "UTC"
-
-    def dst(self, dt):
-        return ZERO
-    
-    def __repr__(self):
-        return '<tzinfo UTC>'
-
-UTC = UTCTimeZone()
-
-class FixedOffset(tzinfo):
-    """Fixed offset in minutes east from UTC."""
-
-    def __init__(self, offset, name):
-        self.__offset = timedelta(minutes = offset)
-        self.__name = name
-
-    def utcoffset(self, dt):
-        return self.__offset
-
-    def tzname(self, dt):
-        return self.__name
-
-    def dst(self, dt):
-        return ZERO
-    
-    def __repr__(self):
-        return "<tzinfo %s>" % self.__name
-    
-for i in range(-12, 13):
-    if i == 0:
-        continue
-    if i>0:
-        k = 'GMT +%d' % i
+    if tz:
+        #Set environ, similar with django: https://juejin.im/post/5848b301128fe1006907d5ed
+        os.environ['TZ'] = tz
+        __server_timezone__ = timezone(tz)
     else:
-        k = 'GMT %d' % i
-    __timezones__[k] = FixedOffset(i*60, k)
-    
-__timezones__['UTC'] = UTC
-re_timezone = re.compile(r'GMT\s?([+-]?)(\d+)', re.IGNORECASE)
+        __server_timezone__ = None
 
-def fix_gmt_timezone(tz):
-    if isinstance(tz, string_types):
-        b = re_timezone.match(tz)
-        if b:
-            n = b.group(2)
-            if n == '0':
-                return 'UTC'
-            sign = b.group(1)
-            if not sign:
-                sign = '+'
-            return 'GMT ' + sign + n
-    return tz
-
-def set_timezone(tz):
-    global __timezone__
-    __timezone__ = timezone(tz)
-    
-def get_timezone():
-    return __timezone__
+def get_server_timezone():
+    return __server_timezone__
 
 def set_local_timezone(tz):
     global __local_timezone__
-    __local_timezone__ = timezone(tz)
-    
+    if tz:
+        __local_timezone__ = timezone(tz)
+    else:
+        __local_timezone__ = None
+
 def get_local_timezone():
     return __local_timezone__
 
@@ -114,32 +43,29 @@ def get_timezones():
 
 def register_timezone(name, tz):
     __timezones__[name] = tz
-    
-def timezone(tzname):
-    if not tzname:
-        return None
-    
-    if isinstance(tzname, string_types):
-        #not pytz module imported, so just return None
-        tzname = fix_gmt_timezone(tzname)
-        tz = __timezones__.get(tzname, None)
-        if not tz:
-            raise DateError("Can't find tzname %s" % tzname)
-        return tz
-    elif isinstance(tzname, tzinfo):
-        return tzname
-    else:
-        raise DateError("Unsupported tzname {} type".format(tzname))
-    
+
 def pick_timezone(*args):
     for x in args:
-        tz = timezone(x)
-        if tz:
-            return tz
-    
+        if x:
+            if isinstance(x,tzinfo):
+                return x
+            tz = timezone(x)
+            if tz:
+                return tz
+
+def is_aware(value):
+    return value.utcoffset() is not None
+
+def is_naive(value):
+    return value.utcoffset() is None
+
 def now(tzinfo=None):
-    tz = pick_timezone(tzinfo, __timezone__)
+    global __server_timezone__
+    tz = pick_timezone(tzinfo, __server_timezone__)
     return datetime.now(tz)
+
+def utc_now():
+    return datetime.now(UTC)
 
 def today(tzinfo=None):
     d = now(tzinfo)
@@ -151,7 +77,7 @@ def to_timezone(dt, tzinfo=None):
     """
     if not dt:
         return dt
-    tz = pick_timezone(tzinfo, __timezone__)
+    tz = pick_timezone(tzinfo, __server_timezone__)
     if not tz:
         return dt
     dttz = getattr(dt, 'tzinfo', None)
@@ -159,7 +85,7 @@ def to_timezone(dt, tzinfo=None):
         return dt.replace(tzinfo=tz)
     else:
         return dt.astimezone(tz)
-    
+
 def to_date(dt, tzinfo=None, format=None):
     """
     Convert a datetime to date with tzinfo
@@ -184,21 +110,13 @@ def to_datetime(dt, tzinfo=None, format=None):
     """
     if not dt:
         return dt
-    
-    tz = pick_timezone(tzinfo, __timezone__)
-    
+
+    tz = pick_timezone(tzinfo, __server_timezone__)
+
     if isinstance(dt, string_types):
-        if not format:
-            formats = DEFAULT_DATETIME_INPUT_FORMATS
-        else:
-            formats = list(format)
-        d = None
-        for fmt in formats:
-            try:
-                d = datetime.strptime(dt, fmt)
-            except ValueError:
-                continue
-        if not d:
+        try:
+            d = parse(dt)
+        except Exception:
             return None
         d = d.replace(tzinfo=tz)
     else:
@@ -209,7 +127,7 @@ def to_datetime(dt, tzinfo=None, format=None):
             d = d.replace(tzinfo=tz)
         else:
             d = d.replace(tzinfo=dt.tzinfo)
-    return to_timezone(d, tzinfo)
+    return d
 
 def to_local(dt, tzinfo=None):
     tz = pick_timezone(tzinfo, __local_timezone__)
