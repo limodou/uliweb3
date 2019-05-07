@@ -3280,10 +3280,10 @@ class ManyResult(Result):
             if self.with_relation_name:
                 offset = len(self.table.columns)
                 
-            o = self.modelb.load(zip(result.keys()[offset:], result.values()[offset:]))
+            o = self.modelb.load(list(zip(result.keys()[offset:], result.values()[offset:])))
             
             if self.with_relation_name:
-                r = self.through_model.load(zip(result.keys()[:offset], result.values()[:offset]))
+                r = self.through_model.load(list(zip(result.keys()[:offset], result.values()[:offset])))
                 setattr(o, self.with_relation_name, r)
                 
             return o
@@ -3310,10 +3310,10 @@ class ManyResult(Result):
                 yield result
                 continue
            
-            o = self.modelb.load(zip(result.keys()[offset:], result.values()[offset:]))
+            o = self.modelb.load(list(zip(result.keys()[offset:], result.values()[offset:])))
             
             if self.with_relation_name:
-                r = self.through_model.load(zip(result.keys()[:offset], result.values()[:offset]))
+                r = self.through_model.load(list(zip(result.keys()[:offset], result.values()[:offset])))
                 setattr(o, self.with_relation_name, r)
                 
             yield o
