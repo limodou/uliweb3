@@ -6,12 +6,12 @@
 import os
 import mimetypes
 import email
-from email.MIMEMultipart import MIMEMultipart
-from email.MIMEBase import MIMEBase
-from email.MIMEText import MIMEText
-from email.MIMEAudio import MIMEAudio
-from email.MIMEImage import MIMEImage
-from email.Encoders import encode_base64
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email.mime.text import MIMEText
+from email.mime.audio import MIMEAudio
+from email.mime.image import MIMEImage
+from email.encoders import encode_base64
 from email.header import Header
 from ..utils._compat import string_types
 
