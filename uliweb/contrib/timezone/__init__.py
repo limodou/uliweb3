@@ -13,7 +13,7 @@ def startup_installed(sender):
 def to_ltimezone(dt):
     from uliweb import request, settings
     if settings.GLOBAL.TIME_ZONE:
-        tzinfo = request.tzinfo
+        tzinfo = getattr(request,"tzinfo",None)
         if tzinfo:
             dt = tzinfo.convert(dt)
     return dt

@@ -2075,11 +2075,11 @@ class DateTimeProperty(Property):
                 log.error("receive a timezone-aware datetime (%s) when settings.GLOBAL.TIME_ZONE is None"%(dt))
                 raise ValueError("Timezone-aware datetimes are not accepted, when settings.GLOBAL.TIME_ZONE is None")
         else:
-            from uliweb.utils.date import UTC
             if functions.is_naive(dt):
                 log.warn("received a naive datetime (%s) while settings.GLOBAL.TIME_ZONE not None"%(dt))
                 value = server_timezone.convert(dt)
-            dt = functions.to_timezone(dt,UTC)
+            # if support timezone, need convert to local time in object
+            dt = functions.to_ltimezone(dt)
         return dt
     
     def convert(self, value):
@@ -4089,13 +4089,22 @@ class Model(with_metaclass(ModelMetaclass)):
                 for k, v in self.properties.items():
                     if v.property_type == 'compound':
                         continue
+                    exist = k in d
                     if not isinstance(v, ManyToMany):
-                        if isinstance(v, DateTimeProperty) and v.auto_now_add and k not in d:
-                            d[k] = v.now()
-                        elif (not k in d) and v.auto_add:
+                        if isinstance(v, DateTimeProperty):
+                            if v.auto_now_add and (not exist):
+                                d[k] = v.now()
+                                exist = True
+                            if exist:
+                                from uliweb import functions
+                                # if support timezone, should convert to UTC before save
+                                if functions.get_server_timezone():
+                                    from uliweb.utils.date import UTC
+                                    d[k] = functions.to_timezone(d[k],UTC)
+                        elif (not exist) and v.auto_add:
                             d[k] = v.default_value()
                     else:
-                        if k in d:
+                        if exist:
                             _manytomany[k] = d.pop(k)
                 if d:
                     if callable(changed):
