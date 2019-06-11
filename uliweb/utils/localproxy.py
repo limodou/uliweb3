@@ -1,4 +1,3 @@
-import six
 #! /usr/bin/env python
 #coding=utf-8
 # inspired from http://code.activestate.com/recipes/496741-object-proxying/

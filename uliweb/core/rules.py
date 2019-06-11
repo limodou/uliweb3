@@ -4,7 +4,6 @@ import re
 import inspect
 from uliweb.utils.common import log
 from uliweb.utils.sorteddict import SortedDict
-from uliweb.utils.date import now
 import copy
 from ..utils._compat import string_types, iterkeys, ismethod, isfunction, get_class
 
@@ -217,6 +216,7 @@ class Expose(object):
             self.parse_class(f)
             
     def parse_class(self, f):
+        from uliweb.utils.date import now
         appname, path = self._get_path(f)
         clsname = f.__name__
         if self.rule:
@@ -316,6 +316,7 @@ class Expose(object):
         return rule
     
     def parse_function(self, f):
+        from uliweb.utils.date import now
         args = inspect.getargspec(f)[0]
         if args:
             args = ['<%s>' % x for x in args]
