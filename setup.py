@@ -140,6 +140,7 @@ setup(name='Uliweb3',
     include_package_data=True,
     install_requires=[
       'pendulum',
+      'six'
     ],
     zip_safe=False,
     entry_points = {
