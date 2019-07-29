@@ -115,7 +115,7 @@ def to_datetime(dt, tzinfo=None, format=None):
 
     if isinstance(dt, string_types):
         try:
-            d = parse(dt)
+            d = parse(dt, strict=False)
         except Exception:
             return None
         d = d.replace(tzinfo=tz)

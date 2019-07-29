@@ -49,12 +49,24 @@ try:
 except ImportError:
     import _thread as thread
 
+can_fork = hasattr(os, "fork")
+
 try:
-    from SocketServer import ThreadingMixIn, ForkingMixIn
+    if can_fork:
+        from SocketServer import ThreadingMixIn, ForkingMixIn
+    else:
+        from SocketServer import ThreadingMixIn
     from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
 except ImportError:
-    from socketserver import ThreadingMixIn, ForkingMixIn
+    if can_fork:
+        from socketserver import ThreadingMixIn, ForkingMixIn
+    else:
+        from socketserver import ThreadingMixIn
     from http.server import HTTPServer, BaseHTTPRequestHandler
+
+if not can_fork:
+    class ForkingMixIn(object):
+        pass
 
 import werkzeug
 from werkzeug._internal import _log
