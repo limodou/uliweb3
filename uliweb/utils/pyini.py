@@ -475,7 +475,7 @@ class Ini(SortedDict):
         encoding = None
         
         if isinstance(fobj, string_types):
-            f = open(fobj, 'r', encoding='utf-8')
+            f = open(fobj, 'rb')
             text = f.read()
             f.close()
         else:
