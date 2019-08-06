@@ -3,11 +3,10 @@ import time, re
 from datetime import tzinfo, timedelta, datetime, date, time as time_
 from .sorteddict import SortedDict
 from ._compat import string_types, PY2, integer_types
-from pendulum import timezone, UTC, parse
+from pendulum import timezone, timezones, UTC, parse
 
 __server_timezone__ = None
 __local_timezone__ = None
-__timezones__ = SortedDict()
 
 class DateError(Exception):pass
 class TimeFormatError(Exception):pass
@@ -17,6 +16,10 @@ ZERO = timedelta(0)
 def set_server_timezone(tz):
     import os
     global __server_timezone__
+
+    #handle FixedTimezone case
+    if hasattr(tz,"name"):
+        tz = tz.name
 
     if tz:
         #Set environ, similar with django: https://juejin.im/post/5848b301128fe1006907d5ed
@@ -39,10 +42,7 @@ def get_local_timezone():
     return __local_timezone__
 
 def get_timezones():
-    return __timezones__
-
-def register_timezone(name, tz):
-    __timezones__[name] = tz
+    return timezones
 
 def pick_timezone(*args):
     for x in args:
@@ -125,9 +125,10 @@ def to_datetime(dt, tzinfo=None, format=None):
             getattr(dt, 'second', 0), getattr(dt, 'microsecond', 0))
         if not getattr(dt, 'tzinfo', None):
             d = d.replace(tzinfo=tz)
+            return d
         else:
             d = d.replace(tzinfo=dt.tzinfo)
-    return d
+    return to_timezone(d, tzinfo)
 
 def to_local(dt, tzinfo=None):
     tz = pick_timezone(tzinfo, __local_timezone__)
