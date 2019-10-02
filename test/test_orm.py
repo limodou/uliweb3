@@ -1,5 +1,6 @@
 #coding=utf-8
 import time, sys
+from uliweb.utils._compat import text_type
 sys.path.insert(0, '../uliweb/lib')
 from uliweb.orm import *
 import uliweb.orm
@@ -13,7 +14,7 @@ def test_1():
     >>> db = get_connection('sqlite://')
     >>> db.metadata.drop_all()
     >>> class Test(Model):
-    ...     username = Field(unicode)
+    ...     username = Field(text_type)
     ...     year = Field(int, default=30)
     ...     birth = Field(datetime.date)
     >>> a = Test(username='limodou', birth='2011-03-04')
@@ -185,7 +186,7 @@ def test_5():
     >>> db = get_connection('sqlite://', strategy='threadlocal')
     >>> db.metadata.drop_all()
     >>> class Test(Model):
-    ...     username = Field(unicode)
+    ...     username = Field(text_type)
     ...     year = Field(int, default=0)
     >>> Begin() # doctest:+ELLIPSIS
     <sqlalchemy.engine.base.RootTransaction object at ...>
@@ -241,7 +242,7 @@ def test_7():
     >>> db = get_connection('sqlite://')
     >>> db.metadata.drop_all()
     >>> class User(Model):
-    ...     username = Field(unicode)
+    ...     username = Field(text_type)
     >>> class Group(Model):
     ...     name = Field(str)
     ...     users = ManyToMany(User)
@@ -332,7 +333,7 @@ def test_model_self_manytomany():
     >>> db = get_connection('sqlite://')
     >>> db.metadata.drop_all()
     >>> class User(Model):
-    ...     username = Field(unicode)
+    ...     username = Field(text_type)
     ...     users = ManyToMany()
     >>> a1 = User(username='limodou')
     >>> a1.save()
@@ -352,7 +353,7 @@ def test_model_manytomany():
     >>> db = get_connection('sqlite://')
     >>> db.metadata.drop_all()
     >>> class User(Model):
-    ...     username = Field(unicode)
+    ...     username = Field(text_type)
     >>> class Group(Model):
     ...     name = Field(str)
     >>> Group.ManyToMany('users', User)
@@ -438,7 +439,7 @@ def test_selfreference():
     >>> db = get_connection('sqlite://')
     >>> db.metadata.drop_all()
     >>> class User(Model):
-    ...     username = Field(unicode)
+    ...     username = Field(text_type)
     ...     parent = SelfReference(collection_name='children')
     >>> a = User(username='a')
     >>> a.save()
@@ -467,7 +468,7 @@ def test_selfreference_2():
     >>> db = get_connection('sqlite://')
     >>> db.metadata.drop_all()
     >>> class User(Model):
-    ...     username = Field(unicode)
+    ...     username = Field(text_type)
     ...     parent = Reference(collection_name='children')
     >>> a = User(username='a')
     >>> a.save()
@@ -495,7 +496,7 @@ def test_model_selfreference():
     >>> db = get_connection('sqlite://')
     >>> db.metadata.drop_all()
     >>> class User(Model):
-    ...     username = Field(unicode)
+    ...     username = Field(text_type)
     ...     parent = Field(int, nullable=True, default=None)
     >>> User.Reference('parent', User, collection_name='children')
     >>> a = User(username='a')
@@ -524,7 +525,7 @@ def test_tree():
     >>> db = get_connection('sqlite://')
     >>> db.metadata.drop_all()
     >>> class User(Model):
-    ...     username = Field(unicode)
+    ...     username = Field(text_type)
     ...     parent = SelfReference(collection_name='children')
     >>> a = User(username='a')
     >>> a.save()
@@ -1794,7 +1795,7 @@ def test_manytomany_delete():
     >>> db = get_connection('sqlite://')
     >>> db.metadata.drop_all()
     >>> class User(Model):
-    ...     username = Field(unicode)
+    ...     username = Field(text_type)
     >>> class Group(Model):
     ...     name = Field(str)
     ...     users = ManyToMany(User)
@@ -1839,7 +1840,7 @@ def test_manytomany_delete_fieldname():
     >>> db = get_connection('sqlite://')
     >>> db.metadata.drop_all()
     >>> class User(Model):
-    ...     username = Field(unicode)
+    ...     username = Field(text_type)
     >>> class Group(Model):
     ...     name = Field(str)
     ...     deleted = Field(bool)
@@ -2034,7 +2035,7 @@ def test_self_manytomany():
     >>> db.echo = False
     >>> db.metadata.drop_all()
     >>> class User(Model):
-    ...     username = Field(unicode)
+    ...     username = Field(text_type)
     >>> class Group(Model):
     ...     name = Field(str)
     >>> Group.ManyToMany('users', User)
@@ -2071,7 +2072,7 @@ def test_sequence():
     >>> db.echo = False
     >>> db.metadata.drop_all()
     >>> class User(Model):
-    ...     username = Field(unicode)
+    ...     username = Field(text_type)
     ...     num = Field(int, sequence=Sequence('num_id'))
     >>> a = User(username='limodou')
     >>> a.save()
@@ -2281,7 +2282,7 @@ def test_manytomany_delete_fieldname():
     >>> db = get_connection('sqlite://')
     >>> db.metadata.drop_all()
     >>> class User(Model):
-    ...     username = Field(unicode)
+    ...     username = Field(text_type)
     >>> class Group(Model):
     ...     name = Field(str)
     ...     deleted = Field(bool)
@@ -2311,7 +2312,7 @@ def test_delay():
     >>> db = get_connection('sqlite://')
     >>> db.metadata.drop_all()
     >>> class Test(Model):
-    ...     username = Field(unicode)
+    ...     username = Field(text_type)
     ...     year = Field(int, default=0)
     ...     birth = Field(datetime.date)
     >>> c = Test(username='limodou', birth='2011-03-04', year=2012)
@@ -2330,7 +2331,7 @@ def test_delay_filter():
     >>> db = get_connection('sqlite://')
     >>> db.metadata.drop_all()
     >>> class Test(Model):
-    ...     username = Field(unicode)
+    ...     username = Field(text_type)
     ...     year = Field(int, default=0)
     ...     birth = Field(datetime.date)
     >>> c = Test(username='limodou', birth='2011-03-04', year=2012)
@@ -2355,7 +2356,7 @@ def test_post_do():
     ...     pass
     >>> uliweb.orm.__default_post_do__ = log
     >>> class Test(Model):
-    ...     username = Field(unicode)
+    ...     username = Field(text_type)
     ...     year = Field(int, default=0)
     ...     birth = Field(datetime.date)
     >>> c = Test(username='limodou', birth='2011-03-04', year=2012)
@@ -2605,7 +2606,7 @@ def test_group_by_and_having():
     >>> db.metadata.drop_all()
     >>> from sqlalchemy.sql import func
     >>> class User(Model):
-    ...     username = Field(unicode)
+    ...     username = Field(text_type)
     >>> u = User(username='python')
     >>> u.save()
     True
@@ -2853,7 +2854,7 @@ def test_derive():
     >>> from sqlalchemy import *
     >>> class User(Model):
     ...     _primary_field = 'username'
-    ...     username = Field(unicode)
+    ...     username = Field(text_type)
     ...     year = Field(int, default=30)
     ...     birth = Field(datetime.date)
     >>> class User1(User):
