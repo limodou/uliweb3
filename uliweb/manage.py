@@ -198,6 +198,10 @@ class MakeAppCommand(Command):
     args = 'appname'
     help = 'Create a new app according the appname parameter.'
     check_apps_dirs = False
+    option_list = (
+        make_option('--simple', action='store_true',
+            help='Make app folder with simplest structure.'),
+    )
 
     def handle(self, options, global_options, *args):
         from uliweb.utils.common import extract_dirs
@@ -228,7 +232,10 @@ class MakeAppCommand(Command):
             else:
                 ans = 'y'
             if ans == 'y':
-                extract_dirs('uliweb', 'template_files/app', path, verbose=global_options.verbose)
+                if options.simple:
+                    extract_dirs('uliweb', 'template_files/app_simple', path, verbose=global_options.verbose)
+                else:
+                    extract_dirs('uliweb', 'template_files/app', path, verbose=global_options.verbose)
 register_command(MakeAppCommand)
 
 class MakePkgCommand(Command):
