@@ -21,8 +21,8 @@ class User(Model):
     auth_type = Field(str, max_length=20, default='default', verbose_name=_('Auth type'))
     timezone = Field(str, max_length=48, verbose_name=_('Time zone'))
 
-    def set_password(self, raw_password):
-        self.password = encrypt_password(raw_password)
+    def set_password(self, raw_password, md5=False):
+        self.password = encrypt_password(raw_password, md5)
         # self.save()
 
     def check_password(self, raw_password):

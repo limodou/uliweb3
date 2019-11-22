@@ -99,7 +99,8 @@ class Request(OriginalRequest):
     POST = OriginalRequest.form
     params = OriginalRequest.values
     FILES = OriginalRequest.files
-    
+
+    @property
     def json(self):
         """
         Return json data, need front send json data

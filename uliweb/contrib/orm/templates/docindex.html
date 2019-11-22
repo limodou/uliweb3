@@ -262,7 +262,7 @@ td.ref{cursor:pointer}
   </div>
 
   <ul class='menu'>
-  {{ for menu in sorted(menus):}}
+  {{ for menu in sorted(menus, key=lambda x:x['name']):}}
         <li class="sec">
         <span id="{{=menu['name']}}">{{=menu['name']}}</span>
         <ul class="items">

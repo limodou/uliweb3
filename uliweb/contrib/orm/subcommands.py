@@ -31,7 +31,7 @@ class InitCommand(SQLCommand, Command):
             'engine_name':options.engine,
             'script_location':alembic_path})
         
-        with open(ini_file, 'wb') as f:
+        with open(ini_file, 'w') as f:
             f.write(text)
             
         #drop old alembic_version table

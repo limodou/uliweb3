@@ -1,3 +1,5 @@
+from uliweb.utils._compat import b
+
 head_template = """
 digraph name {
   fontname = "{{=fontname}}"
@@ -312,7 +314,7 @@ def generate_file(tables, apps, outputfile, format='svg', engine_name=None, font
     result = generate_dot(tables, apps, engine_name=engine_name, fontname=fontname, **kwargs)
     dot_fd, dot_filename = get_tempfilename2('dot_', dir=None, suffix='.dot')
     try:
-        os.write(dot_fd, result)
+        os.write(dot_fd, b(result))
     finally:
         os.close(dot_fd)
     if outputfile:

@@ -2,11 +2,16 @@ from __future__ import print_function
 from uliweb.core.commands import Command
 from uliweb.contrib.orm.commands import SQLCommandMixin
 from ...utils._compat import input
+from optparse import make_option
 
 class CreateSuperUserCommand(SQLCommandMixin, Command):
     name = 'createsuperuser'
     help = 'Create a super user account.'
-    
+    option_list = (
+        make_option('-m', dest='md5', action='store_true', default=False,
+                    help='Using md5 to digest password first.'),
+    )
+
     def handle(self, options, global_options, *args):
         from uliweb.manage import make_simple_application
         from uliweb import orm
@@ -36,7 +41,7 @@ class CreateSuperUserCommand(SQLCommandMixin, Command):
         
         User = orm.get_model('user', options.engine)
         user = User(username=username, email=email)
-        user.set_password(password)
+        user.set_password(password, options.md5)
         user.is_superuser = True
         user.save()
 

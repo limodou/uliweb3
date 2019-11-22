@@ -98,6 +98,8 @@ class Session(dict):
         
         self.key = key
         if not self.key:
+            # 增加key的生成
+            self.key = self.key or (self.prefix + _get_id())
             return
         
         try:

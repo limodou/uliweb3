@@ -37,11 +37,14 @@ def check_password(raw_password, enc_password):
         return False
 
 
-def encrypt_password(raw_password):
+def encrypt_password(raw_password, md5=True):
     import random
     algo = 'sha1'
     salt = get_hexdigest(algo, str(random.random()), str(random.random()))[:5]
-    hsh = get_hexdigest(algo, salt, raw_password)
+    if md5:
+        hsh = get_hexdigest(algo, salt, hashlib.md5(raw_password).hexdigest)
+    else:
+        hsh = get_hexdigest(algo, salt, raw_password)
     return '%s$%s$%s' % (algo, salt, hsh)
 
 

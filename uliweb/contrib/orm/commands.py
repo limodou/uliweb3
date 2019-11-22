@@ -1193,7 +1193,7 @@ class AlembicCommand(SQLCommandMixin, CommandManager):
     check_apps_dirs = True
 
     def get_commands(self, global_options):
-        import subcommands
+        from . import subcommands
         cmds = get_commands(subcommands)
         return cmds
 
