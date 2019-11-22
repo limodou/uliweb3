@@ -209,7 +209,7 @@ def test_triple_string():
     >>> buf = StringIO(\"\"\"
     ... #coding=utf8
     ... [DEFAULT]
-    ... a = u'''hello
+    ... a = '''hello
     ... 中文
     ... '''
     ... \"\"\")

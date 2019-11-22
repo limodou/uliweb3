@@ -481,7 +481,9 @@ class Ini(SortedDict):
         else:
             text = fobj.read()
 
-        text = text + b('\n')
+        LF = b('\n') if isinstance(text,bytes) else '\n'
+
+        text = text + LF
         begin = 0
         # if text.startswith(codecs.BOM_UTF8):
         #     begin = 3
@@ -500,15 +502,16 @@ class Ini(SortedDict):
         self._encoding = encoding
         
         #To fix https://github.com/limodou/uliweb3/issues/14
-        nindex = text.find(b("\n"))
+        nindex = text.find(LF)
         if nindex>=0:
             line = text[:nindex]
-            if line[0]==b(self._commentchar)[0]:
+            if line and line[0]==b(self._commentchar)[0]:
                 r = r_encoding.search(u(line[1:]))
                 if r:
                     self._encoding = r.groups()[0]
         if not PY2:
-            text = text.decode(self._encoding)
+            if isinstance(text,bytes):
+                text = text.decode(self._encoding)
 
         f = StringIO(text)
         f.seek(begin)
