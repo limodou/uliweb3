@@ -1847,8 +1847,8 @@ class Property(object):
 
     def to_column_info(self):
         d = {}
-        d['verbose_name'] = self.verbose_name or ''
-        d['label'] = self.label or ''
+        d['verbose_name'] = u(self.verbose_name or '')
+        d['label'] = u(self.label) or ''
         d['name'] = self.name
         d['fieldname'] = self.fieldname
         d['type'] = self.type_name
@@ -1948,7 +1948,7 @@ class UUIDProperty(StringProperty):
         import uuid
 
         u = uuid.uuid4()
-        return u.get_hex()[:self.max_length]
+        return u.hex[:self.max_length]
 
     def convert(self, value):
         if value is None:
@@ -3945,12 +3945,14 @@ class Model(with_metaclass(ModelMetaclass)):
                     d[field_name] = u', '.join([text_type(x) in field_value])
         return d
 
-    def to_dict(self, fields=None, convert=True, manytomany=False, dicttype=dict):
+    def to_dict(self, fields=None, exclude=None, convert=True, manytomany=False, dicttype=dict):
+        exclude = exclude or []
         d = dicttype()
         fields = fields or self.properties.keys()
         for k in fields:
             v = self.properties.get(k)
             if not v: continue
+            if k in exclude: continue
             if not isinstance(v, ManyToMany):
                 if convert:
                     t = v.get_value_for_datastore(self)

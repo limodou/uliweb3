@@ -138,9 +138,9 @@ class Command(with_metaclass(CommandMetaclass)):
     
         """
         if len(self.option_list) > 0:
-            usage = '%%prog %s [options] %s' % (subcommand, self.args)
+            usage = 'uliweb %s [options] %s' % (subcommand, self.args)
         else:
-            usage = '%%prog {} {}'.format(subcommand, self.args)
+            usage = 'uliweb {} {}'.format(subcommand, self.args)
         if self.help:
             return '%s\n\n%s' % (usage, self.help)
         else:
