@@ -119,6 +119,8 @@ def to_datetime(dt, tzinfo=None, format=None):
         except Exception:
             return None
         d = d.replace(tzinfo=tz)
+        if not tz:
+            d = datetime(d.year, d.month, d.day, d.hour, d.minute, d.second, d.microsecond)
     else:
         d = datetime(getattr(dt, 'year', 1970), getattr(dt, 'month', 1),
             getattr(dt, 'day', 1), getattr(dt, 'hour', 0), getattr(dt, 'minute', 0),

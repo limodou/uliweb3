@@ -1599,7 +1599,7 @@ class Property(object):
     server_default = None
     
     def __init__(self, label=None, verbose_name=None, fieldname=None, default=None,
-        required=False, validators=None, choices=None, max_length=None, 
+        required=False, validators=None, choices=None, max_length=None, choices_name=None,
         hint='', auto=None, auto_add=None, type_class=None, type_attrs=None, 
         placeholder='', extra=None,
         sequence=False, **kwargs):
@@ -1617,6 +1617,7 @@ class Property(object):
         if not isinstance(self.validators, (tuple, list)):
             self.validators = [self.validators]
         self.choices = choices
+        self.choices_name = choices_name
         self.max_length = max_length
         self.kwargs = kwargs
         self.sequence = sequence
