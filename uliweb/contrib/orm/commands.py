@@ -497,7 +497,7 @@ class SQLTableCommand(SQLCommandMixin, Command):
                 dialect = create_engine('{}://'.format(options.dialect), strategy="mock", executor=None).dialect
             else:
                 dialect = engine.dialect
-            print("{};".format(safe_str(u(CreateTable(t)).compile(dialect=dialect))).rstrip())
+            print("{};".format(str((CreateTable(t).compile(dialect=dialect))).rstrip()))
             for x in t.indexes:
                 print("{};".format(CreateIndex(x)))
 
