@@ -1088,6 +1088,31 @@ class SQLHtmlCommand(SQLCommandMixin, Command):
             local_settings_file=global_options.local_settings)
         print(generate_html(tables, apps))
 
+class SQLExcelCommand(SQLCommandMixin, Command):
+    name = 'sqlexcel'
+    args = '<appname, appname, ...>'
+    help = "Create database documentation in Excel format. If no apps, then process the whole database."
+    check_apps = True
+    option_list = (
+        make_option('-o', dest='output_file', default='db.xlsx',
+            help='Output excel filename, default is db.xlsx.'),
+    )
+
+    def handle(self, options, global_options, *args):
+        from .genexcel import generate_excel
+
+        engine = get_engine(options, global_options)
+
+        if args:
+            apps = args
+        else:
+            apps = self.get_apps(global_options)
+
+        tables = get_tables(global_options.apps_dir, args, engine_name=options.engine,
+            settings_file=global_options.settings,
+            local_settings_file=global_options.local_settings)
+        generate_excel(tables, apps, options.output_file)
+
 class SQLShellCommand(SQLCommandMixin, Command):
     name = 'sqlshell'
     args = ''

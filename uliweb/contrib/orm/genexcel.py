@@ -14,15 +14,14 @@ def safe_str(s, encoding='utf-8'):
         return u(s, encoding)
 
 
-def generate_html(tables, apps, **kwargs):
+def generate_excel(tables, apps, filename, **kwargs):
     from uliweb import orm
     from os.path import dirname, join    
-    from uliweb.core.template import template_file
     from uliweb.orm import ReferenceProperty
-    from uliweb.utils.textconvert import text2html
     from sqlalchemy.schema import CreateIndex
     
     menus = []
+    table_objs = {}
     for app in apps:
         section = {
             'name': app,
@@ -37,6 +36,7 @@ def generate_html(tables, apps, **kwargs):
                 'name': tablename,
                 'caption': tablename,
             }
+            table_objs[tablename] = item
             try:
                 M = orm.get_model(tablename)
             except:
@@ -60,7 +60,7 @@ def generate_html(tables, apps, **kwargs):
             'indexes': [],
         }
         if hasattr(t, '__appname__'):
-            model['appname'] = text2html(t.__appname__)
+            model['appname'] = t.__appname__
         else:
             model['appname'] = None
         
@@ -88,6 +88,8 @@ def generate_html(tables, apps, **kwargs):
             model['desc'] = M.__doc__
         else:
             model['desc'] = ''
+        table = table_objs[name]
+        table['desc'] = model['desc']
         
         #process indexes
         for x in t.indexes:
@@ -135,8 +137,39 @@ def generate_html(tables, apps, **kwargs):
             model['fields'].append(field)
         all_tables.append(model)
     database = {}
-    database["menus"] = menus;
-    database["tables"] = all_tables;
-    return template_file(join(dirname(__file__), "templates/docindex.html"), database)
+    database["menus"] = menus
+    database["tables"] = all_tables
+    return write_excel(filename, database)
     
-    
+def write_excel(filename, database):
+    import openpyxl
+
+    wb = openpyxl.Workbook(write_only=True)
+    sh = wb.create_sheet(title="表索引")
+    sh.append(['模块名', '表名', '中文名', '说明'])
+    for menu in database['menus']:
+        for item in menu['items']:
+            sh.append([item['app_name'], item['name'], item['label'], item['desc']])
+    app = ''
+    for table in sorted(database['tables'], key=lambda x: x['appname']):
+        if table['appname'] != app:
+            app = table['appname']
+            sh = wb.create_sheet(title=app)
+
+        sh.append(['表名', table['name'], '中文名', table['label']])
+        sh.append(['中文名', '字段名', '类型', '是否允许为空', '是否主键', '关系', '参数名'])
+        for field in table['fields']:
+            sh.append([str(field['label']), field['name'], str(field['type']),
+                       'Y' if field['nullable'] else 'N',
+                       'Y' if field['primary_key'] else '', field['reftable'],
+                       field['choices_name']])
+
+        sh.append([''])
+        if table['indexes']:
+            sh.append(['索引：'])
+            for index in table['indexes']:
+                sh.append([str(index)])
+            sh.append([''])
+            sh.append([''])
+
+    wb.save(filename)

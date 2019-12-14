@@ -297,10 +297,17 @@ td.ref{cursor:pointer}
               <th>Can be Null</th>
               <th>Relation</th>
           </tr>
-          {{ for field in sorted(table['fields'], key=lambda x:(not x['primary_key'], x['name'])): }}
+          {{ for field in table['fields']: }}
              <tr class="{{if field['primary_key']:}}key{{pass}}">
                 <td>{{if field['primary_key']:}} <i class="icon-tag" title="Yes">Y</i>  {{else:}} &nbsp; {{pass}}</td>
-                <td>{{= field['label']}} {{if field['star']:}} <a class="star" href="#comment-{{= table['name']}}-{{= field['name']}}" onmousemove="tips.show('comment-{{= table['name']}}-{{= field['name']}}')" onmouseout="tips.hide()">{{=field['star']}}</a> {{pass}}</td>
+                <td>{{= field['label']}}
+                    {{if field['star']:}}
+                    <a class="star" href="#comment-{{= table['name']}}-{{= field['name']}}" onmousemove="tips.show('comment-{{= table['name']}}-{{= field['name']}}')" onmouseout="tips.hide()">{{=field['star']}}</a>
+                    {{pass}}
+                    {{if field['choices_name']:}}
+                    <span class="choices-name">(参数名：{{=field['choices_name']}})</span>
+                    {{pass}}
+                </td>
                 <td>{{= field['name']}}</td>
                 <td>{{= field['type']}}</td>
                 <td>{{if field['nullable']:}}<i class="icon-ok" title="True">True</i>  {{else:}} &nbsp; {{pass}}</td>
