@@ -673,6 +673,7 @@ class CallCommand(Command):
                 for f in apps:
                     yield 'app', f, command
 
+        ret = 0 # if call successfully then return 0
         for _type, app, m in get_module(command, apps):
             mod = None
             if _type == 'mod':
@@ -684,21 +685,28 @@ class CallCommand(Command):
                 path = get_app_dir(app)
                 if is_pyfile_exist(path, m):
                     mod_name = app + '.' + m
-                if global_options.verbose:
-                    print("Importing... {}".format(mod_name))
-                mod = __import__('%s.%s' % (app, m), fromlist=['*'])
+                    if global_options.verbose:
+                        print("Importing... {}".format(mod_name))
+                    mod = __import__('%s.%s' % (app, m), fromlist=['*'])
 
+            r = 0
             if mod:
                 if hasattr(mod, 'call'):
-                    getattr(mod, 'call')(args, options, global_options)
+                    r = getattr(mod, 'call')(args, options, global_options)
                 elif hasattr(mod, 'main'):
-                    getattr(mod, 'main')(args, options, global_options)
+                    r = getattr(mod, 'main')(args, options, global_options)
                 else:
                     print("Can't find call() or main() function in module {}".format(mod_name))
+                    r = -1
                 exe_flag = True
+
+        if r:
+            ret = r
 
         if not exe_flag:
             print("Error: Can't import the [{}], please check the file and try again.".format(command))
+            ret = -1
+        sys.exit(ret)
 register_command(CallCommand)
 
 class InstallCommand(Command):
