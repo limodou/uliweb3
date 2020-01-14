@@ -42,6 +42,7 @@ def encrypt_password(raw_password, md5=True):
     algo = 'sha1'
     salt = get_hexdigest(algo, str(random.random()), str(random.random()))[:5]
     if md5:
+        import hashlib
         hsh = get_hexdigest(algo, salt, hashlib.md5(raw_password).hexdigest)
     else:
         hsh = get_hexdigest(algo, salt, raw_password)
@@ -182,19 +183,21 @@ def default_authenticate(username, password):
         if user.check_password(password):
             return True, user
         else:
-            return False, {'password': _("Password isn't correct!")}
+            return False, {'password': _("Username or password isn't correct!")}
     else:
-        return False, {'username': _('"{}" is not existed!').format(username)}
+        return False, {'password': _("Username or password isn't correct!")}
 
 
 def authenticate(username, password, auth_type=None):
-    from uliweb import settings
+    from uliweb import settings, request
 
     auth_type = auth_type or settings.AUTH.AUTH_DEFAULT_TYPE
 
     errors = {}
     if not isinstance(auth_type, (list, tuple)):
         auth_type = [auth_type]
+
+    ip = request.environ['REMOTE_ADDR']
 
     for t in auth_type:
         if t in settings.AUTH_CONFIG:
@@ -203,10 +206,16 @@ def authenticate(username, password, auth_type=None):
                 func = import_attr(func_path)
                 f, d = func(username, password)
                 if f:
-                    log.info("login successfully, auth_type: %s"%(t))
+                    if hasattr(d,"locked") and d.locked:
+                        log.error("'%s' fail to login, err: user '%s' is locked"%(ip, d))
+                        return False, {'username': _('"{}" is locked!').format(username)}
+                    if hasattr(d,"deleted") and d.deleted:
+                        log.error("'%s' fail to login, err: user '%s' is deleted"%(ip, d))
+                        return False, {'username': _('"{}" is deleted!').format(username)}
+                    log.info("'%s' login successfully as user '%s', auth_type: %s"%(ip, username, t))
                     return f, d
                 else:
-                    log.error("fail to login, auth_type: %s, err: %s"%(t,d))
+                    log.error("'%s' fail to login, auth_type: %s, err: %s"%(ip, t, d))
                     errors = d
         else:
             log.error("auth_type %s not in config"%(t))
