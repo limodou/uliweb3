@@ -627,16 +627,24 @@ def print_model(model, engine_name=None, skipblank=False):
     else:
         return sql
 
-def do_(query, ec=None, args=None):
+def do_(query, ec=None, args=None, found_rows=False, **kwargs):
     """
     Execute a query
     """
     from time import time
     from uliweb.utils.common import get_caller
 
+    # note found_rows only support MySQL
     conn = get_session(ec)
+    if isinstance(query, string_types):
+        query = text(query)
     b = time()
-    result = conn.execute(query, *(args or ()))
+    if kwargs:
+        result = conn.execute(query, kwargs)
+    else:
+        result = conn.execute(query, *(args or ()))
+    if found_rows:
+        result.total = conn.execute('select found_rows() as count').scalar()
     t = time() - b
     dispatch.call(ec, 'post_do', query, conn, t)
     
