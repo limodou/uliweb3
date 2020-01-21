@@ -220,7 +220,7 @@ def jsonp(data, **json_kwargs):
         return Response(begin + '(' + json_dumps(data) + ');', **json_kwargs)
 
 
-def CORS(func=None):
+def CORS(func=None, res=None):
     """
     CORS support
     """
@@ -233,7 +233,7 @@ def CORS(func=None):
             response.headers['Access-Control-Allow-Credentials'] = 'true'
             response.headers['Access-Control-Allow-Origin'] = request.headers['Origin']
             response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
-            response.headers['Access-Control-Allow-Headers'] = 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range'
+            response.headers['Access-Control-Allow-Headers'] = request.headers['Access-Control-Request-Headers'] #'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range'
             response.headers['Access-Control-Max-Age'] = 24*3600
             response.headers['Content-Type'] = 'text/plain; charset=utf-8'
             response.headers['Content-Length'] = 0
@@ -245,8 +245,9 @@ def CORS(func=None):
             if 'Origin' in request.headers:
                 response.headers['Access-Control-Allow-Origin'] = request.headers['Origin']
             response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
-            response.headers['Access-Control-Allow-Headers'] = 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range'
+            response.headers['Access-Control-Allow-Headers'] = request.headers.get('Access-Control-Request-Headers', 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range')
             response.headers['Access-Control-Expose-Headers'] = 'Content-Length,Content-Range'
+            return response
 
     if callable(func):
         @wraps(func)
@@ -259,7 +260,7 @@ def CORS(func=None):
 
         return f
     else:
-        w()
+        return w(res)
 
 def expose(rule=None, **kwargs):
     e = rules.Expose(rule, **kwargs)
@@ -1454,6 +1455,10 @@ class Dispatcher(object):
             local.request = req = Request(environ)
             local.response = res = Response(content_type='text/html')
         
+            # add DEFAULT_CORS support
+            if settings.GLOBAL.DEFAULT_CORS and req.method == 'OPTIONS':
+                return CORS()
+
             #add local cached
             local.local_cache = {}
             #add in web flag
@@ -1535,7 +1540,10 @@ class Dispatcher(object):
         finally:
             local.local_cache = {}
             local.in_web = False
-        return response
+        if settings.GLOBAL.DEFAULT_CORS:
+            return CORS(None, response)
+        else:
+            return response
     
     def handler(self):
         return DispatcherHandler(self)
