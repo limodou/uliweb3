@@ -52,18 +52,18 @@ class DirCommand(Command):
                         if not test:
                             os.unlink(f)
                         if test or verbose:
-                            print 'Clean filename {}...'.format(f)
+                            print('Clean filename {}...'.format(f))
                     else:
                         if not test:
                             shutil.rmtree(f)
                         if test or verbose:
-                            print 'Clean directory {}...'.format(f)
+                            print('Clean directory {}...'.format(f))
 
                     i += 1
                 except:
                     import traceback
                     traceback.print_exc()
-        print 'Cleaned {} files'.format(i)
+        print('Cleaned {} files'.format(i))
 
 
 class ModelCommand(Command):
@@ -97,7 +97,7 @@ class ModelCommand(Command):
         log = logging.getLogger(__name__)
 
         if verbose:
-            print 'Clean {}, days={}, count={} ...'.format(model, days, count)
+            print('Clean {}, days={}, count={} ...'.format(model, days, count))
         M = functions.get_model(model)
         if hasattr(M, 'clear_data'):
             b = time.time()
@@ -130,6 +130,6 @@ class ModelCommand(Command):
                 t = ret
 
 
-            print 'Used {} seconds to clean the {}, total records is {}'.format(time.time()-b, model, t)
+            print('Used {} seconds to clean the {}, total records is {}'.format(time.time()-b, model, t))
         else:
-            print 'There is no clear_data() function defined for {}'.format(model)
+            print('There is no clear_data() function defined for {}'.format(model))

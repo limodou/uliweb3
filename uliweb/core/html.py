@@ -126,8 +126,8 @@ class Builder(object):
     
     Then you can output the result:
         
-    print b.text
-    print b.body
+    print(b.text)
+    print(b.body)
     """
     def __init__(self, *parts):
         self.parts = parts or ['body']

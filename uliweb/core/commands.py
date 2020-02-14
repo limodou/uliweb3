@@ -333,7 +333,7 @@ class CommandManager(Command):
                     k, v = x.split('=')
                     os.environ[k.strip()] = v.strip()
                 else:
-                    print ('Error: environment variable definition (%s) format is not right, '
+                    print('Error: environment variable definition (%s) format is not right, '
                            'shoule be -Ek=v or -Ek="a b"' % x)
 
         global_options.settings = global_options.settings or os.environ.get('SETTINGS', 'settings.ini')

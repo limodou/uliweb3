@@ -167,7 +167,7 @@ def dump_table(table, filename, con, std=None, delimiter=',', format=None,
     if not format:
         print(' '.join(fields), file=std)
     elif format == 'txt':
-        print >>std, ','.join(fields)
+        print(','.join(fields), file=std)
     n = 0
     if format == 'txt':
         fw = csv.writer(std, delimiter=delimiter)

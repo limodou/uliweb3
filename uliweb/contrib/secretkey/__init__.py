@@ -7,7 +7,7 @@ def get_cipher(key=None):
     Get cipher object, and then you can invoke:
         des = get_cipher()
         d = des.encrpy('Hello')
-        print des.descrpy(d)
+        print(des.descrpy(d))
     """
     des_func = import_attr(settings.SECRETKEY.CIPHER_CLS)
     kwargs = settings.SECRETKEY.CIPHER_ARGS

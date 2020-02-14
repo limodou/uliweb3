@@ -8,4 +8,4 @@ def timeit(output):
     """
     b = time.time()
     yield
-    print output, 'time used: %.3fs' % (time.time()-b)
+    print(output, 'time used: %.3fs' % (time.time()-b))

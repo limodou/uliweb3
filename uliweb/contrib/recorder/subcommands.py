@@ -67,7 +67,7 @@ class StatusCommand(Command):
             status = s.status
         else:
             status = 'E'
-        print 'Recorder status is', S.status.get_display_value(status).upper()
+        print('Recorder status is', S.status.get_display_value(status).upper())
 
 class PrintCommand(Command):
     name = 'print'
@@ -120,8 +120,8 @@ class PrintCommand(Command):
 
         out.write('#coding=utf8\n')
         if global_options.verbose:
-            print '#recorder template is "%s"' % tplfile
-            print '#recorder row template is "%s"' % row_tplfile
+            print('#recorder template is "%s"' % tplfile)
+            print('#recorder row template is "%s"' % row_tplfile)
 
         begin = time.time()
         rows = []

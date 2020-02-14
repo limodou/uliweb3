@@ -29,5 +29,5 @@ class MakeKeyCommand(Command):
         f = open(keyfile, 'w')
         secret_key = ''.join([choice('abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)') for i in range(settings.SECRETKEY.KEY_LENGTH)])
         f.write(secret_key)
-        print ('OK')
+        print('OK')
 

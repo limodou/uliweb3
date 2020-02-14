@@ -1006,7 +1006,7 @@ class Merge(object):
                     #如果是left_join=True,以左则数组为准
                     else:
                         if self.verbose:
-                            print '---- Path=', path, 'Skip=', i
+                            print('---- Path=', path, 'Skip=', i)
                 else:
                     self.merge_dict(objs[_key], i)
             else:

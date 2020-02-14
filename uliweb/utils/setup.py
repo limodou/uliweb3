@@ -109,8 +109,8 @@ def pre_run(func):
             try:
                 import ntfslink
             except:
-                print ('You need to install ntfslink package first in windows platform.')
-                print ('You can find it at https://github.com/juntalis/ntfslink-python')
+                print('You need to install ntfslink package first in windows platform.')
+                print('You can find it at https://github.com/juntalis/ntfslink-python')
                 sys.exit(1)
             if not hasattr(os, 'symlink'):
                 os.symlink = symlink
@@ -148,11 +148,11 @@ def post_install_for_development(func):
             pkg = os.path.join(libpath, *ps)
             d = package_dir.get(p, None)
             if d is None:
-                print ("Error: the package %s directory can't be found in package_dir, please config it first" % p)
+                print("Error: the package %s directory can't be found in package_dir, please config it first" % p)
                 sys.exit(1)
                 
             src = os.path.abspath(os.path.join(os.getcwd(), d))
-            print ('Linking ', src, 'to', pkg)
+            print('Linking ', src, 'to', pkg)
             rm(pkg)
             os.symlink(src, pkg)
             
@@ -169,7 +169,7 @@ def post_uninstall_link(func):
     
         libpath = sysconfig.get_python_lib()
         for p in sorted(packages, reverse=True):
-            print ('Unlink... %s' % p)
+            print('Unlink... %s' % p)
             pkg = os.path.join(libpath, p.replace('.', '/'))
             rm(pkg)
     return _f

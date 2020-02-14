@@ -966,9 +966,9 @@ class Loader(object):
                 n = nodes[x]
                 caption = ('(%s)' % n['prop']) if n['prop'] else ''
                 if cur == n['id']:
-                    print ('-'*(level*indent-1)+'>', '%s%s' % (caption, n['id']))
+                    print('-'*(level*indent-1)+'>', '%s%s' % (caption, n['id']))
                 else:
-                    print (' '*level*indent, '%s%s' % (caption, n['id']))
+                    print(' '*level*indent, '%s%s' % (caption, n['id']))
                 print_tree(tree_ids.get(x, []), cur=cur, level=level+1, indent=indent)
 
         _filename = ''
@@ -977,9 +977,9 @@ class Loader(object):
         for p in self.dirs:
             _filename = os.path.join(p, filename)
             if os.path.exists(_filename):
-                print (self._get_rel_filename(_filename, path))
-                print ()
-                print ('-------------- Tree --------------')
+                print(self._get_rel_filename(_filename, path))
+                print()
+                print('-------------- Tree --------------')
 
                 break
         if _filename:
@@ -998,7 +998,7 @@ class Loader(object):
             print_tree(make_tree(templates), self._get_rel_filename(_filename, path))
 
     def print_blocks(self, filename, with_filename=True, path=None):
-        print ('-------------- Blocks --------------')
+        print('-------------- Blocks --------------')
         t = self.load(filename)
 
         path = path or os.getcwd()
@@ -1033,9 +1033,9 @@ class Loader(object):
             filename, indent = blocks[name]['filename'], blocks[name]['indent']
             f = self._get_rel_filename(filename, path)
             if with_filename:
-                print ('    '*indent + name, '  ('+f+')')
+                print('    '*indent + name, '  ('+f+')')
             else:
-                print ('    '*indent + name)
+                print('    '*indent + name)
 
 
 class _Node(object):
