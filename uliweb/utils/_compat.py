@@ -6,7 +6,7 @@ common types & functions:
     name         2.x             3.x
     ------------ -----------     -----------
     unichr       unichr          chr
-    unicode      unicode         str
+    text_type    unicode         str
     range        xrange          range
     string_types (str, unicode)  (str, )
     pickle       cPickle         pickle
