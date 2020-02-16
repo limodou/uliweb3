@@ -880,7 +880,7 @@ class Loader(object):
         if not os.path.exists(filename):
             raise ParseError("The file %s is not existed." % filename)
 
-        with open(filename, 'r') as f:
+        with open(filename, 'rb') as f:
             text = f.read()
 
             #if layout is not empty and there is no {{extend}} exsited
