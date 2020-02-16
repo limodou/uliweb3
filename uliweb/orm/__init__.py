@@ -2822,7 +2822,7 @@ class Result(object):
         for i, column in enumerate(fields):
             if column.name not in convertors:
                 if display:
-                    def f(value, data):
+                    def f(value, data, column=column):
                         return column.get_display_value(value)
 
                     convertors[column.name] = f
