@@ -70,10 +70,10 @@ class FileIterator(object):
         return self
     def next(self):
         if self.length is not None and self.length <= 0:
-            return
+            raise StopIteration
         chunk = self.fileobj.read(self.chunk_size)
         if not chunk:
-            return
+            raise StopIteration
         if self.length is not None:
             self.length -= len(chunk)
             if self.length < 0:
@@ -162,7 +162,7 @@ def filedown(environ, filename, cache=True, cache_timeout=None,
                 #for small file, read it to memory and return directly
                 #and this can avoid some issue with google chrome
                 if (rend-rbegin) < FileIterator.chunk_size:
-                    s = "".join([chunk for chunk in FileIterator(real_filename,rbegin,rend)])
+                    s = b"".join([chunk for chunk in FileIterator(real_filename,rbegin,rend)])
                     return Response(s,status=206, headers=headers, direct_passthrough=True)
                 else:
                     return Response(FileIterator(real_filename,rbegin,rend),
