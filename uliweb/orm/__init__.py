@@ -636,8 +636,8 @@ def do_(query, ec=None, args=None, found_rows=False, **kwargs):
 
     # note found_rows only support MySQL
     conn = get_session(ec)
-    if isinstance(query, string_types):
-        query = text(query)
+    # if isinstance(query, string_types):
+    #     query = text(query)
     b = time()
     if kwargs:
         result = conn.execute(query, kwargs)
@@ -4938,27 +4938,33 @@ class Bulk(object):
 
     def prepare(self, name, sql):
         try:
-            x = sql.compile(dialect=self.engine.dialect)
-            fields = SortedDict()
-            if x.positional:
-                s = x.positiontup
+            if isinstance(sql, string_types):
+                fields = []
+                x = sql
+                positional = None
             else:
-                s = x.params.keys()
-            for i in s:
-                v = i.rsplit('_', 1)
-                if len(v) > 1:
-                    n, tail = v
-                    if tail.isdigit():
-                        if n in fields:
-                            fields[i] = i
+                x = sql.compile(dialect=self.engine.dialect)
+                fields = SortedDict()
+                positional = x.positional
+                if x.positional:
+                    s = x.positiontup
+                else:
+                    s = x.params.keys()
+                for i in s:
+                    v = i.rsplit('_', 1)
+                    if len(v) > 1:
+                        n, tail = v
+                        if tail.isdigit():
+                            if n in fields:
+                                fields[i] = i
+                            else:
+                                fields[n] = i
                         else:
-                            fields[n] = i
+                            fields[i] = i
                     else:
                         fields[i] = i
-                else:
-                    fields[i] = i
             self.sqles[name] = {'fields': fields, 'raw_sql': u(x), 'data': [],
-                                'positional': x.positional}
+                                'positional': positional}
             self.keys.append(name)
         except:
             if self.transcation:
@@ -4971,11 +4977,14 @@ class Bulk(object):
     def do_(self, _name, **values):
         try:
             sql = self.sqles[_name]
-            if sql['positional']:
-                d = [values[k] for k, v in sql['fields'].items()]
+            if not sql['fields']:
+                d = values
             else:
-                d = {v:values[k] for k, v in sql['fields'].items()}
-            return do_(sql['raw_sql'], args=d)
+                if sql['positional']:
+                    d = [values[k] for k, v in sql['fields'].items()]
+                else:
+                    d = {v:values[k] for k, v in sql['fields'].items()}
+            return do_(sql['raw_sql'], **d)
         except:
             if self.transcation:
                 Rollback(self.engine)
@@ -4988,10 +4997,13 @@ class Bulk(object):
         try:
             sql = self.sqles[_name]
             data = sql['data']
-            if sql['positional']:
-                d = [values[k] for k, v in sql['fields'].items()]
+            if not sql['fields']:
+                d = values
             else:
-                d = {v:values[k] for k, v in sql['fields'].items()}
+                if sql['positional']:
+                    d = [values[k] for k, v in sql['fields'].items()]
+                else:
+                    d = {v:values[k] for k, v in sql['fields'].items()}
             data.append(d)
             if self.size and len(data) >= self.size:
                 do_(sql['raw_sql'], args=data)
