@@ -176,7 +176,7 @@ class ExcelWriter(object):
                 elif isinstance(row, dict):
                     col = row[h['name']]
                 else:
-                    raise Exception, "Can't support data format %s, only support list, tuple, dict" % type(row)
+                    raise Exception("Can't support data format %s, only support list, tuple, dict" % type(row))
                 col = row[j]
 #            for j, col in enumerate(row):
 #                if isinstance(col, dict):
