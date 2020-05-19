@@ -116,7 +116,7 @@ class Parser(object):
             expr = '\xef\xbb\xbf' + expr.encode('utf-8')
         try:
             node = parse(expr, type)
-        except SyntaxError, e:
+        except SyntaxError as e:
             raise TemplateSyntaxError(str(e), self.filename,
                                       self.lineno + e.lineno - 1)
         nodes = [node]
@@ -391,7 +391,7 @@ class Template(object):
         if kwargs:
             ns.update(kwargs)
         context = Context(ns, self.charset, self.errors)
-        exec self.code in context.runtime, context
+        exec(self.code, context.runtime, context)
         return context.get_value(self.unicode_mode)
 
     def substitute(self, *args, **kwargs):
