@@ -8,10 +8,10 @@ def test_1():
     >>> def view():pass
     >>> f = expose('!/')(view)
     >>> rules.merge_rules()
-    [('__main__', '__main__.view', '/', {})]
+    [('test_url', 'test_url.view', '/', {})]
     >>> f = expose('/hello')(view)
     >>> rules.merge_rules()
-    [('__main__', '__main__.view', '/', {}), ('__main__', '__main__.view', '/hello', {})]
+    [('test_url', 'test_url.view', '/', {}), ('test_url', 'test_url.view', '/hello', {})]
     >>> @expose('/test')
     ... class TestView(object):
     ...     @expose('')
@@ -26,5 +26,5 @@ def test_1():
     ...     def pnt(self):
     ...         return {}
     >>> rules.merge_rules()
-    [('__main__', '__main__.TestView.index', '/test', {}), ('__main__', '__main__.TestView.pnt', '/print', {}), ('__main__', '__main__.TestView.ttt', '/ttt', {}), ('__main__', '__main__.view', '/', {}), ('__main__', '__main__.view', '/hello', {})]
+    [('test_url', 'test_url.view', '/', {}), ('test_url', 'test_url.view', '/hello', {}), ('test_url', 'test_url.TestView.index', '/test', {}), ('test_url', 'test_url.TestView.pnt', '/print', {}), ('test_url', 'test_url.TestView.ttt', '/ttt', {})]
     """
