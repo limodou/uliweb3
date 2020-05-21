@@ -78,8 +78,8 @@ if not PY2:
 
     callable = lambda x: hasattr(x, '__call__')
 
-    ismethod = lambda f: callable(f) and not inspect.isclass(f) and '.' in f.__qualname__
-    isfunction = lambda f: callable(f) and not inspect.isclass(f) and '.' not in f.__qualname__
+    ismethod = lambda f: callable(f) and not inspect.isclass(f) and hasattr(f,"__qualname__") and '.' in f.__qualname__
+    isfunction = lambda f: callable(f) and not inspect.isclass(f) and (not hasattr(f,"__qualname__") or '.' not in f.__qualname__)
 
     import builtins
     from os import walk
