@@ -669,7 +669,7 @@ def request_url(req=None):
     from uliweb import request
 
     r = req or request
-    if request:
+    if r:
         if r.query_string:
             return r.path + '?' + u(r.query_string)
         else:

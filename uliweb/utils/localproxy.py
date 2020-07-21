@@ -22,7 +22,7 @@ class LocalProxy(object):
     def __delattr__(self, name):
         delattr(self.__get_instance__(), name)
 
-    def __nonzero__(self):
+    def __bool__(self):
         return bool(self.__get_instance__())
 
     def __str__(self):

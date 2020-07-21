@@ -114,8 +114,10 @@ def filedown(environ, filename, cache=True, cache_timeout=None,
     d_filename = _get_download_filename(environ, os.path.basename(filename))
     if action == 'download':
         headers.append(('Content-Disposition', 'attachment; %s' % d_filename))
+        headers.append(('Access-Control-Expose-Headers', 'Content-Disposition'))
     elif action == 'inline':
         headers.append(('Content-Disposition', 'inline; %s' % d_filename))
+        headers.append(('Access-Control-Expose-Headers', 'Content-Disposition'))
     if x_sendfile:
         if not x_header_name or not x_filename:
             raise Exception("x_header_name or x_filename can't be empty")

@@ -1,3 +1,5 @@
-nose
-redis
-pylibmc
+uliweb3
+uliweb-ui
+uliweb-layout
+uliweb-apps
+sqlalchemy
