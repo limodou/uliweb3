@@ -643,7 +643,7 @@ class Ini(SortedDict):
         while 1:
             v = get_next(g)
             tokentype, t, start, end, line = v
-            if tokentype == 54:
+            if tokentype == token.AWAIT:
                 continue
             if tokentype in (token.INDENT, token.DEDENT, tokenize.COMMENT):
                 continue
