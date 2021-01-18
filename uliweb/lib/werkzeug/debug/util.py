@@ -16,7 +16,10 @@ import inspect
 import keyword
 import tokenize
 import traceback
-from cgi import escape
+try:
+    from cgi import escape
+except Exception as e:
+    from html import escape
 from werkzeug.local import Local
 from six import BytesIO, StringIO
 import six
