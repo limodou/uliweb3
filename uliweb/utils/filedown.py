@@ -6,7 +6,8 @@ from datetime import datetime
 from zlib import adler32
 import mimetypes
 from werkzeug.http import http_date, is_resource_modified
-from werkzeug import Response, wrap_file
+from werkzeug import Response
+from werkzeug.wsgi import wrap_file
 from werkzeug.exceptions import NotFound
 from ._compat import import_, b
 
@@ -126,10 +127,12 @@ def filedown(environ, filename, cache=True, cache_timeout=None,
             direct_passthrough=True)
     else:
         request = environ.get('werkzeug.request')
-        if request:
-            range = request.range
-        else:
-            range = parse_range_header(environ.get('HTTP_RANGE'))
+        # if request:
+        #     range = request.range
+        # else:
+        #     range = parse_range_header(environ.get('HTTP_RANGE'))
+        # 2021.1.24 request 在新的werkzeug 的版本没有 range 属性，在 Request 上才有
+        range = parse_range_header(environ.get('HTTP_RANGE'))
         #when request range,only recognize "bytes" as range units
         if range and range.units=="bytes":
             try:

@@ -1,5 +1,5 @@
 import os
-from werkzeug.wsgi import SharedDataMiddleware
+from werkzeug.middleware.shared_data import SharedDataMiddleware
 from uliweb import settings
 from uliweb.utils.filedown import filedown
 

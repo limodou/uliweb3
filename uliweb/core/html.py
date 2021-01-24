@@ -1,8 +1,7 @@
 from __future__ import print_function, absolute_import, unicode_literals
-import cgi
 from io import StringIO
 from uliweb.utils.common import safe_unicode, safe_str
-from ..utils._compat import import_, python_2_unicode_compatible
+from ..utils._compat import escape, import_, python_2_unicode_compatible
 
 __noescape_attrs__ = ['href', 'src']
 class DefaultValue(object):pass
@@ -25,7 +24,7 @@ def to_attrs(args, nocreate_if_none=['id', 'for', 'class']):
             if k.lower() in __noescape_attrs__:
                 t = safe_str(v)
             else:
-                t = cgi.escape(safe_str(v))
+                t = escape(safe_str(v))
             t = '"%s"' % t.replace('"', '&quot;')
             s.append('%s=%s' % (k, t))
     return ' '.join(s)

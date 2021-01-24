@@ -5,13 +5,13 @@
 from __future__ import print_function, absolute_import
 
 import os, sys
-import cgi
 import inspect
 import re
 import types
 import threading
 from werkzeug import Request as OriginalRequest, Response as OriginalResponse
-from werkzeug import ClosingIterator, Local, LocalManager, BaseResponse
+from werkzeug.wrappers import BaseResponse
+from werkzeug.local import Local, LocalManager
 from werkzeug.exceptions import HTTPException, NotFound, BadRequest, InternalServerError
 from werkzeug.routing import Map
 import json as jsn
@@ -32,7 +32,7 @@ from . import rules
 
 CONTENT_TYPE_JSON = 'application/json; charset=utf-8'
 CONTENT_TYPE_TEXT = 'text/plain; charset=utf-8'
-from ..utils._compat import string_types, callable, import_, get_class, ismethod, import_
+from ..utils._compat import escape, string_types, callable, import_, get_class, ismethod, import_
 
 try:
     set
@@ -122,8 +122,8 @@ class HTTPError(Exception):
    
 def redirect(location, code=302):
     global _xhr_redirect_json, request
-    
-    if _xhr_redirect_json and request.is_xhr:
+
+    if _xhr_redirect_json and getattr(request, 'is_json', None):
         response = json({'success':False, 'redirect':location}, status=500)
     else:
         response = Response(
@@ -132,7 +132,7 @@ def redirect(location, code=302):
             '<h1>Redirecting...</h1>\n'
             '<p>You should be redirected automatically to target URL: '
             '<a href="%s">%s</a>.  If not click the link.' %
-            (cgi.escape(location), cgi.escape(location)), status=code, content_type='text/html')
+            (escape(location), escape(location)), status=code, content_type='text/html')
         response.headers['Location'] = location
     return response
 
@@ -1506,7 +1506,7 @@ class Dispatcher(object):
                                     ins = cls(self, settings)
                                 response = ins.process_exception(req, e)
                                 if response:
-                                    break
+                                    return response
                         raise
                     
                 for cls in process_response_classes:

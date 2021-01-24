@@ -175,7 +175,7 @@ def make_application(debug=None, apps_dir='apps', project_dir=None,
             debug_cls = DebuggedApplication
 
         log.setLevel(logging.DEBUG)
-        log.info(' * Loading DebuggedApplication...')
+        # log.info(' * Loading DebuggedApplication...')
         app.debug = True
         app = debug_cls(app, uliweb.settings.GLOBAL.get('DEBUG_CONSOLE', False))
     return app
@@ -1051,8 +1051,11 @@ class RunserverCommand(Command):
         else:
             ctx = None
 
-            run_simple(options.hostname, options.port, get_app(), options.reload, False, True,
-                   extra_files, 1, options.thread, options.processes, ssl_context=ctx)
+            # run_simple(options.hostname, options.port, get_app(), options.reload, False, True,
+            #        extra_files, 1, options.thread, options.processes, ssl_context=ctx)
+            run_simple(options.hostname, options.port, get_app(), options.reload, use_debugger=False,
+                       extra_files=extra_files, threaded=options.thread,
+                       processes=options.processes, ssl_context=ctx)
 
 register_command(RunserverCommand)
 

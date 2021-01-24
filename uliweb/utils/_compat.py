@@ -27,6 +27,11 @@ PY26 = sys.version_info[0:2] == (2, 6)
 PYPY = hasattr(sys, 'pypy_translation_info')
 _identity = lambda x: x
 
+try:
+    from cgi import escape
+except Exception as e:
+    from html import escape
+
 if not PY2:
     unichr = chr
     range = range
