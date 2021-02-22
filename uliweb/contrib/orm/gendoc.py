@@ -108,7 +108,11 @@ def generate_html(tables, apps, **kwargs):
             field['label'] = tablefield.name
             
             if M:
-                ppp = M.properties[tablefield.name]
+                # ppp = M.properties[tablefield.name]
+                ppp = None
+                for fieldname, prop in M.properties.items():
+                    if prop.fieldname == tablefield.name:
+                        ppp = prop
                 if getattr(ppp, 'verbose_name', None):
                     field['label'] = (getattr(ppp, 'verbose_name', None))
 
