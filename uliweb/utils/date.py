@@ -130,7 +130,7 @@ def to_datetime(dt, tzinfo=None, format=None):
             return d
         else:
             d = d.replace(tzinfo=dt.tzinfo)
-    return to_timezone(d, tzinfo)
+    return d
 
 def to_local(dt, tzinfo=None):
     tz = pick_timezone(tzinfo, __local_timezone__)
