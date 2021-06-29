@@ -1,5 +1,6 @@
 from uliweb import settings
 from ...utils._compat import string_types, iteritems
+from uliweb.core import dispatch
 
 def after_init_apps(sender):
     from uliweb import orm
@@ -67,6 +68,8 @@ def after_init_apps(sender):
                     path = v + path[len(k):]
                     break
             orm.set_model(path, name)
+
+    dispatch.call(sender, 'after_init_orm')
 
 def patch(patch_none='empty'):
     from sqlalchemy import __version__
