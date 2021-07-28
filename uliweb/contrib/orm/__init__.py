@@ -37,7 +37,6 @@ def after_init_apps(sender):
         'connection_type':settings.get_var('ORM/CONNECTION_TYPE'),
         'debug_log':settings.get_var('ORM/DEBUG_LOG'),
         'connection_args':settings.get_var('ORM/CONNECTION_ARGS'),
-        'strategy':settings.get_var('ORM/STRATEGY'),
         }
     orm.engine_manager.add('default', d)
     
@@ -45,7 +44,6 @@ def after_init_apps(sender):
         x = {'connection_string':d.get('CONNECTION', ''),
             'debug_log':d.get('DEBUG_LOG', None),
             'connection_args':d.get('CONNECTION_ARGS', {}),
-            'strategy':d.get('STRATEGY', 'threadlocal'),
             'connection_type':d.get('CONNECTION_TYPE', 'long'),
             'duplication':d.get('DUPLICATION', False),
         }
