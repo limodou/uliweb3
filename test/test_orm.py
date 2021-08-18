@@ -4,6 +4,7 @@ from uliweb.utils._compat import text_type
 sys.path.insert(0, '../uliweb/lib')
 from uliweb.orm import *
 import uliweb.orm
+from pprint import pprint #https://stackoverflow.com/questions/15549429/how-do-i-test-dictionary-equality-with-pythons-doctest-package
 uliweb.orm.__auto_create__ = True
 uliweb.orm.__nullable__ = True
 uliweb.orm.__server_default__ = False
@@ -21,28 +22,28 @@ def test_1():
     >>> a.save()
     True
     >>> a
-    <Test {'username':u'limodou','year':30,'birth':datetime.date(2011, 3, 4),'id':1}>
-    >>> b = Test(username=u'limodou1')
+    <Test {'username':'limodou','year':30,'birth':datetime.date(2011, 3, 4),'id':1}>
+    >>> b = Test(username='limodou1')
     >>> b.save()
     True
     >>> b
-    <Test {'username':u'limodou1','year':30,'birth':None,'id':2}>
-    >>> print list(Test.all())
-    [<Test {'username':u'limodou','year':30,'birth':datetime.date(2011, 3, 4),'id':1}>, <Test {'username':u'limodou1','year':30,'birth':None,'id':2}>]
-    >>> print Test.count()
+    <Test {'username':'limodou1','year':30,'birth':None,'id':2}>
+    >>> print(list(Test.all()))
+    [<Test {'username':'limodou','year':30,'birth':datetime.date(2011, 3, 4),'id':1}>, <Test {'username':'limodou1','year':30,'birth':None,'id':2}>]
+    >>> print(Test.count())
     2
     >>> Test.any()
     True
     >>> a.username
-    u'limodou'
-    >>> list(Test.filter(Test.c.username==u'limodou'))
-    [<Test {'username':u'limodou','year':30,'birth':datetime.date(2011, 3, 4),'id':1}>]
+    'limodou'
+    >>> list(Test.filter(Test.c.username=='limodou'))
+    [<Test {'username':'limodou','year':30,'birth':datetime.date(2011, 3, 4),'id':1}>]
     >>> c = Test.get(1)
     >>> c
-    <Test {'username':u'limodou','year':30,'birth':datetime.date(2011, 3, 4),'id':1}>
+    <Test {'username':'limodou','year':30,'birth':datetime.date(2011, 3, 4),'id':1}>
     >>> c = Test.get(Test.c.id==1)
     >>> c
-    <Test {'username':u'limodou','year':30,'birth':datetime.date(2011, 3, 4),'id':1}>
+    <Test {'username':'limodou','year':30,'birth':datetime.date(2011, 3, 4),'id':1}>
     >>> Test.remove(1)
     >>> Test.count()
     1
@@ -106,9 +107,9 @@ def test_3():
     >>> b3.save()
     True
     >>> a1
-    <Test {'username':u'limodou1','year':0,'id':1}>
+    <Test {'username':'limodou1','year':0,'id':1}>
     >>> list(a1.test1.all())[0]
-    <Test1 {'test1':<ReferenceProperty:1>,'test2':<ReferenceProperty:1>,'name':u'user','id':1}>
+    <Test1 {'test1':<ReferenceProperty:1>,'test2':<ReferenceProperty:1>,'name':'user','id':1}>
     >>> Test1.all().limit(1).count()
     3
     >>> Test1.all().count()
@@ -118,26 +119,26 @@ def test_3():
     >>> a1.test1.any()
     True
     >>> list(a2.test2.all())
-    [<Test1 {'test1':<ReferenceProperty:1>,'test2':<ReferenceProperty:2>,'name':u'aaaa','id':2}>]
+    [<Test1 {'test1':<ReferenceProperty:1>,'test2':<ReferenceProperty:2>,'name':'aaaa','id':2}>]
     >>> list(a1.test1.filter(Test1.c.name=='user'))
-    [<Test1 {'test1':<ReferenceProperty:1>,'test2':<ReferenceProperty:1>,'name':u'user','id':1}>]
+    [<Test1 {'test1':<ReferenceProperty:1>,'test2':<ReferenceProperty:1>,'name':'user','id':1}>]
     >>> b1.test1
-    <Test {'username':u'limodou1','year':0,'id':1}>
+    <Test {'username':'limodou1','year':0,'id':1}>
     >>> a1.username = 'user'
     >>> Test.get(1)
-    <Test {'username':u'limodou1','year':0,'id':1}>
+    <Test {'username':'limodou1','year':0,'id':1}>
     >>> x = a1.save()
     >>> Test.get(1)
-    <Test {'username':u'user','year':0,'id':1}>
+    <Test {'username':'user','year':0,'id':1}>
     >>> b2 = Test1.get(Test1.c.name == 'user')
     >>> b2
-    <Test1 {'test1':<ReferenceProperty:1>,'test2':<ReferenceProperty:1>,'name':u'user','id':1}>
+    <Test1 {'test1':<ReferenceProperty:1>,'test2':<ReferenceProperty:1>,'name':'user','id':1}>
     >>> b2.test1 = None
     >>> b2.save()
     True
     >>> b3 = Test1.get(Test1.c.name == 'user')
     >>> b3
-    <Test1 {'test1':None,'test2':<ReferenceProperty:1>,'name':u'user','id':1}>
+    <Test1 {'test1':None,'test2':<ReferenceProperty:1>,'name':'user','id':1}>
     """
     
 #testing many2one using collection_name
@@ -161,9 +162,9 @@ def test_4():
     >>> b2.save()
     True
     >>> a1
-    <Test {'username':u'limodou1','year':0,'id':1}>
+    <Test {'username':'limodou1','year':0,'id':1}>
     >>> list(a1.tttt.all())[0]   #here we use tttt but not test1_set
-    <Test1 {'test':<ReferenceProperty:1>,'name':u'user','id':1}>
+    <Test1 {'test':<ReferenceProperty:1>,'name':'user','id':1}>
     >>> a1.tttt.count()
     2
     >>> b3 = Test1(name='aaaa')
@@ -175,9 +176,9 @@ def test_4():
     >>> b3.save()
     True
     >>> b3
-    <Test1 {'test':<ReferenceProperty:1>,'name':u'aaaa','id':3}>
+    <Test1 {'test':<ReferenceProperty:1>,'name':'aaaa','id':3}>
     >>> Test1.get(3)
-    <Test1 {'test':<ReferenceProperty:1>,'name':u'aaaa','id':3}>
+    <Test1 {'test':<ReferenceProperty:1>,'name':'aaaa','id':3}>
     """
     
 #testing transaction
@@ -222,17 +223,17 @@ def test_6():
     >>> b1.save()
     True
     >>> a1
-    <Test {'username':u'limodou1','year':0,'id':1}>
+    <Test {'username':'limodou1','year':0,'id':1}>
     >>> a1.test1
-    <Test1 {'test':<OneToOne:1>,'name':u'user','id':1}>
+    <Test1 {'test':<OneToOne:1>,'name':'user','id':1}>
     >>> b1.test
-    <Test {'username':u'limodou1','year':0,'id':1}>
+    <Test {'username':'limodou1','year':0,'id':1}>
     >>> a1.test1.name = 'guest'
     >>> a1.test1.save()
     True
     >>> c = Test1.get(1)
     >>> c.name
-    u'guest'
+    'guest'
     """
     
 #test ManyToMany
@@ -271,9 +272,9 @@ def test_7():
     >>> g1.users.add(a, b)  #can has duplicated records
     False
     >>> list(g1.users.all())
-    [<User {'username':u'limodou','id':1}>, <User {'username':u'user','id':2}>, <User {'username':u'abc','id':3}>]
+    [<User {'username':'limodou','id':1}>, <User {'username':'user','id':2}>, <User {'username':'abc','id':3}>]
     >>> list(g1.users.all().fields('username'))
-    [<User {'username':u'limodou','id':1}>, <User {'username':u'user','id':2}>, <User {'username':u'abc','id':3}>]
+    [<User {'username':'limodou','id':1}>, <User {'username':'user','id':2}>, <User {'username':'abc','id':3}>]
     >>> g1.users.clear(a)
     >>> g1.users.clear()
     >>> g1.users.count()
@@ -284,10 +285,10 @@ def test_7():
     True
     >>> g1.users.add([a, b, c])
     False
-    >>> g1.to_dict()
+    >>> pprint(g1.to_dict())
     {'id': 1, 'name': 'python'}
-    >>> g1.to_dict(manytomany=True)
-    {'users': [1, 2, 3], 'id': 1, 'name': 'python'}
+    >>> pprint(g1.to_dict(manytomany=True))
+    {'id': 1, 'name': 'python', 'users': [1, 2, 3]}
     >>> g1.users.count()
     3
     >>> g1.users.any()
@@ -299,32 +300,32 @@ def test_7():
     >>> g2.users.add(a)
     True
     >>> list(a.group_set.all())
-    [<Group {'name':u'python','id':1}>, <Group {'name':u'perl','id':2}>]
+    [<Group {'name':'python','id':1}>, <Group {'name':'perl','id':2}>]
     >>> a.group_set.add(g3)
     True
     >>> list(a.group_set.all())
-    [<Group {'name':u'python','id':1}>, <Group {'name':u'perl','id':2}>, <Group {'name':u'java','id':3}>]
+    [<Group {'name':'python','id':1}>, <Group {'name':'perl','id':2}>, <Group {'name':'java','id':3}>]
     >>> g1.users.clear(a)
     >>> list(g1.users.all())
-    [<User {'username':u'user','id':2}>, <User {'username':u'abc','id':3}>]
+    [<User {'username':'user','id':2}>, <User {'username':'abc','id':3}>]
     >>> list(g2.users.all())
-    [<User {'username':u'limodou','id':1}>]
+    [<User {'username':'limodou','id':1}>]
     >>> list(a.group_set.all())
-    [<Group {'name':u'perl','id':2}>, <Group {'name':u'java','id':3}>]
+    [<Group {'name':'perl','id':2}>, <Group {'name':'java','id':3}>]
     >>> g1.users.get(2)
-    <User {'username':u'user','id':2}>
+    <User {'username':'user','id':2}>
     >>> list(g1.users.filter(User.c.id==3).all())
-    [<User {'username':u'abc','id':3}>]
+    [<User {'username':'abc','id':3}>]
     >>> g2.users.add(c)
     True
     >>> list(Group.filter(Group.users.in_(3)))
-    [<Group {'name':u'python','id':1}>, <Group {'name':u'perl','id':2}>]
+    [<Group {'name':'python','id':1}>, <Group {'name':'perl','id':2}>]
     >>> g1.update(users=[1,2])
-    <Group {'name':u'python','id':1}>
+    <Group {'name':'python','id':1}>
     >>> g1.save()
     True
-    >>> g1.to_dict(manytomany=True)
-    {'users': [1, 2], 'id': 1, 'name': 'python'}
+    >>> pprint(g1.to_dict(manytomany=True))
+    {'id': 1, 'name': 'python', 'users': [1, 2]}
     """
 
 def test_model_self_manytomany():
@@ -382,7 +383,7 @@ def test_model_manytomany():
     >>> g1.users.add(a, b)  #can has duplicated records
     False
     >>> list(g1.users.all())
-    [<User {'username':u'limodou','id':1}>, <User {'username':u'user','id':2}>, <User {'username':u'abc','id':3}>]
+    [<User {'username':'limodou','id':1}>, <User {'username':'user','id':2}>, <User {'username':'abc','id':3}>]
     >>> g1.users.clear(a)
     >>> g1.users.clear()
     >>> g1.users.count()
@@ -393,8 +394,8 @@ def test_model_manytomany():
     False
     >>> g1.to_dict()
     {'name': 'python', 'id': 1}
-    >>> g1.to_dict(manytomany=True)
-    {'id': 1, 'users': [1, 2, 3], 'name': 'python'}
+    >>> pprint(g1.to_dict(manytomany=True))
+    {'id': 1, 'name': 'python', 'users': [1, 2, 3]}
     >>> g1.users.count()
     3
     >>> g1.users.has(a)
@@ -404,32 +405,32 @@ def test_model_manytomany():
     >>> g2.users.add(a)
     True
     >>> list(a.group_set.all())
-    [<Group {'name':u'python','id':1}>, <Group {'name':u'perl','id':2}>]
+    [<Group {'name':'python','id':1}>, <Group {'name':'perl','id':2}>]
     >>> a.group_set.add(g3)
     True
     >>> list(a.group_set.all())
-    [<Group {'name':u'python','id':1}>, <Group {'name':u'perl','id':2}>, <Group {'name':u'java','id':3}>]
+    [<Group {'name':'python','id':1}>, <Group {'name':'perl','id':2}>, <Group {'name':'java','id':3}>]
     >>> g1.users.clear(a)
     >>> list(g1.users.all())
-    [<User {'username':u'user','id':2}>, <User {'username':u'abc','id':3}>]
+    [<User {'username':'user','id':2}>, <User {'username':'abc','id':3}>]
     >>> list(g2.users.all())
-    [<User {'username':u'limodou','id':1}>]
+    [<User {'username':'limodou','id':1}>]
     >>> list(a.group_set.all())
-    [<Group {'name':u'perl','id':2}>, <Group {'name':u'java','id':3}>]
+    [<Group {'name':'perl','id':2}>, <Group {'name':'java','id':3}>]
     >>> g1.users.get(2)
-    <User {'username':u'user','id':2}>
+    <User {'username':'user','id':2}>
     >>> list(g1.users.filter(User.c.id==3).all())
-    [<User {'username':u'abc','id':3}>]
+    [<User {'username':'abc','id':3}>]
     >>> g2.users.add(c)
     True
     >>> list(Group.filter(Group.users.in_(3)))
-    [<Group {'name':u'python','id':1}>, <Group {'name':u'perl','id':2}>]
+    [<Group {'name':'python','id':1}>, <Group {'name':'perl','id':2}>]
     >>> g1.update(users=[1,2])
-    <Group {'name':u'python','id':1}>
+    <Group {'name':'python','id':1}>
     >>> g1.save()
     True
-    >>> g1.to_dict(manytomany=True)
-    {'id': 1, 'users': [1, 2], 'name': 'python'}
+    >>> pprint(g1.to_dict(manytomany=True))
+    {'id': 1, 'name': 'python', 'users': [1, 2]}
     """
 
 #test SelfReference
@@ -451,14 +452,14 @@ def test_selfreference():
     >>> c.save()
     True
     >>> for i in User.all():
-    ...     print repr(i)
-    <User {'username':u'a','parent':None,'id':1}>
-    <User {'username':u'b','parent':<ReferenceProperty:1>,'id':2}>
-    <User {'username':u'c','parent':<ReferenceProperty:1>,'id':3}>
+    ...     print(repr(i))
+    <User {'username':'a','parent':None,'id':1}>
+    <User {'username':'b','parent':<ReferenceProperty:1>,'id':2}>
+    <User {'username':'c','parent':<ReferenceProperty:1>,'id':3}>
     >>> for i in a.children.all():
-    ...     print repr(i)
-    <User {'username':u'b','parent':<ReferenceProperty:1>,'id':2}>
-    <User {'username':u'c','parent':<ReferenceProperty:1>,'id':3}>
+    ...     print(repr(i))
+    <User {'username':'b','parent':<ReferenceProperty:1>,'id':2}>
+    <User {'username':'c','parent':<ReferenceProperty:1>,'id':3}>
     """
     
 #test SelfReference
@@ -480,14 +481,14 @@ def test_selfreference_2():
     >>> c.save()
     True
     >>> for i in User.all():
-    ...     print repr(i)
-    <User {'username':u'a','parent':None,'id':1}>
-    <User {'username':u'b','parent':<ReferenceProperty:1>,'id':2}>
-    <User {'username':u'c','parent':<ReferenceProperty:1>,'id':3}>
+    ...     print(repr(i))
+    <User {'username':'a','parent':None,'id':1}>
+    <User {'username':'b','parent':<ReferenceProperty:1>,'id':2}>
+    <User {'username':'c','parent':<ReferenceProperty:1>,'id':3}>
     >>> for i in a.children.all():
-    ...     print repr(i)
-    <User {'username':u'b','parent':<ReferenceProperty:1>,'id':2}>
-    <User {'username':u'c','parent':<ReferenceProperty:1>,'id':3}>
+    ...     print(repr(i))
+    <User {'username':'b','parent':<ReferenceProperty:1>,'id':2}>
+    <User {'username':'c','parent':<ReferenceProperty:1>,'id':3}>
     """
 
 def test_model_selfreference():
@@ -509,14 +510,14 @@ def test_model_selfreference():
     >>> c.save()
     True
     >>> for i in User.all():
-    ...     print repr(i)
-    <User {'username':u'a','parent':None,'id':1}>
-    <User {'username':u'b','parent':<ReferenceProperty:1>,'id':2}>
-    <User {'username':u'c','parent':<ReferenceProperty:1>,'id':3}>
+    ...     print(repr(i))
+    <User {'username':'a','parent':None,'id':1}>
+    <User {'username':'b','parent':<ReferenceProperty:1>,'id':2}>
+    <User {'username':'c','parent':<ReferenceProperty:1>,'id':3}>
     >>> for i in a.children.all():
-    ...     print repr(i)
-    <User {'username':u'b','parent':<ReferenceProperty:1>,'id':2}>
-    <User {'username':u'c','parent':<ReferenceProperty:1>,'id':3}>
+    ...     print(repr(i))
+    <User {'username':'b','parent':<ReferenceProperty:1>,'id':2}>
+    <User {'username':'c','parent':<ReferenceProperty:1>,'id':3}>
     """
 
 def test_tree():
@@ -537,15 +538,15 @@ def test_tree():
     >>> c.save()
     True
     >>> for i in User.get_tree(parent=None, parent_order_by=User.c.id): #User.c.parent==0, parent_field='parent'
-    ...     print repr(i)
-    <User {'username':u'a','parent':None,'id':1}>
-    <User {'username':u'b','parent':<ReferenceProperty:1>,'id':2}>
-    <User {'username':u'c','parent':<ReferenceProperty:1>,'id':3}>
+    ...     print(repr(i))
+    <User {'username':'a','parent':None,'id':1}>
+    <User {'username':'b','parent':<ReferenceProperty:1>,'id':2}>
+    <User {'username':'c','parent':<ReferenceProperty:1>,'id':3}>
     >>> for i in User.get_tree(parent=None, mode='deep'): #User.c.parent==0, parent_field='parent'
-    ...     print repr(i)
-    <User {'username':u'b','parent':<ReferenceProperty:1>,'id':2}>
-    <User {'username':u'c','parent':<ReferenceProperty:1>,'id':3}>
-    <User {'username':u'a','parent':None,'id':1}>
+    ...     print(repr(i))
+    <User {'username':'b','parent':<ReferenceProperty:1>,'id':2}>
+    <User {'username':'c','parent':<ReferenceProperty:1>,'id':3}>
+    <User {'username':'a','parent':None,'id':1}>
     >>> User.delete_tree(parent=None)
     3
     >>> User.count()
@@ -602,15 +603,19 @@ def test_datetime_property():
     >>> a.date3=datetime.time(14,0,5)
     >>> a.date4=datetime.datetime(2009,1,1,14,0,5)
     >>> #test to_dict function
-    >>> print a.to_dict()
-    {'date1': '2009-01-01 14:00:05', 'date3': '14:00:05', 'date2': '2009-01-01', 'date4': '2009-01-01 14:00:05', 'id': None}
-    >>> print a.to_dict(fields=('date1', 'date2'))
+    >>> pprint(a.to_dict())
+    {'date1': '2009-01-01 14:00:05',
+     'date2': '2009-01-01',
+     'date3': '14:00:05',
+     'date4': '2009-01-01 14:00:05',
+     'id': None}
+    >>> print(a.to_dict(fields=('date1', 'date2')))
     {'date1': '2009-01-01 14:00:05', 'date2': '2009-01-01'}
-    >>> print repr(a.date1)
+    >>> print(repr(a.date1))
     datetime.datetime(2009, 1, 1, 14, 0, 5)
-    >>> print repr(a.date2)
+    >>> print(repr(a.date2))
     datetime.date(2009, 1, 1)
-    >>> print repr(a.date3)
+    >>> print(repr(a.date3))
     datetime.time(14, 0, 5)
     >>> #test saving result
     >>> a.save()
@@ -618,34 +623,38 @@ def test_datetime_property():
     >>> a
     <Test {'date1':datetime.datetime(2009, 1, 1, 14, 0, 5),'date2':datetime.date(2009, 1, 1),'date3':datetime.time(14, 0, 5),'date4':datetime.datetime(2009, 1, 1, 14, 0, 5),'id':1}>
     >>> #test to_dict function
-    >>> print a.to_dict()
-    {'date1': '2009-01-01 14:00:05', 'date3': '14:00:05', 'date2': '2009-01-01', 'date4': '2009-01-01 14:00:05', 'id': 1}
+    >>> pprint(a.to_dict())
+    {'date1': '2009-01-01 14:00:05',
+     'date2': '2009-01-01',
+     'date3': '14:00:05',
+     'date4': '2009-01-01 14:00:05',
+     'id': 1}
     >>> #test different datetime object to diffent datetime property
     >>> a.date2=datetime.datetime(2009,1,1,14,0,5)
     >>> a.date3=datetime.datetime(2009,1,1,14,0,5)
-    >>> print repr(a.date2)
+    >>> print(repr(a.date2))
     datetime.date(2009, 1, 1)
-    >>> print repr(a.date3)
+    >>> print(repr(a.date3))
     datetime.time(14, 0, 5)
     >>> #test string format to datetime property
     >>> a.date1 = '2009-01-01 14:00:05'
     >>> a.date2 = '2009-01-01'
     >>> a.date3 = '14:00:05'
-    >>> print repr(a.date1)
+    >>> print(repr(a.date1))
     datetime.datetime(2009, 1, 1, 14, 0, 5)
-    >>> print repr(a.date2)
+    >>> print(repr(a.date2))
     datetime.date(2009, 1, 1)
-    >>> print repr(a.date3)
+    >>> print(repr(a.date3))
     datetime.time(14, 0, 5)
     >>> #test different string format to datetime property
     >>> a.date1 = '2009/01/01 14:00:05'
     >>> a.date2 = '2009-01-01 14:00:05'
     >>> a.date3 = '2009-01-01 14:00:05'
-    >>> print repr(a.date1)
+    >>> print(repr(a.date1))
     datetime.datetime(2009, 1, 1, 14, 0, 5)
-    >>> print repr(a.date2)
+    >>> print(repr(a.date2))
     datetime.date(2009, 1, 1)
-    >>> print repr(a.date3)
+    >>> print(repr(a.date3))
     datetime.time(14, 0, 5)
     """
     
@@ -673,14 +682,30 @@ def test_to_dict():
     >>> a.integer = 200
     >>> a.float = 200.02
     >>> a.decimal = decimal.Decimal("10.2")
-    >>> a.to_dict() # doctest:+ELLIPSIS, +NORMALIZE_WHITESPACE
-    {'date1': '2009-01-01 14:00:05', 'date3': '14:00:00', 'date2': '2009-01-01', 'string': 'limodou', 'decimal': '10.2', 'float': 200.02, 'boolean': True, 'integer': 200, 'id': None}
+    >>> pprint(a.to_dict()) # doctest:+ELLIPSIS, +NORMALIZE_WHITESPACE
+    {'boolean': True,
+     'date1': '2009-01-01 14:00:05',
+     'date2': '2009-01-01',
+     'date3': '14:00:00',
+     'decimal': '10.2',
+     'float': 200.02,
+     'id': None,
+     'integer': 200,
+     'string': 'limodou'}
     >>> a.save()
     True
     >>> a # doctest:+ELLIPSIS, +NORMALIZE_WHITESPACE
-    <Test {'string':u'limodou','boolean':True,'integer':200,'date1':datetime.datetime(2009, 1, 1, 14, 0, 5),'date2':datetime.date(2009, 1, 1),'date3':datetime.time(14, 0),'float':200.02...,'decimal':Decimal('10.2'),'id':1}> 
-    >>> a.to_dict() # doctest:+ELLIPSIS, +NORMALIZE_WHITESPACE
-    {'date1': '2009-01-01 14:00:05', 'date3': '14:00:00', 'date2': '2009-01-01', 'string': 'limodou', 'decimal': '10.2', 'float': 200.02, 'boolean': True, 'integer': 200, 'id': 1}
+    <Test {'string':'limodou','boolean':True,'integer':200,'date1':datetime.datetime(2009, 1, 1, 14, 0, 5),'date2':datetime.date(2009, 1, 1),'date3':datetime.time(14, 0),'float':200.02...,'decimal':Decimal('10.2'),'id':1}> 
+    >>> pprint(a.to_dict()) # doctest:+ELLIPSIS, +NORMALIZE_WHITESPACE
+    {'boolean': True,
+     'date1': '2009-01-01 14:00:05',
+     'date2': '2009-01-01',
+     'date3': '14:00:00',
+     'decimal': '10.2',
+     'float': 200.02,
+     'id': 1,
+     'integer': 200,
+     'string': 'limodou'}
     """
 
 def test_none_value():
@@ -707,15 +732,23 @@ def test_none_value():
     >>> a.integer = None
     >>> a.float = None
     >>> a.decimal = None
-    >>> a.to_dict()
-    {'date1': None, 'date3': None, 'date2': None, 'string': '', 'decimal': '0.0', 'float': 0.0, 'boolean': False, 'integer': None, 'id': None}
+    >>> pprint(a.to_dict())
+    {'boolean': False,
+     'date1': None,
+     'date2': None,
+     'date3': None,
+     'decimal': '0.0',
+     'float': 0.0,
+     'id': None,
+     'integer': None,
+     'string': ''}
     >>> b = Test()
     >>> b.string = 0
     >>> b.string
-    u'0'
+    '0'
     >>> b.string = False
     >>> b.string
-    u'False'
+    'False'
     """
 
 def test_match():
@@ -728,14 +761,14 @@ def test_match():
     ...     string = StringProperty(max_length=40, choices=c)
     >>> a = Test()
     >>> a #because you didn't assign a value to string, so the default will only affect at saving
-    <Test {'string':u'','id':None}>
+    <Test {'string':'','id':None}>
     >>> #test the correct assign
     #>>> a.string = 'abc'
     #>>> #test the error assign
     #>>> try:
     #...     a.string = 'aaa'
     #... except Exception, e:
-    #...     print e
+    #...     print(e)
     #Property string is 'aaa'; must be one of ['abc', 'def']
     >>> #test tuple choices
     >>> c = [('abc', 'Prompt'), ('def', 'Hello')]
@@ -746,7 +779,7 @@ def test_match():
     #>>> try:
     #...     a.string = 'aaa'
     #... except Exception, e:
-    #...     print e
+    #...     print(e)
     #Property string is 'aaa'; must be one of ['abc', 'def']
     """
 
@@ -762,35 +795,35 @@ def test_result():
     >>> a.save()
     True
     >>> a
-    <Test {'username':u'limodou','year':10,'id':1}>
+    <Test {'username':'limodou','year':10,'id':1}>
     >>> Test(username='user', year=5).save()
     True
-    >>> print list(Test.all())
-    [<Test {'username':u'limodou','year':10,'id':1}>, <Test {'username':u'user','year':5,'id':2}>]
-    >>> print list(Test.filter(Test.c.year > 5))
-    [<Test {'username':u'limodou','year':10,'id':1}>]
-    >>> print list(Test.all().order_by(Test.c.year.desc()))
-    [<Test {'username':u'limodou','year':10,'id':1}>, <Test {'username':u'user','year':5,'id':2}>]
-    >>> print list(Test.all().order_by(Test.c.year.asc(), Test.c.username.desc()))
-    [<Test {'username':u'user','year':5,'id':2}>, <Test {'username':u'limodou','year':10,'id':1}>]
-    >>> print Test.count()
+    >>> print(list(Test.all()))
+    [<Test {'username':'limodou','year':10,'id':1}>, <Test {'username':'user','year':5,'id':2}>]
+    >>> print(list(Test.filter(Test.c.year > 5)))
+    [<Test {'username':'limodou','year':10,'id':1}>]
+    >>> print(list(Test.all().order_by(Test.c.year.desc())))
+    [<Test {'username':'limodou','year':10,'id':1}>, <Test {'username':'user','year':5,'id':2}>]
+    >>> print(list(Test.all().order_by(Test.c.year.asc(), Test.c.username.desc())))
+    [<Test {'username':'user','year':5,'id':2}>, <Test {'username':'limodou','year':10,'id':1}>]
+    >>> print(Test.count())
     2
-    >>> print Test.filter(Test.c.year>5).count()
+    >>> print(Test.filter(Test.c.year>5).count())
     1
     >>> Test.filter(Test.c.year>5).any()
     True
-    >>> print list(Test.all().values(Test.c.username, 'year'))
-    [(u'limodou', 10), (u'user', 5)]
-    >>> print list(Test.all().values('username'))
-    [(u'limodou',), (u'user',)]
-    >>> print Test.all().values_one(Test.c.username)
-    (u'limodou',)
-    >>> print list(Test.filter(Test.c.year<0))
+    >>> print(list(Test.all().values(Test.c.username, 'year')))
+    [('limodou', 10), ('user', 5)]
+    >>> print(list(Test.all().values('username')))
+    [('limodou',), ('user',)]
+    >>> print(Test.all().values_one(Test.c.username))
+    ('limodou',)
+    >>> print(list(Test.filter(Test.c.year<0)))
     []
-    >>> print Test.filter(Test.c.year<0).one()
+    >>> print(Test.filter(Test.c.year<0).one())
     None
-    >>> print repr(Test.filter(Test.c.year>5).one())
-    <Test {'username':u'limodou','year':10,'id':1}>
+    >>> print(repr(Test.filter(Test.c.year>5).one()))
+    <Test {'username':'limodou','year':10,'id':1}>
     """
     
 def test_get_data():
@@ -803,23 +836,25 @@ def test_get_data():
     ...     year = Field(datetime.datetime, auto_now_add=True, auto_now=True)
     >>> a = Test(username='limodou')
     >>> a._get_data() # doctest:+ELLIPSIS
-    {'username': u'limodou', 'year': datetime.datetime(...)}
-    >>> print a.create_sql() # doctest:+ELLIPSIS
+    {'username': 'limodou', 'year': datetime.datetime(...)}
+    >>> print(a.create_sql()) # doctest:+ELLIPSIS
     INSERT INTO test (username, year) VALUES ('limodou', '...');
     >>> a.save()
     True
-    >>> a.to_dict() # doctest:+ELLIPSIS
-    {'username': 'limodou', 'id': 1, 'year': '... ...'}
+    >>> pprint(a.to_dict()) # doctest: +ELLIPSIS
+    {'id': 1, 'username': 'limodou', 'year': '... ...'}
     >>> a.username = 'newuser'
-    >>> a._get_data()
-    {'username': u'newuser', 'id': 1}
-    >>> print a.create_sql() # doctest:+ELLIPSIS
+    >>> pprint(a._get_data())
+    {'id': 1, 'username': 'newuser'}
+    >>> print(a.create_sql()) # doctest:+ELLIPSIS
     UPDATE test SET username='newuser', year='...' WHERE test.id = 1;
-    >>> a._get_data(fields=['username', 'year'])
-    {'username': u'newuser', 'id': 1}
-    >>> a._get_data(fields=['username', 'year'], compare=False) # doctest:+ELLIPSIS
-    {'username': u'newuser', 'id': 1, 'year': datetime.datetime(...)}
-    >>> print a.create_sql(fields=['username'])
+    >>> pprint(a._get_data(fields=['username', 'year']))
+    {'id': 1, 'username': 'newuser'}
+    >>> pprint(a._get_data(fields=['username', 'year'], compare=False)) # doctest:+ELLIPSIS
+    {'id': 1,
+     'username': 'newuser',
+     'year': datetime.datetime(...)}
+    >>> print(a.create_sql(fields=['username']))
     UPDATE test SET username='newuser' WHERE test.id = 1;
     """
     
@@ -880,30 +915,30 @@ def test_reference_not_id():
     >>> b2 = Test1(name='aaaa', year=10, test=a1)
     >>> b2.save()
     True
-    >>> print repr(a1), repr(b1), repr(b2)
-    <Test {'username':u'limodou1','year':20,'id':1}> <Test1 {'test':<ReferenceProperty:1>,'year':5,'name':u'user','id':1}> <Test1 {'test':<ReferenceProperty:1>,'year':10,'name':u'aaaa','id':2}>
-    >>> print repr(b2.test)
-    <Test {'username':u'limodou1','year':20,'id':1}>
-    >>> print b2._test_
+    >>> print(repr(a1), repr(b1), repr(b2))
+    <Test {'username':'limodou1','year':20,'id':1}> <Test1 {'test':<ReferenceProperty:1>,'year':5,'name':'user','id':1}> <Test1 {'test':<ReferenceProperty:1>,'year':10,'name':'aaaa','id':2}>
+    >>> print(repr(b2.test))
+    <Test {'username':'limodou1','year':20,'id':1}>
+    >>> print(b2._test_)
     limodou1
     >>> #Test get with fields and lazy load _field_
     >>> b3 = Test1.get(Test1.c.name=='aaaa', fields=['name'])
-    >>> print b3._test_
+    >>> print(b3._test_)
     limodou1
-    >>> print a1.tttt.has(b1, b2)
+    >>> print(a1.tttt.has(b1, b2))
     True
-    >>> print a1.tttt.ids()
+    >>> print(a1.tttt.ids())
     [1, 2]
-    >>> print list(Test1.all())
-    [<Test1 {'test':<ReferenceProperty:1>,'year':5,'name':u'user','id':1}>, <Test1 {'test':<ReferenceProperty:1>,'year':10,'name':u'aaaa','id':2}>]
+    >>> print(list(Test1.all()))
+    [<Test1 {'test':<ReferenceProperty:1>,'year':5,'name':'user','id':1}>, <Test1 {'test':<ReferenceProperty:1>,'year':10,'name':'aaaa','id':2}>]
     >>> a1.tttt.clear(b2)
-    >>> print list(Test1.all())
-    [<Test1 {'test':<ReferenceProperty:1>,'year':5,'name':u'user','id':1}>]
+    >>> print(list(Test1.all()))
+    [<Test1 {'test':<ReferenceProperty:1>,'year':5,'name':'user','id':1}>]
     >>> b3 = Test1(name='aaaa', year=10, test='limodou1')
     >>> b3.save()
     True
-    >>> print repr(b3)
-    <Test1 {'test':<ReferenceProperty:1>,'year':10,'name':u'aaaa','id':2}>
+    >>> print(repr(b3))
+    <Test1 {'test':<ReferenceProperty:1>,'year':10,'name':'aaaa','id':2}>
     """
 
 def test_one2one_reference_field():
@@ -923,11 +958,11 @@ def test_one2one_reference_field():
     >>> b1.save()
     True
     >>> a1
-    <Test {'username':u'limodou1','year':0,'id':1}>
+    <Test {'username':'limodou1','year':0,'id':1}>
     >>> a1.test1
-    <Test1 {'test':<OneToOne:1>,'name':u'user','id':1}>
+    <Test1 {'test':<OneToOne:1>,'name':'user','id':1}>
     >>> b1.test
-    <Test {'username':u'limodou1','year':0,'id':1}>
+    <Test {'username':'limodou1','year':0,'id':1}>
     """
     
 def test_many2many_reference_field():
@@ -951,8 +986,8 @@ def test_many2many_reference_field():
     >>> c = User(username='abc', year=20)
     >>> c.save()
     True
-    >>> print list(User.all())
-    [<User {'username':u'limodou','year':5,'id':1}>, <User {'username':u'user','year':10,'id':2}>, <User {'username':u'abc','year':20,'id':3}>]
+    >>> print(list(User.all()))
+    [<User {'username':'limodou','year':5,'id':1}>, <User {'username':'user','year':10,'id':2}>, <User {'username':'abc','year':20,'id':3}>]
     >>> g1 = Group(name='python')
     >>> g1.save()
     True
@@ -962,24 +997,24 @@ def test_many2many_reference_field():
     >>> g3 = Group(name='java')
     >>> g3.save()
     True
-    >>> print list(Group.all())
-    [<Group {'name':u'python','id':1}>, <Group {'name':u'perl','id':2}>, <Group {'name':u'java','id':3}>]
+    >>> print(list(Group.all()))
+    [<Group {'name':'python','id':1}>, <Group {'name':'perl','id':2}>, <Group {'name':'java','id':3}>]
     >>> g1.users.add(a)
     True
     >>> g1.users.add(b)
     True
     >>> g2.users.add(a)
     True
-    >>> print list(g1.users.all())
-    [<User {'username':u'limodou','year':5,'id':1}>, <User {'username':u'user','year':10,'id':2}>]
-    >>> print list(g1.users.all().order_by(User.c.year.desc()))
-    [<User {'username':u'user','year':10,'id':2}>, <User {'username':u'limodou','year':5,'id':1}>]
-    >>> print list(g1.users.filter(User.c.year>5).order_by(User.c.year.desc()))
-    [<User {'username':u'user','year':10,'id':2}>]
-    >>> print g1.users.has(a)
+    >>> print(list(g1.users.all()))
+    [<User {'username':'limodou','year':5,'id':1}>, <User {'username':'user','year':10,'id':2}>]
+    >>> print(list(g1.users.all().order_by(User.c.year.desc())))
+    [<User {'username':'user','year':10,'id':2}>, <User {'username':'limodou','year':5,'id':1}>]
+    >>> print(list(g1.users.filter(User.c.year>5).order_by(User.c.year.desc())))
+    [<User {'username':'user','year':10,'id':2}>]
+    >>> print(g1.users.has(a))
     True
-    >>> print list(a.group_set.all())
-    [<Group {'name':u'python','id':1}>, <Group {'name':u'perl','id':2}>]
+    >>> print(list(a.group_set.all()))
+    [<Group {'name':'python','id':1}>, <Group {'name':'perl','id':2}>]
     """
 
 def test_many2many_reference_field_and_reversed_field():
@@ -1003,8 +1038,8 @@ def test_many2many_reference_field_and_reversed_field():
     >>> c = User(username='abc', year=20)
     >>> c.save()
     True
-    >>> print list(User.all())
-    [<User {'username':u'limodou','year':5,'id':1}>, <User {'username':u'user','year':10,'id':2}>, <User {'username':u'abc','year':20,'id':3}>]
+    >>> print(list(User.all()))
+    [<User {'username':'limodou','year':5,'id':1}>, <User {'username':'user','year':10,'id':2}>, <User {'username':'abc','year':20,'id':3}>]
     >>> g1 = Group(name='python')
     >>> g1.save()
     True
@@ -1014,24 +1049,24 @@ def test_many2many_reference_field_and_reversed_field():
     >>> g3 = Group(name='java')
     >>> g3.save()
     True
-    >>> print list(Group.all())
-    [<Group {'name':u'python','id':1}>, <Group {'name':u'perl','id':2}>, <Group {'name':u'java','id':3}>]
+    >>> print(list(Group.all()))
+    [<Group {'name':'python','id':1}>, <Group {'name':'perl','id':2}>, <Group {'name':'java','id':3}>]
     >>> g1.users.add(a)
     True
     >>> g1.users.add(b)
     True
     >>> g2.users.add(a)
     True
-    >>> print list(g1.users.all())
-    [<User {'username':u'limodou','year':5,'id':1}>, <User {'username':u'user','year':10,'id':2}>]
-    >>> print list(g1.users.all().order_by(User.c.year.desc()))
-    [<User {'username':u'user','year':10,'id':2}>, <User {'username':u'limodou','year':5,'id':1}>]
-    >>> print list(g1.users.filter(User.c.year>5).order_by(User.c.year.desc()))
-    [<User {'username':u'user','year':10,'id':2}>]
-    >>> print g1.users.has(a)
+    >>> print(list(g1.users.all()))
+    [<User {'username':'limodou','year':5,'id':1}>, <User {'username':'user','year':10,'id':2}>]
+    >>> print(list(g1.users.all().order_by(User.c.year.desc())))
+    [<User {'username':'user','year':10,'id':2}>, <User {'username':'limodou','year':5,'id':1}>]
+    >>> print(list(g1.users.filter(User.c.year>5).order_by(User.c.year.desc())))
+    [<User {'username':'user','year':10,'id':2}>]
+    >>> print(g1.users.has(a))
     True
-    >>> print list(a.group_set.all())
-    [<Group {'name':u'python','id':1}>, <Group {'name':u'perl','id':2}>]
+    >>> print(list(a.group_set.all()))
+    [<Group {'name':'python','id':1}>, <Group {'name':'perl','id':2}>]
     """
 
 def test_many2many_through():
@@ -1059,8 +1094,8 @@ def test_many2many_through():
     >>> c = User(username='abc', year=20)
     >>> c.save()
     True
-    >>> print list(User.all())
-    [<User {'username':u'limodou','year':5,'id':1}>, <User {'username':u'user','year':10,'id':2}>, <User {'username':u'abc','year':20,'id':3}>]
+    >>> print(list(User.all()))
+    [<User {'username':'limodou','year':5,'id':1}>, <User {'username':'user','year':10,'id':2}>, <User {'username':'abc','year':20,'id':3}>]
     >>> g1 = Group(name='python')
     >>> g1.save()
     True
@@ -1070,24 +1105,24 @@ def test_many2many_through():
     >>> g3 = Group(name='java')
     >>> g3.save()
     True
-    >>> print list(Group.all())
-    [<Group {'name':u'python','id':1}>, <Group {'name':u'perl','id':2}>, <Group {'name':u'java','id':3}>]
+    >>> print(list(Group.all()))
+    [<Group {'name':'python','id':1}>, <Group {'name':'perl','id':2}>, <Group {'name':'java','id':3}>]
     >>> g1.users.add(a)
     True
     >>> g1.users.add(b)
     True
     >>> g2.users.add(a)
     True
-    >>> print list(g1.users.all())
-    [<User {'username':u'limodou','year':5,'id':1}>, <User {'username':u'user','year':10,'id':2}>]
-    >>> print list(g1.users.all().order_by(User.c.year.desc()))
-    [<User {'username':u'user','year':10,'id':2}>, <User {'username':u'limodou','year':5,'id':1}>]
-    >>> print list(g1.users.filter(User.c.year>5).order_by(User.c.year.desc()))
-    [<User {'username':u'user','year':10,'id':2}>]
-    >>> print g1.users.has(a)
+    >>> print(list(g1.users.all()))
+    [<User {'username':'limodou','year':5,'id':1}>, <User {'username':'user','year':10,'id':2}>]
+    >>> print(list(g1.users.all().order_by(User.c.year.desc())))
+    [<User {'username':'user','year':10,'id':2}>, <User {'username':'limodou','year':5,'id':1}>]
+    >>> print(list(g1.users.filter(User.c.year>5).order_by(User.c.year.desc())))
+    [<User {'username':'user','year':10,'id':2}>]
+    >>> print(g1.users.has(a))
     True
-    >>> print list(a.group_set.all())
-    [<Group {'name':u'python','id':1}>, <Group {'name':u'perl','id':2}>]
+    >>> print(list(a.group_set.all()))
+    [<Group {'name':'python','id':1}>, <Group {'name':'perl','id':2}>]
     """
 
 def test_many2many_through_ext():
@@ -1142,11 +1177,11 @@ def test_many2many_through_ext():
     True
     >>> g1.users2.add(d)
     True
-    >>> print list(g1.users1.all())
-    [<User {'username':u'a','id':1}>, <User {'username':u'b','id':2}>]
-    >>> print list(g1.users2.all())
-    [<User {'username':u'c','id':3}>, <User {'username':u'd','id':4}>]
-    >>> print g1.users1.has(a)
+    >>> print(list(g1.users1.all()))
+    [<User {'username':'a','id':1}>, <User {'username':'b','id':2}>]
+    >>> print(list(g1.users2.all()))
+    [<User {'username':'c','id':3}>, <User {'username':'d','id':4}>]
+    >>> print(g1.users1.has(a))
     True
     """
 
@@ -1173,8 +1208,8 @@ def test_many2many_self_through():
     >>> r = Relation(user=a, user_b=b, year=20)
     >>> r.save()
     True
-    >>> print list(a.users.all())
-    [<User {'username':u'guest','year':5,'id':2}>]
+    >>> print(list(a.users.all()))
+    [<User {'username':'guest','year':5,'id':2}>]
     >>> u = a.users.all().with_relation().one()
     >>> u.relation
     <Relation {'user':<ReferenceProperty:1>,'user_b':<ReferenceProperty:2>,'year':20,'id':1}>
@@ -1205,8 +1240,8 @@ def test_many2many_through_alone():
     >>> c = User(username='abc', year=20)
     >>> c.save()
     True
-    >>> print list(User.all())
-    [<User {'username':u'limodou','year':5,'id':1}>, <User {'username':u'user','year':10,'id':2}>, <User {'username':u'abc','year':20,'id':3}>]
+    >>> print(list(User.all()))
+    [<User {'username':'limodou','year':5,'id':1}>, <User {'username':'user','year':10,'id':2}>, <User {'username':'abc','year':20,'id':3}>]
     >>> g1 = Group(name='python')
     >>> g1.save()
     True
@@ -1216,8 +1251,8 @@ def test_many2many_through_alone():
     >>> g3 = Group(name='java')
     >>> g3.save()
     True
-    >>> print list(Group.all())
-    [<Group {'name':u'python','id':1}>, <Group {'name':u'perl','id':2}>, <Group {'name':u'java','id':3}>]
+    >>> print(list(Group.all()))
+    [<Group {'name':'python','id':1}>, <Group {'name':'perl','id':2}>, <Group {'name':'java','id':3}>]
     >>> r1 = Relation(user=a, group=g1, year=10)
     >>> r1.save()
     True
@@ -1227,23 +1262,23 @@ def test_many2many_through_alone():
     >>> r3 = Relation(user=a, group=g2, year=8)
     >>> r3.save()
     True
-    >>> print list(g1.users.all())
-    [<User {'username':u'limodou','year':5,'id':1}>, <User {'username':u'user','year':10,'id':2}>]
-    >>> print list(g1.users.all().order_by(User.c.year.desc()))
-    [<User {'username':u'user','year':10,'id':2}>, <User {'username':u'limodou','year':5,'id':1}>]
-    >>> print list(g1.users.filter(User.c.year>5).order_by(User.c.year.desc()))
-    [<User {'username':u'user','year':10,'id':2}>]
-    >>> print g1.users.has(a)
+    >>> print(list(g1.users.all()))
+    [<User {'username':'limodou','year':5,'id':1}>, <User {'username':'user','year':10,'id':2}>]
+    >>> print(list(g1.users.all().order_by(User.c.year.desc())))
+    [<User {'username':'user','year':10,'id':2}>, <User {'username':'limodou','year':5,'id':1}>]
+    >>> print(list(g1.users.filter(User.c.year>5).order_by(User.c.year.desc())))
+    [<User {'username':'user','year':10,'id':2}>]
+    >>> print(g1.users.has(a))
     True
-    >>> print list(a.group_set.all())
-    [<Group {'name':u'python','id':1}>, <Group {'name':u'perl','id':2}>]
-    >>> print list(g1.users.filter(Relation.c.year>5))
-    [<User {'username':u'limodou','year':5,'id':1}>]
-    >>> print list(a.group_set.filter(Relation.c.year>5))
-    [<Group {'name':u'python','id':1}>, <Group {'name':u'perl','id':2}>]
+    >>> print(list(a.group_set.all()))
+    [<Group {'name':'python','id':1}>, <Group {'name':'perl','id':2}>]
+    >>> print(list(g1.users.filter(Relation.c.year>5)))
+    [<User {'username':'limodou','year':5,'id':1}>]
+    >>> print(list(a.group_set.filter(Relation.c.year>5)))
+    [<Group {'name':'python','id':1}>, <Group {'name':'perl','id':2}>]
     >>> #Test with_relation function
     >>> u = g1.users.all().with_relation().one()
-    >>> print u.relation.year
+    >>> print(u.relation.year)
     10
     """
 
@@ -1272,8 +1307,8 @@ def test_many2many_through_alone_condition():
     >>> c = User(username='abc', year=20)
     >>> c.save()
     True
-    >>> print list(User.all())
-    [<User {'username':u'limodou','year':5,'id':1}>, <User {'username':u'user','year':10,'id':2}>, <User {'username':u'abc','year':20,'id':3}>]
+    >>> print(list(User.all()))
+    [<User {'username':'limodou','year':5,'id':1}>, <User {'username':'user','year':10,'id':2}>, <User {'username':'abc','year':20,'id':3}>]
     >>> g1 = Group(name='python')
     >>> g1.save()
     True
@@ -1283,8 +1318,8 @@ def test_many2many_through_alone_condition():
     >>> g3 = Group(name='java')
     >>> g3.save()
     True
-    >>> print list(Group.all())
-    [<Group {'name':u'python','id':1}>, <Group {'name':u'perl','id':2}>, <Group {'name':u'java','id':3}>]
+    >>> print(list(Group.all()))
+    [<Group {'name':'python','id':1}>, <Group {'name':'perl','id':2}>, <Group {'name':'java','id':3}>]
     >>> r1 = Relation(user=a, group=g1, age=10)
     >>> r1.save()
     True
@@ -1294,26 +1329,26 @@ def test_many2many_through_alone_condition():
     >>> r3 = Relation(user=a, group=g2, age=8)
     >>> r3.save()
     True
-    >>> print list(g1.users.all())
-    [<User {'username':u'limodou','year':5,'id':1}>, <User {'username':u'user','year':10,'id':2}>]
-    >>> print list(g1.users.all().order_by(User.c.year.desc()))
-    [<User {'username':u'user','year':10,'id':2}>, <User {'username':u'limodou','year':5,'id':1}>]
-    >>> print list(g1.users.filter(User.c.year>5).order_by(User.c.year.desc()))
-    [<User {'username':u'user','year':10,'id':2}>]
-    >>> print g1.users.has(a)
+    >>> print(list(g1.users.all()))
+    [<User {'username':'limodou','year':5,'id':1}>, <User {'username':'user','year':10,'id':2}>]
+    >>> print(list(g1.users.all().order_by(User.c.year.desc())))
+    [<User {'username':'user','year':10,'id':2}>, <User {'username':'limodou','year':5,'id':1}>]
+    >>> print(list(g1.users.filter(User.c.year>5).order_by(User.c.year.desc())))
+    [<User {'username':'user','year':10,'id':2}>]
+    >>> print(g1.users.has(a))
     True
-    >>> print list(a.group_set.all())
-    [<Group {'name':u'python','id':1}>, <Group {'name':u'perl','id':2}>]
-    >>> print list(g1.users.filter(Relation.c.age>5))
-    [<User {'username':u'limodou','year':5,'id':1}>]
-    >>> print list(a.group_set.filter(Relation.c.age>5))
-    [<Group {'name':u'python','id':1}>, <Group {'name':u'perl','id':2}>]
-    >>> print list(Group.filter(Group.users.in_(1)))
-    [<Group {'name':u'python','id':1}>, <Group {'name':u'perl','id':2}>]
-    >>> print list(Group.filter(Group.users.filter(User.c.username=='limodou')))
-    [<Group {'name':u'python','id':1}>, <Group {'name':u'perl','id':2}>]
-    >>> print list(Group.filter(Group.users.filter(User.c.username=='user')))
-    [<Group {'name':u'python','id':1}>]
+    >>> print(list(a.group_set.all()))
+    [<Group {'name':'python','id':1}>, <Group {'name':'perl','id':2}>]
+    >>> print(list(g1.users.filter(Relation.c.age>5)))
+    [<User {'username':'limodou','year':5,'id':1}>]
+    >>> print(list(a.group_set.filter(Relation.c.age>5)))
+    [<Group {'name':'python','id':1}>, <Group {'name':'perl','id':2}>]
+    >>> print(list(Group.filter(Group.users.in_(1))))
+    [<Group {'name':'python','id':1}>, <Group {'name':'perl','id':2}>]
+    >>> print(list(Group.filter(Group.users.filter(User.c.username=='limodou'))))
+    [<Group {'name':'python','id':1}>, <Group {'name':'perl','id':2}>]
+    >>> print(list(Group.filter(Group.users.filter(User.c.username=='user'))))
+    [<Group {'name':'python','id':1}>]
     
     """
 
@@ -1343,8 +1378,8 @@ def test_many2many_through_field():
     >>> c = User(username='abc', year=20)
     >>> c.save()
     True
-    >>> print list(User.all())
-    [<User {'username':u'limodou','year':5,'id':1}>, <User {'username':u'user','year':10,'id':2}>, <User {'username':u'abc','year':20,'id':3}>]
+    >>> print(list(User.all()))
+    [<User {'username':'limodou','year':5,'id':1}>, <User {'username':'user','year':10,'id':2}>, <User {'username':'abc','year':20,'id':3}>]
     >>> g1 = Group(name='python')
     >>> g1.save()
     True
@@ -1354,8 +1389,8 @@ def test_many2many_through_field():
     >>> g3 = Group(name='java')
     >>> g3.save()
     True
-    >>> print list(Group.all())
-    [<Group {'name':u'python','id':1}>, <Group {'name':u'perl','id':2}>, <Group {'name':u'java','id':3}>]
+    >>> print(list(Group.all()))
+    [<Group {'name':'python','id':1}>, <Group {'name':'perl','id':2}>, <Group {'name':'java','id':3}>]
     >>> r1 = Relation(user2=a, user=b, group=g1, age=10)
     >>> r1.save()
     True
@@ -1365,26 +1400,26 @@ def test_many2many_through_field():
     >>> r3 = Relation(user2=a, group=g2, age=8)
     >>> r3.save()
     True
-    >>> print list(g1.users.all())
-    [<User {'username':u'limodou','year':5,'id':1}>, <User {'username':u'user','year':10,'id':2}>]
-    >>> print list(g1.users.all().order_by(User.c.year.desc()))
-    [<User {'username':u'user','year':10,'id':2}>, <User {'username':u'limodou','year':5,'id':1}>]
-    >>> print list(g1.users.filter(User.c.year>5).order_by(User.c.year.desc()))
-    [<User {'username':u'user','year':10,'id':2}>]
-    >>> print g1.users.has(a)
+    >>> print(list(g1.users.all()))
+    [<User {'username':'limodou','year':5,'id':1}>, <User {'username':'user','year':10,'id':2}>]
+    >>> print(list(g1.users.all().order_by(User.c.year.desc())))
+    [<User {'username':'user','year':10,'id':2}>, <User {'username':'limodou','year':5,'id':1}>]
+    >>> print(list(g1.users.filter(User.c.year>5).order_by(User.c.year.desc())))
+    [<User {'username':'user','year':10,'id':2}>]
+    >>> print(g1.users.has(a))
     True
-    >>> print list(a.group_set.all())
-    [<Group {'name':u'python','id':1}>, <Group {'name':u'perl','id':2}>]
-    >>> print list(g1.users.filter(Relation.c.age>5))
-    [<User {'username':u'limodou','year':5,'id':1}>]
-    >>> print list(a.group_set.filter(Relation.c.age>5))
-    [<Group {'name':u'python','id':1}>, <Group {'name':u'perl','id':2}>]
-    >>> print list(Group.filter(Group.users.in_(1)))
-    [<Group {'name':u'python','id':1}>, <Group {'name':u'perl','id':2}>]
-    >>> print list(Group.filter(Group.users.filter(User.c.username=='limodou')))
-    [<Group {'name':u'python','id':1}>, <Group {'name':u'perl','id':2}>]
-    >>> print list(Group.filter(Group.users.filter(User.c.username=='user')))
-    [<Group {'name':u'python','id':1}>]
+    >>> print(list(a.group_set.all()))
+    [<Group {'name':'python','id':1}>, <Group {'name':'perl','id':2}>]
+    >>> print(list(g1.users.filter(Relation.c.age>5)))
+    [<User {'username':'limodou','year':5,'id':1}>]
+    >>> print(list(a.group_set.filter(Relation.c.age>5)))
+    [<Group {'name':'python','id':1}>, <Group {'name':'perl','id':2}>]
+    >>> print(list(Group.filter(Group.users.in_(1))))
+    [<Group {'name':'python','id':1}>, <Group {'name':'perl','id':2}>]
+    >>> print(list(Group.filter(Group.users.filter(User.c.username=='limodou'))))
+    [<Group {'name':'python','id':1}>, <Group {'name':'perl','id':2}>]
+    >>> print(list(Group.filter(Group.users.filter(User.c.username=='user'))))
+    [<Group {'name':'python','id':1}>]
     
     """
 
@@ -1414,8 +1449,8 @@ def test_model_many2many_through_field():
     >>> c = User(username='abc', year=20)
     >>> c.save()
     True
-    >>> print list(User.all())
-    [<User {'username':u'limodou','year':5,'id':1}>, <User {'username':u'user','year':10,'id':2}>, <User {'username':u'abc','year':20,'id':3}>]
+    >>> print(list(User.all()))
+    [<User {'username':'limodou','year':5,'id':1}>, <User {'username':'user','year':10,'id':2}>, <User {'username':'abc','year':20,'id':3}>]
     >>> g1 = Group(name='python')
     >>> g1.save()
     True
@@ -1425,8 +1460,8 @@ def test_model_many2many_through_field():
     >>> g3 = Group(name='java')
     >>> g3.save()
     True
-    >>> print list(Group.all())
-    [<Group {'name':u'python','id':1}>, <Group {'name':u'perl','id':2}>, <Group {'name':u'java','id':3}>]
+    >>> print(list(Group.all()))
+    [<Group {'name':'python','id':1}>, <Group {'name':'perl','id':2}>, <Group {'name':'java','id':3}>]
     >>> r1 = Relation(user2=a, user=b, group=g1, age=10)
     >>> r1.save()
     True
@@ -1436,26 +1471,26 @@ def test_model_many2many_through_field():
     >>> r3 = Relation(user2=a, group=g2, age=8)
     >>> r3.save()
     True
-    >>> print list(g1.users.all())
-    [<User {'username':u'limodou','year':5,'id':1}>, <User {'username':u'user','year':10,'id':2}>]
-    >>> print list(g1.users.all().order_by(User.c.year.desc()))
-    [<User {'username':u'user','year':10,'id':2}>, <User {'username':u'limodou','year':5,'id':1}>]
-    >>> print list(g1.users.filter(User.c.year>5).order_by(User.c.year.desc()))
-    [<User {'username':u'user','year':10,'id':2}>]
-    >>> print g1.users.has(a)
+    >>> print(list(g1.users.all()))
+    [<User {'username':'limodou','year':5,'id':1}>, <User {'username':'user','year':10,'id':2}>]
+    >>> print(list(g1.users.all().order_by(User.c.year.desc())))
+    [<User {'username':'user','year':10,'id':2}>, <User {'username':'limodou','year':5,'id':1}>]
+    >>> print(list(g1.users.filter(User.c.year>5).order_by(User.c.year.desc())))
+    [<User {'username':'user','year':10,'id':2}>]
+    >>> print(g1.users.has(a))
     True
-    >>> print list(a.group_set.all())
-    [<Group {'name':u'python','id':1}>, <Group {'name':u'perl','id':2}>]
-    >>> print list(g1.users.filter(Relation.c.age>5))
-    [<User {'username':u'limodou','year':5,'id':1}>]
-    >>> print list(a.group_set.filter(Relation.c.age>5))
-    [<Group {'name':u'python','id':1}>, <Group {'name':u'perl','id':2}>]
-    >>> print list(Group.filter(Group.users.in_(1)))
-    [<Group {'name':u'python','id':1}>, <Group {'name':u'perl','id':2}>]
-    >>> print list(Group.filter(Group.users.filter(User.c.username=='limodou')))
-    [<Group {'name':u'python','id':1}>, <Group {'name':u'perl','id':2}>]
-    >>> print list(Group.filter(Group.users.filter(User.c.username=='user')))
-    [<Group {'name':u'python','id':1}>]
+    >>> print(list(a.group_set.all()))
+    [<Group {'name':'python','id':1}>, <Group {'name':'perl','id':2}>]
+    >>> print(list(g1.users.filter(Relation.c.age>5)))
+    [<User {'username':'limodou','year':5,'id':1}>]
+    >>> print(list(a.group_set.filter(Relation.c.age>5)))
+    [<Group {'name':'python','id':1}>, <Group {'name':'perl','id':2}>]
+    >>> print(list(Group.filter(Group.users.in_(1))))
+    [<Group {'name':'python','id':1}>, <Group {'name':'perl','id':2}>]
+    >>> print(list(Group.filter(Group.users.filter(User.c.username=='limodou'))))
+    [<Group {'name':'python','id':1}>, <Group {'name':'perl','id':2}>]
+    >>> print(list(Group.filter(Group.users.filter(User.c.username=='user'))))
+    [<Group {'name':'python','id':1}>]
     
     """
 
@@ -1499,40 +1534,40 @@ def test_many2many_save_and_update():
     >>> g1 = Group(name='python')
     >>> g1.save()
     True
-    >>> print g1.users.ids()
+    >>> print(g1.users.ids())
     []
     >>> g1.users = ['limodou', 'test']
-    >>> print Group.users.get_value_for_datastore(g1, cached=True)
-    [u'limodou', u'test']
+    >>> print(Group.users.get_value_for_datastore(g1, cached=True))
+    ['limodou', 'test']
     >>> g1.save()
     True
-    >>> print Group.users.get_value_for_datastore(g1, cached=True)
-    [u'limodou', u'test']
+    >>> print(Group.users.get_value_for_datastore(g1, cached=True))
+    ['limodou', 'test']
     >>> g2 = Group(name='perl', users=['user'])
     >>> g2.save()
     True
-    >>> print Group.users.get_value_for_datastore(g2, cached=True)
-    [u'user']
+    >>> print(Group.users.get_value_for_datastore(g2, cached=True))
+    ['user']
     >>> g2.users = ['limodou']
     >>> g2.save()
     True
-    >>> print Group.users.get_value_for_datastore(g2, cached=True)
-    [u'limodou']
-    >>> print g2.users.ids()
-    [u'limodou']
-    >>> print Group.users.get_value_for_datastore(g2)
-    [u'limodou']
+    >>> print(Group.users.get_value_for_datastore(g2, cached=True))
+    ['limodou']
+    >>> print(g2.users.ids())
+    ['limodou']
+    >>> print(Group.users.get_value_for_datastore(g2))
+    ['limodou']
     >>> g2.update(users=['limodou', 'test'])
-    <Group {'name':u'perl','id':2}>
+    <Group {'name':'perl','id':2}>
     >>> g2.save()
     True
-    >>> print g2.users.ids()
-    [u'limodou', u'test']
+    >>> print(g2.users.ids())
+    ['limodou', 'test']
     >>> g2.update(name='new group', users=[])
-    <Group {'name':u'new group','id':2}>
+    <Group {'name':'new group','id':2}>
     >>> g2.save()
     True
-    >>> print g2.users.ids()
+    >>> print(g2.users.ids())
     []
     """
     
@@ -1551,12 +1586,12 @@ def test_auto():
     >>> u.save()
     True
     >>> u
-    <User {'username':u'limodou','year':10,'id':1}>
+    <User {'username':'limodou','year':10,'id':1}>
     >>> u.username = 'aaa'
     >>> u.save()
     True
     >>> u
-    <User {'username':u'aaa','year':10,'id':1}>
+    <User {'username':'aaa','year':10,'id':1}>
     >>> User.username.default = 'default'
     >>> u.save()
     False
@@ -1564,7 +1599,7 @@ def test_auto():
     >>> u.save()
     True
     >>> u
-    <User {'username':u'default','year':20,'id':1}>
+    <User {'username':'default','year':20,'id':1}>
     >>> class User(Model):
     ...     username = Field(CHAR, max_length=20, auto_add=True, default='limodou')
     ...     year = Field(int)
@@ -1572,12 +1607,12 @@ def test_auto():
     >>> u.save()
     True
     >>> u
-    <User {'username':u'limodou','year':10,'id':2}>
+    <User {'username':'limodou','year':10,'id':2}>
     >>> u.username = 'aaa'
     >>> u.save()
     True
     >>> u
-    <User {'username':u'aaa','year':10,'id':2}>
+    <User {'username':'aaa','year':10,'id':2}>
     >>> User.username.default = 'default'
     >>> u.save()
     False
@@ -1585,7 +1620,7 @@ def test_auto():
     >>> u.save()
     True
     >>> u
-    <User {'username':u'aaa','year':20,'id':2}>
+    <User {'username':'aaa','year':20,'id':2}>
     
     """
 
@@ -1603,18 +1638,18 @@ def test_pickle():
     >>> a = User(username='limodou', memo={'age':30})
     >>> a.save()
     True
-    >>> print a.memo
+    >>> print(a.memo)
     {'age': 30}
     >>> b = User.get(1)
-    >>> print b.memo
+    >>> print(b.memo)
     {'age': 30}
     >>> c = User(username='limodou')
     >>> c.save()
     True
-    >>> print c.memo
+    >>> print(c.memo)
     {}
     >>> d = User.get(2)
-    >>> print c.memo
+    >>> print(c.memo)
     {}
     """
 
@@ -1632,18 +1667,18 @@ def test_json():
     >>> a = User(username='limodou', memo={'age':30})
     >>> a.save()
     True
-    >>> print a.memo
+    >>> print(a.memo)
     {'age': 30}
     >>> b = User.get(1)
-    >>> print b.memo
-    {u'age': 30}
+    >>> print(b.memo)
+    {'age': 30}
     >>> c = User(username='limodou')
     >>> c.save()
     True
-    >>> print c.memo
+    >>> print(c.memo)
     {}
     >>> d = User.get(2)
-    >>> print c.memo
+    >>> print(c.memo)
     {}
     """
 
@@ -1673,10 +1708,10 @@ def test_default_query():
     >>> b = User(username='b', year=9)
     >>> b.save()
     True
-    >>> print list(User.all())
-    [<User {'username':u'a','year':10,'id':1}>]
-    >>> print list(User.all().without())
-    [<User {'username':u'a','year':10,'id':1}>, <User {'username':u'b','year':9,'id':2}>]
+    >>> print(list(User.all()))
+    [<User {'username':'a','year':10,'id':1}>]
+    >>> print(list(User.all().without()))
+    [<User {'username':'a','year':10,'id':1}>, <User {'username':'b','year':9,'id':2}>]
     >>> g1 = Group(name='b')
     >>> g1.save()
     True
@@ -1687,10 +1722,10 @@ def test_default_query():
     True
     >>> a.group.add(g2)
     True
-    >>> print list(a.group)
-    [<Group {'name':u'a','id':2}>, <Group {'name':u'b','id':1}>]
-    >>> print list(a.group.without())
-    [<Group {'name':u'b','id':1}>, <Group {'name':u'a','id':2}>]
+    >>> print(list(a.group))
+    [<Group {'name':'a','id':2}>, <Group {'name':'b','id':1}>]
+    >>> print(list(a.group.without()))
+    [<Group {'name':'b','id':1}>, <Group {'name':'a','id':2}>]
     """
     
 def test_manytomany_filter():
@@ -1723,16 +1758,16 @@ def test_manytomany_filter():
     True
     >>> b.groups.add(g1, g2)
     True
-    >>> print list(User.filter(User.groups.join_in(1,2)))
-    [<User {'username':u'user1','id':1}>, <User {'username':u'user1','id':1}>, <User {'username':u'user2','id':2}>, <User {'username':u'user2','id':2}>]
-    >>> print list(User.filter(User.groups.join_in(1,2)).distinct())
-    [<User {'username':u'user1','id':1}>, <User {'username':u'user2','id':2}>]
-    >>> print list(User.filter(User.groups.join_filter(Group.c.name=='group3')))
-    [<User {'username':u'user1','id':1}>]
-    >>> print list(User.filter(User.groups.filter(Group.c.name=='group3')))
-    [<User {'username':u'user1','id':1}>]
-    >>> print list(Group.filter(User.groups.join_filter(User.c.username=='user2')))
-    [<Group {'name':u'group1','id':1}>, <Group {'name':u'group2','id':2}>]
+    >>> print(list(User.filter(User.groups.join_in(1,2))))
+    [<User {'username':'user1','id':1}>, <User {'username':'user1','id':1}>, <User {'username':'user2','id':2}>, <User {'username':'user2','id':2}>]
+    >>> print(list(User.filter(User.groups.join_in(1,2)).distinct()))
+    [<User {'username':'user1','id':1}>, <User {'username':'user2','id':2}>]
+    >>> print(list(User.filter(User.groups.join_filter(Group.c.name=='group3'))))
+    [<User {'username':'user1','id':1}>]
+    >>> print(list(User.filter(User.groups.filter(Group.c.name=='group3'))))
+    [<User {'username':'user1','id':1}>]
+    >>> print(list(Group.filter(User.groups.join_filter(User.c.username=='user2'))))
+    [<Group {'name':'group1','id':1}>, <Group {'name':'group2','id':2}>]
     """
 
 def test_distinct_updates():
@@ -1765,23 +1800,23 @@ def test_distinct_updates():
     True
     >>> b.groups.add(g1, g2)
     True
-    >>> print User.all().distinct().get_query()
+    >>> print(User.all().distinct().get_query())
     SELECT DISTINCT user.username, user.id 
     FROM user
-    >>> print User.all().distinct('username').get_query()
+    >>> print(User.all().distinct('username').get_query())
     SELECT distinct(user.username) AS username, user.id 
     FROM user
-    >>> print list(User.all().values('username').filter(User.c.username=='user1'))
-    [(u'user1',)]
-    >>> print list(a.groups.all().values('name'))
-    [(u'group1',), (u'group2',), (u'group3',)]
-    >>> print a.groups.all().distinct('name').get_query()
+    >>> print(list(User.all().values('username').filter(User.c.username=='user1')))
+    [('user1',)]
+    >>> print(list(a.groups.all().values('name')))
+    [('group1',), ('group2',), ('group3',)]
+    >>> print(a.groups.all().distinct('name').get_query())
     SELECT distinct("group".name) AS name, "group".id 
     FROM "group", user_group_groups 
     WHERE user_group_groups.user_id = ? AND user_group_groups.group_id = "group".id
-    >>> print list(g1.user_set.all().values('username'))
-    [(u'user1',), (u'user2',)]
-    >>> print g1.user_set.all().distinct('username').get_query()
+    >>> print(list(g1.user_set.all().values('username')))
+    [('user1',), ('user2',)]
+    >>> print(g1.user_set.all().distinct('username').get_query())
     SELECT distinct(user.username) AS username, user.id 
     FROM user, user_group_groups 
     WHERE user_group_groups.group_id = ? AND user_group_groups.user_id = user.id
@@ -1824,7 +1859,7 @@ def test_manytomany_delete():
     >>> g1.users.add(a, b)  #can has duplicated records
     False
     >>> list(g1.users.all())
-    [<User {'username':u'limodou','id':1}>, <User {'username':u'user','id':2}>, <User {'username':u'abc','id':3}>]
+    [<User {'username':'limodou','id':1}>, <User {'username':'user','id':2}>, <User {'username':'abc','id':3}>]
     >>> list(do_(Group.users.table.select()))
     [(1, 1), (1, 2), (1, 3)]
     >>> g1.delete()
@@ -1870,14 +1905,14 @@ def test_manytomany_delete_fieldname():
     >>> g1.users.add(a, b)  #can has duplicated records
     False
     >>> list(g1.users.all())
-    [<User {'username':u'limodou','id':1}>, <User {'username':u'user','id':2}>, <User {'username':u'abc','id':3}>]
+    [<User {'username':'limodou','id':1}>, <User {'username':'user','id':2}>, <User {'username':'abc','id':3}>]
     >>> list(do_(Group.users.table.select()))
     [(1, 1), (1, 2), (1, 3)]
     >>> g1.delete(delete_fieldname=True)
     >>> list(do_(Group.users.table.select()))
     []
     >>> g1
-    <Group {'name':u'python','deleted':True,'id':1}>
+    <Group {'name':'python','deleted':True,'id':1}>
     """
 
 def test_generic_relation():
@@ -1900,8 +1935,8 @@ def test_generic_relation():
     >>> b = Article(title='Linux')
     >>> b.save()
     True
-    >>> print list(a.all()) # doctest:+ELLIPSIS
-    [<Article {'title':u'Test','content':u'','tags':<uliweb.orm.Result ...>,'id':1}>, <Article {'title':u'Linux','content':u'','tags':<uliweb.orm.Result ...>,'id':2}>]
+    >>> print(list(a.all())) # doctest:+ELLIPSIS
+    [<Article {'title':'Test','content':'','tags':<uliweb.orm.Result ...>,'id':1}>, <Article {'title':'Linux','content':'','tags':<uliweb.orm.Result ...>,'id':2}>]
     >>> t = Tag(name='python', content_object=a)
     >>> t.save()
     True
@@ -1909,23 +1944,23 @@ def test_generic_relation():
     >>> t1.save()
     True
     >>> b = list(t.all())[0]
-    >>> print repr(b) # doctest:+ELLIPSIS
-    <Tag {'name':u'python','content_object':<Article {'title':u'Test','content':u'','tags':<uliweb.orm.Result ...>,'id':1}>,'id':1,'table_id':1,'object_id':1}>
-    >>> print b.to_dict()
+    >>> print(repr(b)) # doctest:+ELLIPSIS
+    <Tag {'name':'python','content_object':<Article {'title':'Test','content':'','tags':<uliweb.orm.Result ...>,'id':1}>,'id':1,'table_id':1,'object_id':1}>
+    >>> print(b.to_dict())
     {'content_object': (1, 1), 'table_id': 1, 'name': 'python', 'object_id': 1, 'id': 1}
-    >>> print b.content_object
+    >>> print(b.content_object)
     1
-    >>> print [x.name for x in a.tags]
-    [u'python', u'linux']
-    >>> print [x.name for x in Tag.content_object.filter(a)]
-    [u'python', u'linux']
-    >>> print [x.name for x in Tag.content_object.filter(('article', a.id))]
-    [u'python', u'linux']
+    >>> print([x.name for x in a.tags])
+    ['python', 'linux']
+    >>> print([x.name for x in Tag.content_object.filter(a)])
+    ['python', 'linux']
+    >>> print([x.name for x in Tag.content_object.filter(('article', a.id))])
+    ['python', 'linux']
     >>> c = Article(title="perl", content=None)
     >>> c.save()
     True
     >>> Article.get(Article.c.title=='perl') # doctest:+ELLIPSIS
-    <Article {'title':u'perl','content':u'','tags':<uliweb.orm.Result...>,'id':3}>
+    <Article {'title':'perl','content':'','tags':<uliweb.orm.Result...>,'id':3}>
     """
     
 def test_camel_case_tablename():
@@ -1972,13 +2007,13 @@ def test_model_reference():
     >>> b.save()
     True
     >>> c = Article.get(1)
-    >>> print repr(c.tag)
-    <Tag {'name':u'python','id':1}>
-    >>> print list(t.article_set)
-    [<Article {'title':u'Test','tag':<ReferenceProperty:1>,'id':1}>]
+    >>> print(repr(c.tag))
+    <Tag {'name':'python','id':1}>
+    >>> print(list(t.article_set))
+    [<Article {'title':'Test','tag':<ReferenceProperty:1>,'id':1}>]
     >>> Article.Reference('tag', 'tag', collection_name='articles')
-    >>> print list(t.articles)
-    [<Article {'title':u'Test','tag':<ReferenceProperty:1>,'id':1}>]
+    >>> print(list(t.articles))
+    [<Article {'title':'Test','tag':<ReferenceProperty:1>,'id':1}>]
     """
     
 def test_model_reference_self():
@@ -1996,13 +2031,13 @@ def test_model_reference_self():
     >>> t1 = Group(title='orm', parent=t.id)
     >>> t1.save()
     True
-    >>> print list(Group.all())
-    [<Group {'title':u'python','parent':None,'id':1}>, <Group {'title':u'orm','parent':<ReferenceProperty:1>,'id':2}>]
+    >>> print(list(Group.all()))
+    [<Group {'title':'python','parent':None,'id':1}>, <Group {'title':'orm','parent':<ReferenceProperty:1>,'id':2}>]
     >>> a = Group.get(2)
-    >>> print repr(a.parent)
-    <Group {'title':u'python','parent':None,'id':1}>
-    >>> print list(a.parent.children)
-    [<Group {'title':u'orm','parent':<ReferenceProperty:1>,'id':2}>]
+    >>> print(repr(a.parent))
+    <Group {'title':'python','parent':None,'id':1}>
+    >>> print(list(a.parent.children))
+    [<Group {'title':'orm','parent':<ReferenceProperty:1>,'id':2}>]
     """
     
 def test_model_one2one():
@@ -2023,10 +2058,10 @@ def test_model_one2one():
     >>> a.save()
     True
     >>> c = Article.get(1)
-    >>> print repr(c.tag)
-    <Tag {'name':u'python','id':1}>
-    >>> print repr(t.article)
-    <Article {'title':u'Test','tag':<OneToOne:1>,'id':1}>
+    >>> print(repr(c.tag))
+    <Tag {'name':'python','id':1}>
+    >>> print(repr(t.article))
+    <Article {'title':'Test','tag':<OneToOne:1>,'id':1}>
     """
     
 def test_self_manytomany():
@@ -2051,18 +2086,18 @@ def test_self_manytomany():
     True
     >>> g1.users.add(a)
     True
-    >>> print list(a.group_set)
-    [<Group {'name':u'python','id':1}>]
+    >>> print(list(a.group_set))
+    [<Group {'name':'python','id':1}>]
     >>> g2 = Group(name='orm')
     >>> g2.save()
     True
     >>> g1.child.add(g2)
     True
     >>> g3 = Group.get(1)
-    >>> print list(g3.child)
-    [<Group {'name':u'orm','id':2}>]
-    >>> print list(g2.group_set)
-    [<Group {'name':u'python','id':1}>]
+    >>> print(list(g3.child))
+    [<Group {'name':'orm','id':2}>]
+    >>> print(list(g2.group_set))
+    [<Group {'name':'python','id':1}>]
     """
     
 def test_sequence():
@@ -2110,7 +2145,7 @@ def test_validate():
     >>> a.save()
     True
     >>> a # doctest:+ELLIPSIS, +NORMALIZE_WHITESPACE
-    <Test {'string':u'limodou','boolean':True,'integer':200,'date1':datetime.datetime(2009, 1, 1, 14, 0, 5),'date2':datetime.date(2009, 1, 1),'date3':datetime.time(14, 0),'float':200.02,'decimal':Decimal('10.2'),'pickle':'','id':1}> 
+    <Test {'string':'limodou','boolean':True,'integer':200,'date1':datetime.datetime(2009, 1, 1, 14, 0, 5),'date2':datetime.date(2009, 1, 1),'date3':datetime.time(14, 0),'float':200.02,'decimal':Decimal('10.2'),'pickle':'','id':1}> 
     >>> a.to_dict() # doctest:+ELLIPSIS, +NORMALIZE_WHITESPACE
     {'date1': '2009-01-01 14:00:05', 'date3': '14:00:00', 'date2': '2009-01-01', 'string': 'limodou', 'decimal': '10.2', 'float': 200.02, 'boolean': True, 'integer': 200, 'pickle': '', 'id': 1}
     >>> a.boolean = 'False'
@@ -2150,7 +2185,7 @@ def test_load_dump():
     {'pickle': '\\x80\\x02}q\\x01U\\x01a]q\\x02(K\\x01K\\x02K\\x03es.', 'id': '1'}
     >>> b.json
     {'a': 1, 'b': ['c', 'd']}
-    >>> print b.dump(fields=['json'])['json']
+    >>> print(b.dump(fields=['json'])['json'])
     {"a":1,"b":["c","d"]}
     >>> b.date1=Lazy
     >>> b.date2=Lazy
@@ -2171,16 +2206,16 @@ def test_load_dump():
     {'t': '1', 'id': '1', 'name': ''}
     >>> x = Test2.load(d, from_='dump')
     >>> x
-    <Test2 {'name':u'','t':<ReferenceProperty:1>,'id':1}>
+    <Test2 {'name':'','t':<ReferenceProperty:1>,'id':1}>
     >>> a3 = Test2(name='a')
     >>> a3.save()
     True
     >>> d = a3.dump()
-    >>> print d
+    >>> print(d)
     {'t': '', 'id': '2', 'name': 'a'}
     >>> a4 = Test2.load(d, from_='dump')
     >>> a4
-    <Test2 {'name':u'a','t':None,'id':2}>
+    <Test2 {'name':'a','t':None,'id':2}>
     """
 
 def test_reference_loaddump():
@@ -2209,13 +2244,13 @@ def test_reference_loaddump():
     >>> g1.dump(fields=['name'], exclude=['user'])
     {'id': '1', 'name': 'python'}
     >>> d = g1.dump(['name', 'user'])
-    >>> print d
+    >>> print(d)
     {'user': '1', 'id': '1', 'name': 'python'}
     >>> g = Group.load(d)
-    >>> print g._user_
+    >>> print(g._user_)
     1
     >>> g.user
-    <User {'username':u'limodou','year':5,'id':1}>
+    <User {'username':'limodou','year':5,'id':1}>
     >>> x = {'user': '', 'id': '1', 'name': 'python'}
     >>> g2 = Group.load(x)
     >>> g2.user
@@ -2244,7 +2279,7 @@ def test_manytomany_loaddump():
     >>> g1 = Group(name='python', users=[a.id, b.id])
     >>> g1.save()
     True
-    >>> print g1._users_
+    >>> print(g1._users_)
     [1, 2]
     >>> g1.dump()
     {'id': '1', 'name': 'python'}
@@ -2255,24 +2290,24 @@ def test_manytomany_loaddump():
     >>> g1.dump(fields=['name'], exclude=['users'])
     {'id': '1', 'name': 'python'}
     >>> d = g1.dump(['name', 'users'])
-    >>> print d
+    >>> print(d)
     {'users': '1,2', 'id': '1', 'name': 'python'}
     >>> g = Group.load(d)
-    >>> print g._users_
+    >>> print(g._users_)
     [1, 2]
     >>> list(g.users)
-    [<User {'username':u'limodou','year':5,'id':1}>, <User {'username':u'user','year':10,'id':2}>]
+    [<User {'username':'limodou','year':5,'id':1}>, <User {'username':'user','year':10,'id':2}>]
     >>> g.users.all(cache=True)
-    [<User {'username':u'limodou','year':5,'id':1}>, <User {'username':u'user','year':10,'id':2}>]
+    [<User {'username':'limodou','year':5,'id':1}>, <User {'username':'user','year':10,'id':2}>]
     >>> x = {'users': '', 'id': '1', 'name': 'python'}
     >>> g3 = Group.load(x, from_='dump')
-    >>> print g3._users_
+    >>> print(g3._users_)
     []
     >>> list(g3.users)
-    [<User {'username':u'limodou','year':5,'id':1}>, <User {'username':u'user','year':10,'id':2}>]
+    [<User {'username':'limodou','year':5,'id':1}>, <User {'username':'user','year':10,'id':2}>]
     >>> x = {'users': '1,2', 'id': '1', 'name': 'python'}
     >>> g4 = Group.load(x, from_='dump')
-    >>> print g4._users_
+    >>> print(g4._users_)
     [1, 2]
     """
     
@@ -2352,7 +2387,7 @@ def test_post_do():
     >>> db = get_connection('sqlite://')
     >>> db.metadata.drop_all()
     >>> def log(ec, query, conn, usetime):
-    ...     #print rawsql(query)
+    ...     #print(rawsql(query))
     ...     pass
     >>> uliweb.orm.__default_post_do__ = log
     >>> class Test(Model):
@@ -2390,7 +2425,7 @@ def test_changed_and_saved():
     >>> g1.users.ids()
     [1]
     >>> g1.update(users=[b.id], name='test')
-    <Group {'name':u'test','id':1}>
+    <Group {'name':'test','id':1}>
     >>> def change(obj, created, old, new):
     ...     new['name'] = 'ddd'
     >>> def saved(obj, created, old, new):
@@ -2403,7 +2438,7 @@ def test_changed_and_saved():
     >>> g2.users.ids()
     [2]
     >>> list(g2.users.all())
-    [<User {'username':u'user','year':10,'id':2}>]
+    [<User {'username':'user','year':10,'id':2}>]
     >>> g3 = Group.get(1)
     >>> g3._users_
     [2]
@@ -2476,7 +2511,7 @@ def test_reflect_table():
     >>> meta = MetaData()
     >>> table = Table('test', meta)
     >>> insp.reflecttable(table, None)
-    >>> print reflect_table_model(table) # doctest: +REPORT_UDIFF
+    >>> print(reflect_table_model(table)) # doctest: +REPORT_UDIFF
     class Test(Model):
         \"\"\"
         Description:
@@ -2528,7 +2563,7 @@ def test_reference_server_default():
     >>> b2.save()
     True
     >>> c = Test1.get(Test1.c.name=='aaaa')
-    >>> print c._test_
+    >>> print(c._test_)
     0
     >>> set_server_default(False)
     """
@@ -2547,15 +2582,15 @@ def test_version():
     >>> b = Test.get(1)
     >>> b1 = Test.get(1)
     >>> b1.update(year=21)
-    <Test {'username':u'limodou1','year':21,'version':0,'id':1}>
+    <Test {'username':'limodou1','year':21,'version':0,'id':1}>
     >>> b1.save(version=True)
     True
     >>> b.update(year=22)
-    <Test {'username':u'limodou1','year':22,'version':0,'id':1}>
+    <Test {'username':'limodou1','year':22,'version':0,'id':1}>
     >>> try:
     ...     b.save(version=True)
     ... except SaveError:
-    ...     print 'saveerror'
+    ...     print('saveerror')
     saveerror
     """
     
@@ -2570,7 +2605,7 @@ def test_primary_key():
     ...     version = Field(int)
     >>> Test.properties.keys()
     ['username', 'version', 'user_id', 'year']
-    >>> print Test._key
+    >>> print(Test._key)
     <IntegerProperty 'type':<type 'int'>, 'verbose_name':None, 'name':'user_id', 'fieldname':'user_id', 'default':0, 'required':False, 'validator':[], 'chocies':None, 'max_length':None, 'kwargs':{'autoincrement': True, 'primary_key': True}>
     """
 
@@ -2586,17 +2621,17 @@ def test_get_object():
     >>> a.save()
     True
     >>> get_object('Test', 1)
-    <Test {'username':u'limodou','year':0,'id':1}>
+    <Test {'username':'limodou','year':0,'id':1}>
     >>> get_object('Test', 1, cache=True)
-    <Test {'username':u'limodou','year':0,'id':1}>
+    <Test {'username':'limodou','year':0,'id':1}>
     >>> get_object('Test', 1, cache=True, use_local=True)
-    <Test {'username':u'limodou','year':0,'id':1}>
+    <Test {'username':'limodou','year':0,'id':1}>
     >>> get_object('Test', 1, cache=True, use_local=True)
-    <Test {'username':u'limodou','year':0,'id':1}>
+    <Test {'username':'limodou','year':0,'id':1}>
     >>> Test.get(Test.c.id == 1)
-    <Test {'username':u'limodou','year':0,'id':1}>
+    <Test {'username':'limodou','year':0,'id':1}>
     >>> Test.get(1, cache=True)
-    <Test {'username':u'limodou','year':0,'id':1}>
+    <Test {'username':'limodou','year':0,'id':1}>
     """
 
 def test_group_by_and_having():
@@ -2614,9 +2649,9 @@ def test_group_by_and_having():
     >>> u.save()
     True
     >>> list(u.all().group_by(User.c.username))
-    [<User {'username':u'python','id':2}>]
+    [<User {'username':'python','id':2}>]
     >>> list(u.all().group_by(User.c.username).having(func.count('*')>0))
-    [<User {'username':u'python','id':2}>]
+    [<User {'username':'python','id':2}>]
     >>> u.all().group_by(User.c.username).count()
     1
     """
@@ -2645,7 +2680,7 @@ def test_join():
     >>> g1.save()
     True
     >>> list(User.all().join(Group, User.c.id==Group.c.user))
-    [<User {'username':u'limodou','year':5,'id':1}>]
+    [<User {'username':'limodou','year':5,'id':1}>]
     >>> User.all().join(Group, User.c.id==Group.c.user).count()
     1
     """
@@ -2667,7 +2702,7 @@ def test_rename_table_and_columns():
     >>> engine = get_connection()
     >>> t = User.table
     >>> x = str(CreateTable(t).compile(dialect=engine.dialect)).strip()
-    >>> print x.replace('\\t', '').replace('\\n', '')
+    >>> print(x.replace('\\t', '').replace('\\n', ''))
     CREATE TABLE test_user (f_username CHAR(20), f_year INTEGER, id INTEGER NOT NULL, PRIMARY KEY (id))
     >>> User.properties.keys()
     ['username', 'id', 'year']
@@ -2690,14 +2725,14 @@ def test_rename_table_and_columns():
     <BLANKLINE>
     >>> set_echo(False)
     >>> x
-    <User {'username':u'limodou','year':5,'id':1}>
+    <User {'username':'limodou','year':5,'id':1}>
     >>> set_echo(False)
     >>> g1 = Group(name='python', user=a)
     >>> g1.save()
     True
     >>> g2 = Group.get(1)
-    >>> print repr(g2.user)
-    <User {'username':u'limodou','year':5,'id':1}>
+    >>> print(repr(g2.user))
+    <User {'username':'limodou','year':5,'id':1}>
     """
 
 def test_none_condition():
@@ -2711,7 +2746,7 @@ def test_none_condition():
     ...     __tablename__ = 'test_user'
     ...     username = Field(CHAR, fieldname='f_username', max_length=20)
     ...     year = Field(int, fieldname='f_year')
-    >>> print (User.c.username=='limodou') & None # doctest:+ELLIPSIS
+    >>> print((User.c.username=='limodou')) & None # doctest:+ELLIPSIS
     test_user.f_username = :...username_1
     """
 
@@ -2794,17 +2829,17 @@ def test_uuid_and_new_fields():
     >>> engine = get_connection()
     >>> t = User.table
     >>> x = str(CreateTable(t).compile(dialect=engine.dialect)).strip()
-    >>> print x.replace('\\t', '').replace('\\n', '')
+    >>> print(x.replace('\\t', '').replace('\\n', ''))
     CREATE TABLE test_user (id VARCHAR(32) NOT NULL, sid VARBINARY(16), username VARCHAR(255) DEFAULT '', year SMALLINT DEFAULT '0', PRIMARY KEY (id), UNIQUE (id))
     >>> x = str(CreateTable(Group.table).compile(dialect=engine.dialect)).strip()
-    >>> print x.replace('\\t', '').replace('\\n', '')
+    >>> print(x.replace('\\t', '').replace('\\n', ''))
     CREATE TABLE test_group (name VARCHAR(20), user VARCHAR(32), id INTEGER NOT NULL, PRIMARY KEY (id))
     >>> a = User(username='limodou', year=5)
     >>> a.save() # doctest:+ELLIPSIS
     True
     >>> u1 = User.get(User.c.username=='limodou') # doctest:+ELLIPSIS
     >>> u1 # doctest:+ELLIPSIS
-    <User {'id':...,'username':u'limodou','year':5}>
+    <User {'id':...,'username':'limodou','year':5}>
     >>> g1 = Group(name='python', user=a)
     >>> g1.save()
     True
@@ -2830,14 +2865,14 @@ def test_save_file():
     >>> from StringIO import StringIO
     >>> buf = StringIO()
     >>> Test.all().save_file(buf)
-    >>> print buf.getvalue().replace('\\r\\n', '\\n')
+    >>> print(buf.getvalue().replace('\\r\\n', '\\n'))
     username,year,id
     limodou,0,1
     guest,10,2
     <BLANKLINE>
     >>> buf = StringIO()
     >>> Test.all().values('username').save_file(buf)
-    >>> print buf.getvalue().replace('\\r\\n', '\\n')
+    >>> print(buf.getvalue().replace('\\r\\n', '\\n'))
     username
     limodou
     guest
@@ -2859,9 +2894,9 @@ def test_derive():
     ...     birth = Field(datetime.date)
     >>> class User1(User):
     ...     age = Field(int)
-    >>> print User1.properties.keys()
+    >>> print(User1.properties.keys())
     ['username', 'age', 'birth', 'year']
-    >>> print User1._primary_field
+    >>> print(User1._primary_field)
     username
     >>> set_auto_create(True)
     """
@@ -2873,9 +2908,9 @@ def test_primary_1():
     >>> class User(Model):
     ...     username = Field(unicode, primary_key=True)
     ...     year = Field(int, default=30)
-    >>> print User.properties.keys()
+    >>> print(User.properties.keys())
     ['username', 'year']
-    >>> print User._primary_field
+    >>> print(User._primary_field)
     username
     >>> u = User(username='guest')
     >>> set_echo(True)
@@ -2915,8 +2950,8 @@ def test_primary_2():
     True
     >>> u1 = User.get('guest')
     >>> u1
-    <User {'username':u'guest','year':30,'group':<ReferenceProperty:group>}>
-    >>> print u1.group
+    <User {'username':'guest','year':30,'group':<ReferenceProperty:group>}>
+    >>> print(u1.group)
     group
     """
 
@@ -2940,14 +2975,14 @@ def test_primary_3():
     True
     >>> u1 = User.get('guest')
     >>> u1
-    <User {'username':u'guest','year':30}>
-    >>> print u1.group_set.keys()
-    [u'group']
+    <User {'username':'guest','year':30}>
+    >>> print(u1.group_set.keys())
+    ['group']
     >>> g1 = Group.get('group')
     >>> g1
-    <Group {'name':u'group'}>
+    <Group {'name':'group'}>
     >>> g1.users.keys()
-    [u'guest']
+    ['guest']
     >>> g1.users.remove()
     >>> g1.users.keys()
     []
@@ -2976,14 +3011,14 @@ def test_primary_4():
     True
     >>> u1 = User.get('guest')
     >>> u1
-    <User {'username':u'guest','year':30}>
-    >>> print u1.group_set.keys()
-    [u'group']
+    <User {'username':'guest','year':30}>
+    >>> print(u1.group_set.keys())
+    ['group']
     >>> g1 = Group.get('group')
     >>> g1
-    <Group {'name':u'group'}>
+    <Group {'name':'group'}>
     >>> g1.users.keys()
-    [u'guest']
+    ['guest']
     >>> g1.users.remove()
     >>> g1.users.keys()
     []
@@ -3010,16 +3045,16 @@ def test_primary_4():
 #     t = User.table
 #     set_echo(True)
 #     x = str(CreateTable(t).compile(dialect=engine.dialect)).strip()
-#     print x.replace('\\t', '').replace('\\n', '')
+#     print(x.replace('\\t', '').replace('\\n', ''))
 #     a = User(username='limodou', year=5)
 #     a.save() # doctest:+ELLIPSIS
 #
-#     print User.get(User.c.username=='limodou') # doctest:+ELLIPSIS
+#     print(User.get(User.c.username=='limodou')) # doctest:+ELLIPSIS
 #     g1 = Group(name='python', user=a)
 #     g1.save()
 #
 #     g2 = Group.get(1)
-#     print repr(g2.user)
+#     print(repr(g2.user))
 
 
 def test_primary_5():
@@ -3046,29 +3081,29 @@ def test_bulk():
     >>> b.put('insert', username='u1', year=12)
     >>> b.put('insert', username='u2', year=13)
     >>> b.close()
-    >>> print list(User.all())
-    [<User {'username':u'u1','year':12,'nick_name':u''}>, <User {'username':u'u2','year':13,'nick_name':u''}>]
+    >>> print(list(User.all()))
+    [<User {'username':'u1','year':12,'nick_name':''}>, <User {'username':'u2','year':13,'nick_name':''}>]
     >>> b = Bulk()
     >>> b.prepare('update', User.table.update().values(username='username', year='year').where(User.c.username=='username'))
     >>> b.put('update', username='u3', year=22, username_1='u1')
     >>> b.put('update', username='u4', year=23, username_1='u2')
     >>> b.close()
-    >>> print list(User.all())
-    [<User {'username':u'u3','year':22,'nick_name':u''}>, <User {'username':u'u4','year':23,'nick_name':u''}>]
+    >>> print(list(User.all()))
+    [<User {'username':'u3','year':22,'nick_name':''}>, <User {'username':'u4','year':23,'nick_name':''}>]
     >>> b = Bulk()
     >>> b.prepare('select', User.table.select().where(User.c.username=='username'))
-    >>> print b.do_('select', username='u3').fetchone()
-    (u'u3', 22, None)
+    >>> print(b.do_('select', username='u3').fetchone())
+    ('u3', 22, None)
     >>> b.prepare('delete', User.table.delete().where(User.c.username=='username'))
     >>> b.put('delete', username='u3')
     >>> b.put('delete', username='u4')
     >>> b.close()
-    >>> print User.count()
+    >>> print(User.count())
     0
     >>> from sqlalchemy import select
     >>> b.prepare('select_2', select([User.c.nick_name, User.c.username]).where(User.c.nick_name=='nick_name'))
-    >>> print b.sqles['select_2']['fields']
-    <SortedDict {u'nick_name':u'nick_name_1'}>
+    >>> print(b.sqles['select_2']['fields'])
+    <SortedDict {'nick_name':'nick_name_1'}>
     """
 
 def test_rawsql():
@@ -3081,16 +3116,16 @@ def test_rawsql():
     >>> from sqlalchemy import create_engine
     >>> sql = User.filter(User.c.username=='guest').get_query()
     >>> e = create_engine('oracle://', strategy='mock', executor=None)
-    >>> print rawsql(sql, e)
+    >>> print(rawsql(sql, e))
     SELECT "user".username, "user".year FROM "user" WHERE "user".username = 'guest'
     >>> e = create_engine('postgresql://', strategy='mock', executor=None)
-    >>> print rawsql(sql, e)
+    >>> print(rawsql(sql, e))
     SELECT "user".username, "user".year FROM "user" WHERE "user".username = 'guest'
     >>> e = create_engine('mysql://', strategy='mock', executor=None)
-    >>> print rawsql(sql, e)
+    >>> print(rawsql(sql, e))
     SELECT user.username, user.year FROM user WHERE user.username = 'guest'
     >>> e = create_engine('sqlite://', strategy='mock', executor=None)
-    >>> print rawsql(sql, e)
+    >>> print(rawsql(sql, e))
     SELECT user.username, user.year FROM user WHERE user.username = 'guest'
     """
 
@@ -3106,13 +3141,13 @@ def test_bulk_3():
     >>> b = Bulk(engine='oracle', size=10)
     >>> b.prepare('update', User.table.update().values(year='year').where(User.c.username=='username'))
     >>> b.put('update', **{'username':'test', 'year':30})
-    >>> print b.sqles['update']['data']
-    [{u'username_1': 'test', 'year': 30}]
+    >>> print(b.sqles['update']['data'])
+    [{'username_1': 'test', 'year': 30}]
     >>> e = get_connection('mysql://', strategy='mock', executor=None, engine_name='mysql')
     >>> b = Bulk(engine='mysql', size=10)
     >>> b.prepare('update', User.table.update().values(year='year').where(User.c.username=='username'))
     >>> b.put('update', **{'username':'test', 'year':30})
-    >>> print b.sqles['update']['data']
+    >>> print(b.sqles['update']['data'])
     [[30, 'test']]
     """
 
@@ -3131,7 +3166,7 @@ if __name__ == '__main__':
     # b.put('insert', username='u2', year=13)
     # b.close()
     #
-    # print list(User.all())
+    # print(list(User.all()))
     #
     # b = Bulk()
     # b.prepare('update', User.table.update().values(username='username', year='year').where(User.c.username=='username'))
@@ -3139,17 +3174,17 @@ if __name__ == '__main__':
     # b.put('update', username='u4', year=23, username_1='u2')
     # b.close()
     #
-    # print list(User.all())
+    # print(list(User.all()))
     #
     # b = Bulk()
     # b.prepare('select', User.table.select().where(User.c.username=='username'))
-    # print b.do_('select', username='u3').fetchone()
+    # print(b.do_('select', username='u3').fetchone())
     #
     # b.prepare('delete', User.table.delete().where(User.c.username=='username'))
     # b.put('delete', username='u3')
     # b.put('delete', username='u4')
     # b.close()
-    # print User.count()
+    # print(User.count())
 
     # db = get_connection('sqlite://')
     # db.metadata.drop_all()
@@ -3163,12 +3198,12 @@ if __name__ == '__main__':
     # b = Bulk(engine='oracle', size=10)
     # b.prepare('update', User.table.update().values(year='year').where(User.c.username=='username'))
     # b.put('update', **{'username':'test', 'year':30})
-    # print b.sqles['update']['data']
+    # print(b.sqles['update']['data'])
     #
     # e = get_connection('mysql://', strategy='mock', executor=None, engine_name='mysql')
     # Bulk = orm.Bulk
     # b = Bulk(engine='mysql', size=10)
     # b.prepare('update', User.table.update().values(year='year').where(User.c.username=='username'))
     # b.put('update', **{'username':'test', 'year':30})
-    # print b.sqles['update']['data']
+    # print(b.sqles['update']['data'])
 
