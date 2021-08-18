@@ -95,9 +95,9 @@ class SortedDict(dict):
     def copy(self):
         return self.__class__(self)
     
-    # def sort(self, cmp=None, key=None, reverse=False):
-    #     self._fields = [x for x, y in sorted(self.items(), cmp, key, reverse)]
-    #
+    def sort(self, key=None, reverse=False):
+        self._fields = [x for x, y in sorted(self.items(), key=key, reverse=reverse)]
+    
     def setdefault(self, key, value=None):
         if key in self:
             return self[key]
