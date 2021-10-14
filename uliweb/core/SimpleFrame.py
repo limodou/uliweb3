@@ -284,7 +284,10 @@ def get_url_adapter(_domain_name):
     """
     Fetch a domain url_adapter object, and bind it to according domain
     """
-    from werkzeug._compat import wsgi_decoding_dance
+    try:
+        from werkzeug._compat import wsgi_decoding_dance
+    except ModuleNotFoundError:
+        from werkzeug._internal import _wsgi_decoding_dance as wsgi_decoding_dance
 
     domain = application.domains.get(_domain_name, {})
     server_name = None
