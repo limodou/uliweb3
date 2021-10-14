@@ -1,5 +1,6 @@
 from uliweb import settings
 from ...utils._compat import string_types, iteritems
+from uliweb.core import dispatch
 
 def after_init_apps(sender):
     from uliweb import orm
@@ -36,7 +37,6 @@ def after_init_apps(sender):
         'connection_type':settings.get_var('ORM/CONNECTION_TYPE'),
         'debug_log':settings.get_var('ORM/DEBUG_LOG'),
         'connection_args':settings.get_var('ORM/CONNECTION_ARGS'),
-        'strategy':settings.get_var('ORM/STRATEGY'),
         }
     orm.engine_manager.add('default', d)
     
@@ -44,7 +44,6 @@ def after_init_apps(sender):
         x = {'connection_string':d.get('CONNECTION', ''),
             'debug_log':d.get('DEBUG_LOG', None),
             'connection_args':d.get('CONNECTION_ARGS', {}),
-            'strategy':d.get('STRATEGY', 'threadlocal'),
             'connection_type':d.get('CONNECTION_TYPE', 'long'),
             'duplication':d.get('DUPLICATION', False),
         }
@@ -67,6 +66,8 @@ def after_init_apps(sender):
                     path = v + path[len(k):]
                     break
             orm.set_model(path, name)
+
+    dispatch.call(sender, 'after_init_orm')
 
 def patch(patch_none='empty'):
     from sqlalchemy import __version__

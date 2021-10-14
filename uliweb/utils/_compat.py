@@ -179,6 +179,11 @@ except NameError:
     def next(it):
         return get_next(it)
 
+# https://docs.python.org/3.7/library/cgi.html#cgi.escape
+try:
+    from cgi import escape as html_escape
+except ImportError:
+    from html import escape as html_escape
 
 def with_metaclass(meta, *bases):
     # This requires a bit of explanation: the basic idea is to make a

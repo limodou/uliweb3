@@ -26,6 +26,7 @@ import uliweb.utils.pyini as pyini
 from uliweb.i18n import gettext_lazy, i18n_ini_convertor
 from uliweb.utils.localproxy import LocalProxy, Global
 from uliweb import UliwebError
+from uliweb.utils._compat import html_escape
 
 # from rules import Mapping, add_rule
 from . import rules
@@ -132,7 +133,7 @@ def redirect(location, code=302):
             '<h1>Redirecting...</h1>\n'
             '<p>You should be redirected automatically to target URL: '
             '<a href="%s">%s</a>.  If not click the link.' %
-            (escape(location), escape(location)), status=code, content_type='text/html')
+            (html_escape(location), html_escape(location)), status=code, content_type='text/html')
         response.headers['Location'] = location
     return response
 

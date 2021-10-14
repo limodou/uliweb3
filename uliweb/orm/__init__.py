@@ -30,6 +30,8 @@ __all__ = ['Field', 'get_connection', 'Model', 'do_',
     'NotFound', 'reflect_table', 'reflect_table_data', 'reflect_table_model',
     'get_field_type', 'create_model', 'get_metadata', 'migrate_tables',
     'print_model', 'get_model_property', 'Bulk',
+    'set_timezone_support', 'set_now', 'set_to_datetime',
+    'set_to_timezone', 'set_to_ltimezone',
     ]
 
 __auto_create__ = False
@@ -50,6 +52,11 @@ __nullable__ = False    #not enabled null by default
 __server_default__ = False    #not enabled null by default
 __manytomany_index_reverse__ = False
 __lazy_model_init__ = False
+__timezone_support__ = None
+__now__ = None
+__to_datetime__ = None
+__to_timezone__ = None
+__to_ltimezone__ = None
 
 import sys
 import decimal
@@ -177,7 +184,27 @@ def set_tablename_converter(converter=None):
 def set_lazy_model_init(flag):
     global __lazy_model_init__
     __lazy_model_init__ = flag
+
+def set_timezone_support(func):
+    global __timezone_support__
+    __timezone_support__ = func
     
+def set_now(func):
+    global __now__
+    __now__ = func
+
+def set_to_datetime(func):
+    global __to_datetime__
+    __to_datetime__ = func
+
+def set_to_timezone(func):
+    global __to_timezone__
+    __to_timezone__ = func
+
+def set_to_ltimezone(func):
+    global __to_ltimezone__
+    __to_ltimezone__ = func
+
 def get_tablename(tablename):
     global __default_tablename_converter__
     
@@ -1181,8 +1208,6 @@ def get_object(table, id=None, condition=None, cache=False, fields=None, use_loc
     Get obj in Local.object_caches first and also use get(cache=True) function if 
     not found in object_caches
     """
-    from uliweb import functions, settings
-    
     model = get_model(table, engine_name)
         
     #if id is an object of Model, so get the real id value
@@ -2061,35 +2086,30 @@ class DateTimeProperty(Property):
     
     @staticmethod
     def now():
-        from uliweb import functions
-        server_timezone = functions.get_server_timezone()
-        if server_timezone == None:
-            return functions.now()
+        if __now__:
+            # will make auto_now_add use UTC time
+            return __now__()
         else:
-            #return UTC datetime for auto_now_add
-            return functions.utc_now()
+            return _date.now()
 
     def make_value_from_datastore(self, value):
         if value is not None:
-            value = self._convert_func(value)
+            # if support timezone, will treat datetime from datastore as UTC time
+            # then convert to local timezone so it can use to display directly
+            if __timezone_support__ and __timezone_support__():
+                value = self._convert_func(value, tzinfo = _date.UTC)
+                if __to_ltimezone__:
+                    value = __to_ltimezone__(value)
+            else:
+                value = self._convert_func(value)
         return value
 
     @staticmethod
     def _convert_func(*args, **kwargs):
-        from uliweb import functions
-        dt = functions.to_datetime(*args, **kwargs)
-        server_timezone = functions.get_server_timezone()
-        if not server_timezone:
-            if functions.is_aware(dt):
-                log.error("receive a timezone-aware datetime (%s) when settings.GLOBAL.TIME_ZONE is None"%(dt))
-                raise ValueError("Timezone-aware datetimes are not accepted, when settings.GLOBAL.TIME_ZONE is None")
+        if __to_datetime__:
+            return __to_datetime__(*args, **kwargs)
         else:
-            if functions.is_naive(dt):
-                log.warn("received a naive datetime (%s) while settings.GLOBAL.TIME_ZONE not None"%(dt))
-                value = server_timezone.convert(dt)
-            # if support timezone, need convert to local time in object
-            dt = functions.to_ltimezone(dt)
-        return dt
+            return _date.to_datetime(*args, **kwargs)
     
     def convert(self, value):
         if not value:
@@ -4109,11 +4129,10 @@ class Model(with_metaclass(ModelMetaclass)):
                                 d[k] = v.now()
                                 exist = True
                             if exist:
-                                from uliweb import functions
                                 # if support timezone, should convert to UTC before save
-                                if functions.get_server_timezone():
-                                    from uliweb.utils.date import UTC
-                                    d[k] = functions.to_timezone(d[k],UTC)
+                                if __timezone_support__ and __timezone_support__():
+                                    if __to_timezone__:
+                                        d[k] = __to_timezone__(d[k],_date.UTC)
                         elif (not exist) and v.auto_add:
                             d[k] = v.default_value()
                     else:
@@ -4147,8 +4166,13 @@ class Model(with_metaclass(ModelMetaclass)):
                         if v.property_type == 'compound' or k == self._primary_field:
                             continue
                         if not isinstance(v, ManyToMany):
-                            if isinstance(v, DateTimeProperty) and v.auto_now and k not in d:
-                                d[k] = v.now()
+                            if isinstance(v, DateTimeProperty):
+                                if v.auto_now and k not in d:
+                                    d[k] = v.now()
+                                # if support timezone, should convert to UTC before save
+                                if k in d and __timezone_support__ and __timezone_support__():
+                                    if __to_timezone__:
+                                        d[k] = __to_timezone__(d[k],_date.UTC)
                             elif (not k in d) and v.auto:
                                 d[k] = v.default_value()
                         else:
