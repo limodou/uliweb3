@@ -69,6 +69,11 @@ def test_section():
     #change
     [default]
     <BLANKLINE>
+    >>> s = Section('Test', "#comment for Test")
+    >>> s.add("k1",{"k1":"v1"})
+    >>> s.add("k2",{"k2":"v2"})
+    >>> [(k,v) for k, v in s.items()]
+    [('k1', {'k1': 'v1'}), ('k2', {'k2': 'v2'})]
     """
     
 def test_ini1():
