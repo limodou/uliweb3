@@ -35,7 +35,7 @@ class SessionMiddle(Middleware):
     def process_request(self, request):
         key = request.cookies.get(SessionCookie.default_cookie_id)
         if not key:
-            key = request.values.get(SessionCookie.default_cookie_id)
+            key = request.GET.get(SessionCookie.default_cookie_id)
         serial_cls_path = settings.SESSION.serial_cls
         if serial_cls_path:
             serial_cls = import_attr(serial_cls_path)
