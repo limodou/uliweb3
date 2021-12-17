@@ -108,6 +108,14 @@ class Request(OriginalRequest):
         :return: dict
         """
         return jsn.loads(self.data)
+
+    is_xhr = property(lambda x: x.environ.get('HTTP_X_REQUESTED_WITH', '')
+                      .lower() == 'xmlhttprequest', doc='''
+        True if the request was triggered via a JavaScript XMLHttpRequest.
+        This only works with libraries that support the `X-Requested-With`
+        header and set it to "XMLHttpRequest".  Libraries that do that are
+        prototype, jQuery and Mochikit and probably some more.''')
+
     
 class Response(OriginalResponse):
     def write(self, value):
