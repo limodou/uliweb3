@@ -3340,8 +3340,8 @@ class ManyResult(Result):
             if self._values_flag:
                 yield result
                 continue
-           
-            o = self.modelb.load(list(zip(result.keys()[offset:], result.values()[offset:])))
+
+            o = self.modelb.load(list(zip(list(result.keys())[offset:], list(result.values())[offset:])))
             
             if self.with_relation_name:
                 r = self.through_model.load(list(zip(result.keys()[:offset], result.values()[:offset])))
