@@ -1330,7 +1330,7 @@ def reflect_table_data(table, mapping=None, engine_name='default'):
 
         if type_name in ('char', 'varchar'):
             kwargs['max_length'] = column_type.length
-        elif type_name in ('text', 'blob', 'integer', 'float', 'bigint'):
+        elif type_name in ('text', 'blob', 'integer', 'float', 'bigint', 'smallint'):
             pass
         elif type_name == 'long':
             field_type = 'bigint'
