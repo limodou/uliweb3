@@ -5,7 +5,7 @@ import inspect
 from uliweb.utils.common import log
 from uliweb.utils.sorteddict import SortedDict
 import copy
-from ..utils._compat import string_types, iterkeys, ismethod, isfunction, get_class
+from ..utils._compat import string_types, iterkeys, get_class, ismethod
 
 class ReservedKeyError(Exception):pass
 
@@ -137,7 +137,7 @@ class Expose(object):
         self.replace = replace
         self.template = template
         self.layout = layout
-        if isfunction(rule) or inspect.isclass(rule):
+        if inspect.isfunction(rule) or inspect.isclass(rule):
             self.parse_level = 1
             self.rule = None
             self.kwargs = {}
@@ -146,7 +146,7 @@ class Expose(object):
             self.parse_level = 2
             self.rule = rule
             self.kwargs = kwargs
-            
+
     def _get_app_prefix(self, appname):
         if appname in __app_rules__:
             d = __app_rules__[appname]
@@ -208,7 +208,7 @@ class Expose(object):
         return appname, '/'.join(s)
     
     def parse(self, f):
-        if isfunction(f) or ismethod(f):
+        if inspect.isfunction(f) or ismethod(f):
             func, result = self.parse_function(f)
             a = __exposes__.setdefault(func, [])
             a.append(result)
@@ -226,7 +226,7 @@ class Expose(object):
         f.__exposed_url__ = prefix
         for name in dir(f):
             func = getattr(f, name)
-            if (ismethod(func) or isfunction(func)) and not name.startswith('_'):
+            if (ismethod(func) or inspect.isfunction(func)) and not name.startswith('_'):
                 if hasattr(func, '__exposed__') and func.__exposed__:
                     new_endpoint = '.'.join([func.__module__, f.__name__, name])
                     f_func = get_func(func)
@@ -255,7 +255,7 @@ class Expose(object):
                                 x = list(v)
                                 x[1] = new_endpoint
                                 x[2] = rule
-                                func.__dict__['__saved_rule__'] = x
+                                setattr(func, '__saved_rule__', x)
 
                                 #add subdomain process
                                 self._fix_kwargs(appname, v[3])
@@ -265,7 +265,7 @@ class Expose(object):
                     else:
                         #maybe is subclass
                         v = copy.deepcopy(func.func_dict.get('__saved_rule__'))
-                        if func.__dict__.get('__fixed_url__'):
+                        if getattr(func, '__fixed_url__'):
                             rule = v[2]
                         else:
                             rule = self._get_url(appname, prefix, func)
@@ -273,12 +273,12 @@ class Expose(object):
                         if v and new_endpoint != v[1]:
                             if self.replace:
                                 v[3]['name'] = v[3].get('name') or v[1]
-                                func.__dict__['__template__'] = {'function':func.__name__, 'view_class':func.__old_rule__['clsname'], 'appname':appname}
+                                setattr(func, '__template__', {'function':func.__name__, 'view_class':func.__old_rule__['clsname'], 'appname':appname})
                             else:
                                 v[2] = rule
                             v[1] = new_endpoint
                             v[4] = now()
-                            func.__dict__['__saved_rule__'] = v
+                            setattr(func, '__saved_rule__', v)
 
                             #add subdomain process
                             self._fix_kwargs(appname, v[3])
@@ -293,12 +293,12 @@ class Expose(object):
                     self._fix_kwargs(appname, kw)
                     x = appname, endpoint, rule, kw, now()
                     __no_need_exposed__.append(x)
-                    func.__dict__['__exposed__'] = True
-                    func.__dict__['__saved_rule__'] = list(x)
-                    func.__dict__['__old_rule__'] = {'rule':rule, 'clsname':clsname}
-                    func.__dict__['__template__'] = None
-                    func.__dict__['__layout__'] = None
-                    func.__dict__['__fixed_url__'] = False
+                    setattr(func, '__exposed__', True)
+                    setattr(func, '__saved_rule__', list(x))
+                    setattr(func, '__old_rule__', {'rule':rule, 'clsname':clsname})
+                    setattr(func, '__template__', None)
+                    setattr(func, '__layout__', None)
+                    setattr(func, '__fixed_url__', False)
     
     def _get_url(self, appname, prefix, f):
         args = inspect.getargspec(f)[0]
@@ -335,16 +335,16 @@ class Expose(object):
         rule = self._fix_url(appname, rule)
         endpoint = get_function_path(f)
         clsname = get_classname(f)
-        f.__dict__['__exposed__'] = True
-        f.__dict__['__no_rule__'] = (self.parse_level == 1) or (self.parse_level == 2 and (self.rule is None))
+        setattr(f, '__exposed__', True)
+        setattr(f, '__no_rule__', (self.parse_level == 1) or (self.parse_level == 2 and (self.rule is None)))
         if not hasattr(f, '__old_rule__'):
-            f.__dict__['__old_rule__'] = {}
-    
-        f.__dict__['__old_rule__'][rule] = self.rule
-        f.__dict__['__old_rule__']['clsname'] = clsname
-        f.__dict__['__template__'] = self.template
-        f.__dict__['__layout__'] = self.layout
-        f.__dict__['__fixed_url__'] = fixed_url
+            setattr(f, '__old_rule__', {})
+
+        getattr(f, '__old_rule__')[rule] = self.rule
+        getattr(f, '__old_rule__')['clsname'] = clsname
+        setattr(f, '__template__', self.template)
+        setattr(f, '__layout__', self.layout)
+        setattr(f, '__fixed_url__', fixed_url)
 
         kw = self.kwargs.copy()
         self._fix_kwargs(appname, kw)
