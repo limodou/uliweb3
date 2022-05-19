@@ -67,17 +67,6 @@ def test():
     >>> ####################################################
     >>> @expose
     ... class A:
-    ...     def index(self, id):pass
-    ...     @classmethod
-    ...     def p(cls, id):pass
-    ...     @staticmethod
-    ...     def x(id):pass
-    >>> print(merge_rules())
-    [('test_expose', 'test_expose.A.index', '/test_expose/A/index/<id>', {}), ('test_expose', 'test_expose.A.p', '/test_expose/A/p/<id>', {}), ('test_expose', 'test_expose.A.x', '/test_expose/A/x', {})]
-    >>> clear_rules()
-    >>> ####################################################
-    >>> @expose
-    ... class A:
     ...     @expose('/index')
     ...     def index(self, id):pass
     >>> print(merge_rules())
