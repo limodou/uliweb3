@@ -13,13 +13,13 @@ class SessionMiddle(Middleware):
             settings.get_var('ORM/CONNECTIONS', {}).get('default', {}).get('CONNECTION', ''))
             if _url:
                 self.options['url'] = _url
-        
+
         #process Session options
         self.remember_me_timeout = settings.SESSION.remember_me_timeout
         self.session_storage_type = settings.SESSION.type
         self.timeout = settings.SESSION.timeout
         Session.force = settings.SESSION.force
-        
+
         #process Cookie options
         SessionCookie.default_domain = settings.SESSION_COOKIE.domain
         SessionCookie.default_path = settings.SESSION_COOKIE.path
@@ -31,7 +31,7 @@ class SessionMiddle(Middleware):
         else:
             timeout = settings.SESSION_COOKIE.timeout
         SessionCookie.default_expiry_time = timeout
-        
+
     def process_request(self, request):
         key = request.cookies.get(SessionCookie.default_cookie_id)
         if not key:
@@ -41,7 +41,7 @@ class SessionMiddle(Middleware):
             serial_cls = import_attr(serial_cls_path)
         else:
             serial_cls = None
-        session = Session(key, storage_type=self.session_storage_type, 
+        session = Session(key, storage_type=self.session_storage_type,
             options=self.options, expiry_time=self.timeout, serial_cls=serial_cls)
         request.session = session
 
@@ -63,8 +63,18 @@ class SessionMiddle(Middleware):
                     session.key, max_age=cookie_max_age,
                     expires=None, domain=c.domain,
                     path=c.path, secure=c.secure)
+
+                #add user timezone to cookie when enable timezone
+                if settings.TIMEZONE:
+                    cookie_key = settings.TIMEZONE.cookie_key
+                    user = getattr(request, 'user', None)
+                    if cookie_key and user and user.timezone:
+                        response.set_cookie(cookie_key,
+                            user.timezone, max_age=cookie_max_age,
+                            expires=None, domain=c.domain,
+                            path=c.path, secure=c.secure)
         return response
-        
+
     def process_exception(self, request, e):
         """
         Still process session data when specially Exception
