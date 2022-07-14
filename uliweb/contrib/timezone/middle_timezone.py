@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 #coding=utf-8
 
+import urllib
 from uliweb import Middleware, settings
 from pendulum import timezone
 from pendulum.tz.zoneinfo.exceptions import InvalidTimezone
@@ -22,7 +23,7 @@ class TimezoneMiddleware(Middleware):
             if not tz and request.cookies:
                 v = request.cookies.get(self._cookie_key)
                 if v:
-                    tz = v
+                    tz = urllib.parse.unquote(v)
             if not tz:
                 tz = self._local_time_zone
             if tz:
