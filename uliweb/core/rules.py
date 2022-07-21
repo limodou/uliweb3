@@ -83,9 +83,10 @@ def get_classname(f):
 
 
 def clear_rules():
-    global __exposes__, __no_need_exposed__
+    global __exposes__, __no_need_exposed__, __url_names__
     __exposes__ = {}
     __no_need_exposed__ = []
+    __url_names__ = {}
 
 def set_app_rules(rules=None):
     global __app_rules__
