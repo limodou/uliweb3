@@ -1947,7 +1947,7 @@ def test_generic_relation():
     >>> print(repr(b)) # doctest:+ELLIPSIS
     <Tag {'name':'python','content_object':<Article {'title':'Test','content':'','tags':<uliweb.orm.Result ...>,'id':1}>,'id':1,'table_id':1,'object_id':1}>
     >>> print(b.to_dict())
-    {'content_object': (1, 1), 'table_id': 1, 'name': 'python', 'object_id': 1, 'id': 1}
+    {'name': 'python', 'content_object': (1, 1), 'id': 1, 'table_id': 1, 'object_id': 1}
     >>> print(b.content_object)
     1
     >>> print([x.name for x in a.tags])
@@ -2141,13 +2141,13 @@ def test_validate():
     >>> a.decimal = '10.2'
     >>> a.pickle = ''
     >>> a.to_dict() # doctest:+ELLIPSIS, +NORMALIZE_WHITESPACE
-    {'date1': '2009-01-01 14:00:05', 'date3': '14:00:00', 'date2': '2009-01-01', 'string': 'limodou', 'decimal': '10.2', 'float': 200.02, 'boolean': True, 'integer': 200, 'pickle': '', 'id': None}
+    {'string': 'limodou', 'boolean': True, 'integer': 200, 'date1': '2009-01-01 14:00:05', 'date2': '2009-01-01', 'date3': '14:00:00', 'float': 200.02, 'decimal': '10.2', 'pickle': '', 'id': None}
     >>> a.save()
     True
     >>> a # doctest:+ELLIPSIS, +NORMALIZE_WHITESPACE
     <Test {'string':'limodou','boolean':True,'integer':200,'date1':datetime.datetime(2009, 1, 1, 14, 0, 5),'date2':datetime.date(2009, 1, 1),'date3':datetime.time(14, 0),'float':200.02,'decimal':Decimal('10.2'),'pickle':'','id':1}> 
     >>> a.to_dict() # doctest:+ELLIPSIS, +NORMALIZE_WHITESPACE
-    {'date1': '2009-01-01 14:00:05', 'date3': '14:00:00', 'date2': '2009-01-01', 'string': 'limodou', 'decimal': '10.2', 'float': 200.02, 'boolean': True, 'integer': 200, 'pickle': '', 'id': 1}
+    {'string': 'limodou', 'boolean': True, 'integer': 200, 'date1': '2009-01-01 14:00:05', 'date2': '2009-01-01', 'date3': '14:00:00', 'float': 200.02, 'decimal': '10.2', 'pickle': '', 'id': 1}
     >>> a.boolean = 'False'
     >>> a.boolean
     False
@@ -2175,14 +2175,19 @@ def test_load_dump():
     >>> b.save(insert=True)
     True
     >>> b.to_dict() # doctest:+ELLIPSIS, +NORMALIZE_WHITESPACE
-    {'date1': '2009-01-01 14:00:05', 'date3': '14:00:00', 'date2': '2009-01-01', 'string': 'limodou', 'decimal': '10.2', 'float': 200.02, 'json': '{"a":1,"b":["c","d"]}', 'boolean': True, 'integer': 200, 'pickle': {'a': 1, 'b': 2}, 'id': 1}
-    >>> b.dump() # doctest:+ELLIPSIS, +NORMALIZE_WHITESPACE
-    {'date1': '2009-01-01 14:00:05', 'date3': '14:00:00', 'date2': '2009-01-01', 'string': 'limodou', 'decimal': '10.2', 'float': '200.02', 'json': '{"a":1,"b":["c","d"]}', 'boolean': 'True', 'integer': '200', 'pickle': '\\x80\\x02}q\\x01(U\\x01aK\\x01U\\x01bK\\x02u.', 'id': '1'}
+    {'string': 'limodou', 'boolean': True, 'integer': 200, 'date1': '2009-01-01 14:00:05', 'date2': '2009-01-01', 'date3': '14:00:00', 'float': 200.02, 'decimal': '10.2', 'pickle': {'a': 1, 'b': 2}, 'json': '{"a":1,"b":["c","d"]}', 'id': 1}
+    >>> import base64
+    >>> s = b.dump()
+    >>> s['pickle'] = base64.b64encode(s['pickle'])
+    >>> s # doctest:+ELLIPSIS, +NORMALIZE_WHITESPACE
+    {'string': 'limodou', 'boolean': 'True', 'integer': '200', 'date1': '2009-01-01 14:00:05', 'date2': '2009-01-01', 'date3': '14:00:00', 'float': '200.02', 'decimal': '10.2', 'pickle': b'gAWVEQAAAAAAAAB9lCiMAWGUSwGMAWKUSwJ1Lg==', 'json': '{"a":1,"b":["c","d"]}', 'id': '1'}
     >>> b.dump(fields=['boolean', 'decimal'])
-    {'decimal': '10.2', 'boolean': 'True', 'id': '1'}
+    {'boolean': 'True', 'decimal': '10.2', 'id': '1'}
     >>> b.pickle = {'a':[1,2,3]}
-    >>> b.dump(fields=['pickle'])
-    {'pickle': '\\x80\\x02}q\\x01U\\x01a]q\\x02(K\\x01K\\x02K\\x03es.', 'id': '1'}
+    >>> s = b.dump(fields=['pickle'])
+    >>> s['pickle'] = base64.b64encode(s['pickle'])
+    >>> s
+    {'pickle': b'gAWVEgAAAAAAAAB9lIwBYZRdlChLAUsCSwNlcy4=', 'id': '1'}
     >>> b.json
     {'a': 1, 'b': ['c', 'd']}
     >>> print(b.dump(fields=['json'])['json'])
@@ -2203,7 +2208,7 @@ def test_load_dump():
     True
     >>> d = a2.dump()
     >>> d
-    {'t': '1', 'id': '1', 'name': ''}
+    {'name': '', 't': '1', 'id': '1'}
     >>> x = Test2.load(d, from_='dump')
     >>> x
     <Test2 {'name':'','t':<ReferenceProperty:1>,'id':1}>
@@ -2212,7 +2217,7 @@ def test_load_dump():
     True
     >>> d = a3.dump()
     >>> print(d)
-    {'t': '', 'id': '2', 'name': 'a'}
+    {'name': 'a', 't': '', 'id': '2'}
     >>> a4 = Test2.load(d, from_='dump')
     >>> a4
     <Test2 {'name':'a','t':None,'id':2}>
@@ -2236,16 +2241,16 @@ def test_reference_loaddump():
     >>> g1.save()
     True
     >>> g1.dump()
-    {'user': '1', 'id': '1', 'name': 'python'}
+    {'name': 'python', 'user': '1', 'id': '1'}
     >>> g1.dump(exclude=['user'])
-    {'id': '1', 'name': 'python'}
+    {'name': 'python', 'id': '1'}
     >>> g1.dump(fields=[], exclude=['user'])
-    {'id': '1', 'name': 'python'}
+    {'name': 'python', 'id': '1'}
     >>> g1.dump(fields=['name'], exclude=['user'])
-    {'id': '1', 'name': 'python'}
+    {'name': 'python', 'id': '1'}
     >>> d = g1.dump(['name', 'user'])
     >>> print(d)
-    {'user': '1', 'id': '1', 'name': 'python'}
+    {'name': 'python', 'user': '1', 'id': '1'}
     >>> g = Group.load(d)
     >>> print(g._user_)
     1
@@ -2282,16 +2287,16 @@ def test_manytomany_loaddump():
     >>> print(g1._users_)
     [1, 2]
     >>> g1.dump()
-    {'id': '1', 'name': 'python'}
+    {'name': 'python', 'id': '1'}
     >>> g1.dump(exclude=['users'])
-    {'id': '1', 'name': 'python'}
+    {'name': 'python', 'id': '1'}
     >>> g1.dump(fields=[], exclude=['users'])
-    {'id': '1', 'name': 'python'}
+    {'name': 'python', 'id': '1'}
     >>> g1.dump(fields=['name'], exclude=['users'])
-    {'id': '1', 'name': 'python'}
+    {'name': 'python', 'id': '1'}
     >>> d = g1.dump(['name', 'users'])
     >>> print(d)
-    {'users': '1,2', 'id': '1', 'name': 'python'}
+    {'name': 'python', 'users': '1,2', 'id': '1'}
     >>> g = Group.load(d)
     >>> print(g._users_)
     [1, 2]
@@ -2443,7 +2448,7 @@ def test_changed_and_saved():
     >>> g3._users_
     [2]
     >>> g3._old_values
-    {'users': [2], 'id': 1, 'name': 'ddd'}
+    {'name': 'ddd', 'id': 1, 'users': [2]}
     >>> g2.users.add(c)
     True
     >>> g2._users_
@@ -2603,10 +2608,10 @@ def test_primary_key():
     ...     username = Field(CHAR, max_length=20)
     ...     year = Field(int)
     ...     version = Field(int)
-    >>> Test.properties.keys()
-    ['username', 'version', 'user_id', 'year']
+    >>> list(Test.properties.keys())
+    ['user_id', 'username', 'year', 'version']
     >>> print(Test._key)
-    <IntegerProperty 'type':<type 'int'>, 'verbose_name':None, 'name':'user_id', 'fieldname':'user_id', 'default':0, 'required':False, 'validator':[], 'chocies':None, 'max_length':None, 'kwargs':{'autoincrement': True, 'primary_key': True}>
+    <IntegerProperty 'type':<class 'int'>, 'verbose_name':None, 'name':'user_id', 'fieldname':'user_id', 'default':0, 'required':False, 'validator':[], 'chocies':None, 'max_length':None, 'kwargs':{'primary_key': True, 'autoincrement': True}>
     """
 
 def test_get_object():
@@ -2649,9 +2654,9 @@ def test_group_by_and_having():
     >>> u.save()
     True
     >>> list(u.all().group_by(User.c.username))
-    [<User {'username':'python','id':2}>]
+    [<User {'username':'python','id':1}>]
     >>> list(u.all().group_by(User.c.username).having(func.count('*')>0))
-    [<User {'username':'python','id':2}>]
+    [<User {'username':'python','id':1}>]
     >>> u.all().group_by(User.c.username).count()
     1
     """
@@ -2704,22 +2709,22 @@ def test_rename_table_and_columns():
     >>> x = str(CreateTable(t).compile(dialect=engine.dialect)).strip()
     >>> print(x.replace('\\t', '').replace('\\n', ''))
     CREATE TABLE test_user (f_username CHAR(20), f_year INTEGER, id INTEGER NOT NULL, PRIMARY KEY (id))
-    >>> User.properties.keys()
-    ['username', 'id', 'year']
-    >>> User.c.keys()
+    >>> list(User.properties.keys())
+    ['username', 'year', 'id']
+    >>> list(User.c.keys())
     ['username', 'year', 'id']
     >>> a = User(username='limodou', year=5)
     >>> set_echo(True)
     >>> a.save() # doctest:+ELLIPSIS
     <BLANKLINE>
-    ===>>>>> [default] (...)
+    ===>>>>> [default](...)
     INSERT INTO test_user (f_username, f_year) VALUES ('limodou', 5);
     ===<<<<< time used ...
     <BLANKLINE>
     True
     >>> x = User.get(User.c.username=='limodou') # doctest:+ELLIPSIS
     <BLANKLINE>
-    ===>>>>> [default] (...)
+    ===>>>>> [default](...)
     SELECT test_user.f_username, test_user.f_year, test_user.id FROM test_user WHERE test_user.f_username = 'limodou'...LIMIT 1 OFFSET 0;
     ===<<<<< time used ...
     <BLANKLINE>
@@ -2746,7 +2751,7 @@ def test_none_condition():
     ...     __tablename__ = 'test_user'
     ...     username = Field(CHAR, fieldname='f_username', max_length=20)
     ...     year = Field(int, fieldname='f_year')
-    >>> print((User.c.username=='limodou')) & None # doctest:+ELLIPSIS
+    >>> print((User.c.username=='limodou') & None ) # doctest:+ELLIPSIS
     test_user.f_username = :...username_1
     """
 
@@ -2776,36 +2781,36 @@ def test_to_column_info():
     ...     reference = Reference()
     ...     other = ManyToMany(Other)
     ...     one = OneToOne(One)
-    >>> Test.string.to_column_info()
-    {'index': False, 'name': 'string', 'nullable': True, 'verbose_name': '', 'type_name': 'VARCHAR(40)', 'label': '', 'fieldname': 'string', 'server_default': None, 'autoincrement': False, 'relation': '', 'unique': False, 'type': 'VARCHAR', 'primary_key': False}
-    >>> Test.char.to_column_info()
-    {'index': False, 'name': 'char', 'nullable': True, 'verbose_name': '', 'type_name': 'CHAR(40)', 'label': '', 'fieldname': 'char', 'server_default': None, 'autoincrement': False, 'relation': '', 'unique': False, 'type': 'CHAR', 'primary_key': False}
-    >>> Test.file.to_column_info()
-    {'index': False, 'name': 'file', 'nullable': True, 'verbose_name': '', 'type_name': 'VARCHAR(40)', 'label': '', 'fieldname': 'file', 'server_default': None, 'autoincrement': False, 'relation': '', 'unique': False, 'type': 'VARCHAR', 'primary_key': False}
-    >>> Test.uni.to_column_info()
-    {'index': False, 'name': 'uni', 'nullable': True, 'verbose_name': '', 'type_name': 'VARCHAR(40)', 'label': '', 'fieldname': 'uni', 'server_default': None, 'autoincrement': False, 'relation': '', 'unique': False, 'type': 'VARCHAR', 'primary_key': False}
-    >>> Test.boolean.to_column_info()
-    {'index': False, 'name': 'boolean', 'nullable': True, 'verbose_name': '', 'type_name': 'BOOL', 'label': '', 'fieldname': 'boolean', 'server_default': None, 'autoincrement': False, 'relation': '', 'unique': False, 'type': 'BOOL', 'primary_key': False}
-    >>> Test.integer.to_column_info()
-    {'index': False, 'name': 'integer', 'nullable': True, 'verbose_name': '', 'type_name': 'INTEGER', 'label': '', 'fieldname': 'integer', 'server_default': None, 'autoincrement': False, 'relation': '', 'unique': False, 'type': 'INTEGER', 'primary_key': False}
-    >>> Test.date1.to_column_info()
-    {'index': False, 'name': 'date1', 'nullable': True, 'verbose_name': '', 'type_name': 'DATETIME', 'label': '', 'fieldname': 'date1', 'server_default': None, 'autoincrement': False, 'relation': '', 'unique': False, 'type': 'DATETIME', 'primary_key': False}
-    >>> Test.date2.to_column_info()
-    {'index': False, 'name': 'date2', 'nullable': True, 'verbose_name': '', 'type_name': 'DATE', 'label': '', 'fieldname': 'date2', 'server_default': None, 'autoincrement': False, 'relation': '', 'unique': False, 'type': 'DATE', 'primary_key': False}
-    >>> Test.date3.to_column_info()
-    {'index': False, 'name': 'date3', 'nullable': True, 'verbose_name': '', 'type_name': 'TIME', 'label': '', 'fieldname': 'date3', 'server_default': None, 'autoincrement': False, 'relation': '', 'unique': False, 'type': 'TIME', 'primary_key': False}
-    >>> Test.date4.to_column_info()
-    {'index': False, 'name': 'date4', 'nullable': True, 'verbose_name': '', 'type_name': 'TIMESTAMP', 'label': '', 'fieldname': 'date4', 'server_default': None, 'autoincrement': False, 'relation': '', 'unique': False, 'type': 'TIMESTAMP', 'primary_key': False}
-    >>> Test.float.to_column_info()
-    {'index': False, 'name': 'float', 'nullable': True, 'verbose_name': '', 'type_name': 'FLOAT', 'label': '', 'fieldname': 'float', 'server_default': None, 'autoincrement': False, 'relation': '', 'unique': False, 'type': 'FLOAT', 'primary_key': False}
-    >>> Test.decimal.to_column_info()
-    {'index': False, 'name': 'decimal', 'nullable': True, 'verbose_name': '', 'type_name': 'DECIMAL(10,2)', 'label': '', 'fieldname': 'decimal', 'server_default': None, 'autoincrement': False, 'relation': '', 'unique': False, 'type': 'DECIMAL', 'primary_key': False}
-    >>> Test.reference.to_column_info()
-    {'index': False, 'name': 'reference', 'nullable': True, 'verbose_name': '', 'type_name': 'INTEGER', 'label': '', 'fieldname': 'reference', 'server_default': None, 'autoincrement': False, 'relation': 'Reference(Test:id)', 'unique': False, 'type': 'Reference', 'primary_key': False}
-    >>> Test.other.to_column_info()
-    {'index': False, 'name': 'other', 'nullable': True, 'verbose_name': '', 'type_name': 'ManyToMany', 'label': '', 'fieldname': 'other', 'server_default': None, 'autoincrement': False, 'relation': 'ManyToMany(Test:id-Other:id)', 'unique': False, 'type': 'ManyToMany', 'primary_key': False}
-    >>> Test.one.to_column_info()
-    {'index': False, 'name': 'one', 'nullable': True, 'verbose_name': '', 'type_name': 'INTEGER', 'label': '', 'fieldname': 'one', 'server_default': None, 'autoincrement': False, 'relation': 'OneToOne(One:id)', 'unique': False, 'type': 'OneToOne', 'primary_key': False}
+    >>> sorted(Test.string.to_column_info().items())
+    [('autoincrement', False), ('fieldname', 'string'), ('index', False), ('label', ''), ('name', 'string'), ('nullable', True), ('primary_key', False), ('relation', ''), ('server_default', None), ('type', 'VARCHAR'), ('type_name', 'VARCHAR(40)'), ('unique', False), ('verbose_name', '')]
+    >>> sorted(Test.char.to_column_info().items())
+    [('autoincrement', False), ('fieldname', 'char'), ('index', False), ('label', ''), ('name', 'char'), ('nullable', True), ('primary_key', False), ('relation', ''), ('server_default', None), ('type', 'CHAR'), ('type_name', 'CHAR(40)'), ('unique', False), ('verbose_name', '')]
+    >>> sorted(Test.file.to_column_info().items())
+    [('autoincrement', False), ('fieldname', 'file'), ('index', False), ('label', ''), ('name', 'file'), ('nullable', True), ('primary_key', False), ('relation', ''), ('server_default', None), ('type', 'VARCHAR'), ('type_name', 'VARCHAR(40)'), ('unique', False), ('verbose_name', '')]
+    >>> sorted(Test.uni.to_column_info().items())
+    [('autoincrement', False), ('fieldname', 'uni'), ('index', False), ('label', ''), ('name', 'uni'), ('nullable', True), ('primary_key', False), ('relation', ''), ('server_default', None), ('type', 'VARCHAR'), ('type_name', 'VARCHAR(40)'), ('unique', False), ('verbose_name', '')]
+    >>> sorted(Test.boolean.to_column_info().items())
+    [('autoincrement', False), ('fieldname', 'boolean'), ('index', False), ('label', ''), ('name', 'boolean'), ('nullable', True), ('primary_key', False), ('relation', ''), ('server_default', None), ('type', 'BOOL'), ('type_name', 'BOOL'), ('unique', False), ('verbose_name', '')]
+    >>> sorted(Test.integer.to_column_info().items())
+    [('autoincrement', False), ('fieldname', 'integer'), ('index', False), ('label', ''), ('name', 'integer'), ('nullable', True), ('primary_key', False), ('relation', ''), ('server_default', None), ('type', 'INTEGER'), ('type_name', 'INTEGER'), ('unique', False), ('verbose_name', '')]
+    >>> sorted(Test.date1.to_column_info().items())
+    [('autoincrement', False), ('fieldname', 'date1'), ('index', False), ('label', ''), ('name', 'date1'), ('nullable', True), ('primary_key', False), ('relation', ''), ('server_default', None), ('type', 'DATETIME'), ('type_name', 'DATETIME'), ('unique', False), ('verbose_name', '')]
+    >>> sorted(Test.date2.to_column_info().items())
+    [('autoincrement', False), ('fieldname', 'date2'), ('index', False), ('label', ''), ('name', 'date2'), ('nullable', True), ('primary_key', False), ('relation', ''), ('server_default', None), ('type', 'DATE'), ('type_name', 'DATE'), ('unique', False), ('verbose_name', '')]
+    >>> sorted(Test.date3.to_column_info().items())
+    [('autoincrement', False), ('fieldname', 'date3'), ('index', False), ('label', ''), ('name', 'date3'), ('nullable', True), ('primary_key', False), ('relation', ''), ('server_default', None), ('type', 'TIME'), ('type_name', 'TIME'), ('unique', False), ('verbose_name', '')]
+    >>> sorted(Test.date4.to_column_info().items())
+    [('autoincrement', False), ('fieldname', 'date4'), ('index', False), ('label', ''), ('name', 'date4'), ('nullable', True), ('primary_key', False), ('relation', ''), ('server_default', None), ('type', 'TIMESTAMP'), ('type_name', 'TIMESTAMP'), ('unique', False), ('verbose_name', '')]
+    >>> sorted(Test.float.to_column_info().items())
+    [('autoincrement', False), ('fieldname', 'float'), ('index', False), ('label', ''), ('name', 'float'), ('nullable', True), ('primary_key', False), ('relation', ''), ('server_default', None), ('type', 'FLOAT'), ('type_name', 'FLOAT'), ('unique', False), ('verbose_name', '')]
+    >>> sorted(Test.decimal.to_column_info().items())
+    [('autoincrement', False), ('fieldname', 'decimal'), ('index', False), ('label', ''), ('name', 'decimal'), ('nullable', True), ('primary_key', False), ('relation', ''), ('server_default', None), ('type', 'DECIMAL'), ('type_name', 'DECIMAL(10,2)'), ('unique', False), ('verbose_name', '')]
+    >>> sorted(Test.reference.to_column_info().items())
+    [('autoincrement', False), ('fieldname', 'reference'), ('index', False), ('label', ''), ('name', 'reference'), ('nullable', True), ('primary_key', False), ('relation', 'Reference(Test:id)'), ('server_default', None), ('type', 'Reference'), ('type_name', 'INTEGER'), ('unique', False), ('verbose_name', '')]
+    >>> sorted(Test.other.to_column_info().items())
+    [('autoincrement', False), ('fieldname', 'other'), ('index', False), ('label', ''), ('name', 'other'), ('nullable', True), ('primary_key', False), ('relation', 'ManyToMany(Test:id-Other:id)'), ('server_default', None), ('type', 'ManyToMany'), ('type_name', 'ManyToMany'), ('unique', False), ('verbose_name', '')]
+    >>> sorted(Test.one.to_column_info().items())
+    [('autoincrement', False), ('fieldname', 'one'), ('index', False), ('label', ''), ('name', 'one'), ('nullable', True), ('primary_key', False), ('relation', 'OneToOne(One:id)'), ('server_default', None), ('type', 'OneToOne'), ('type_name', 'INTEGER'), ('unique', False), ('verbose_name', '')]
     >>> [(x['name'], x['type']) for x in Test.get_columns_info()]
     [('string', 'VARCHAR'), ('char', 'CHAR'), ('file', 'VARCHAR'), ('uni', 'VARCHAR'), ('boolean', 'BOOL'), ('integer', 'INTEGER'), ('date1', 'DATETIME'), ('date2', 'DATE'), ('date3', 'TIME'), ('date4', 'TIMESTAMP'), ('float', 'FLOAT'), ('decimal', 'DECIMAL'), ('reference', 'Reference'), ('other', 'ManyToMany'), ('one', 'OneToOne'), ('id', 'INTEGER')]
     """
@@ -2862,7 +2867,7 @@ def test_save_file():
     >>> b = Test(username='guest', year=10)
     >>> b.save()
     True
-    >>> from StringIO import StringIO
+    >>> from io import StringIO
     >>> buf = StringIO()
     >>> Test.all().save_file(buf)
     >>> print(buf.getvalue().replace('\\r\\n', '\\n'))
@@ -2894,8 +2899,8 @@ def test_derive():
     ...     birth = Field(datetime.date)
     >>> class User1(User):
     ...     age = Field(int)
-    >>> print(User1.properties.keys())
-    ['username', 'age', 'birth', 'year']
+    >>> print(list(User1.properties.keys()))
+    ['username', 'year', 'birth', 'age']
     >>> print(User1._primary_field)
     username
     >>> set_auto_create(True)
@@ -2906,9 +2911,9 @@ def test_primary_1():
     >>> db = get_connection('sqlite://')
     >>> db.metadata.drop_all()
     >>> class User(Model):
-    ...     username = Field(unicode, primary_key=True)
+    ...     username = Field(str, primary_key=True)
     ...     year = Field(int, default=30)
-    >>> print(User.properties.keys())
+    >>> print(list(User.properties.keys()))
     ['username', 'year']
     >>> print(User._primary_field)
     username
@@ -2916,7 +2921,7 @@ def test_primary_1():
     >>> set_echo(True)
     >>> u.save() # doctest:+ELLIPSIS
     <BLANKLINE>
-    ===>>>>> [default] (<...)
+    ===>>>>> [default](...)
     INSERT INTO user (username, year) VALUES ('guest', 30);
     ===<<<<< time used ...
     <BLANKLINE>
@@ -2924,7 +2929,7 @@ def test_primary_1():
     >>> u.year = 24
     >>> u.save() # doctest:+ELLIPSIS
     <BLANKLINE>
-    ===>>>>> [default] (<...)
+    ===>>>>> [default](...)
     UPDATE user SET year=24 WHERE user.username = 'guest';
     ===<<<<< time used ...
     <BLANKLINE>
@@ -2937,9 +2942,9 @@ def test_primary_2():
     >>> db = get_connection('sqlite://')
     >>> db.metadata.drop_all()
     >>> class Group(Model):
-    ...     name = Field(unicode, primary_key=True)
+    ...     name = Field(str, primary_key=True)
     >>> class User(Model):
-    ...     username = Field(unicode, primary_key=True)
+    ...     username = Field(str, primary_key=True)
     ...     year = Field(int, default=30)
     ...     group = Reference('group')
     >>> g = Group(name='group')
@@ -2960,10 +2965,10 @@ def test_primary_3():
     >>> db = get_connection('sqlite://')
     >>> db.metadata.drop_all()
     >>> class User(Model):
-    ...     username = Field(unicode, primary_key=True)
+    ...     username = Field(str, primary_key=True)
     ...     year = Field(int, default=30)
     >>> class Group(Model):
-    ...     name = Field(unicode, primary_key=True)
+    ...     name = Field(str, primary_key=True)
     ...     users = ManyToMany('user')
     >>> g = Group(name='group')
     >>> g.save()
@@ -2993,10 +2998,10 @@ def test_primary_4():
     >>> db = get_connection('sqlite://')
     >>> db.metadata.drop_all()
     >>> class User(Model):
-    ...     username = Field(unicode, primary_key=True)
+    ...     username = Field(str, primary_key=True)
     ...     year = Field(int, default=30)
     >>> class Group(Model):
-    ...     name = Field(unicode, primary_key=True)
+    ...     name = Field(str, primary_key=True)
     ...     users = ManyToMany('user', through='usergrouprel')
     >>> class UserGroupRel(Model):
     ...     user = Reference('user')
@@ -3062,10 +3067,10 @@ def test_primary_5():
     >>> db = get_connection('sqlite://')
     >>> db.metadata.drop_all()
     >>> class User(Model):
-    ...     username = Field(unicode, primary_key=True)
+    ...     username = Field(str, primary_key=True)
     ...     year = Field(int, default=30)
     >>> class MyUser(User):
-    ...     username = Field(unicode, max_length=30)
+    ...     username = Field(str, max_length=30)
     """
 
 def test_bulk():
@@ -3073,7 +3078,7 @@ def test_bulk():
     >>> db = get_connection('sqlite://')
     >>> db.metadata.drop_all()
     >>> class User(Model):
-    ...     username = Field(unicode, primary_key=True)
+    ...     username = Field(str, primary_key=True)
     ...     year = Field(int, default=30)
     ...     nick_name = Field(str, max_length=30)
     >>> b = Bulk()
@@ -3111,7 +3116,7 @@ def test_rawsql():
     >>> db = get_connection('sqlite://')
     >>> db.metadata.drop_all()
     >>> class User(Model):
-    ...     username = Field(unicode, primary_key=True)
+    ...     username = Field(str, primary_key=True)
     ...     year = Field(int, default=30)
     >>> from sqlalchemy import create_engine
     >>> sql = User.filter(User.c.username=='guest').get_query()
@@ -3134,7 +3139,7 @@ def test_bulk_3():
     >>> db = get_connection('sqlite://')
     >>> db.metadata.drop_all()
     >>> class User(Model):
-    ...     username = Field(unicode, primary_key=True)
+    ...     username = Field(str, primary_key=True)
     ...     year = Field(int, default=30)
     >>> from sqlalchemy import create_engine
     >>> e = get_connection('oracle://', strategy='mock', executor=None, engine_name='oracle')
@@ -3142,7 +3147,7 @@ def test_bulk_3():
     >>> b.prepare('update', User.table.update().values(year='year').where(User.c.username=='username'))
     >>> b.put('update', **{'username':'test', 'year':30})
     >>> print(b.sqles['update']['data'])
-    [{'username_1': 'test', 'year': 30}]
+    [{'year': 30, 'username_1': 'test'}]
     >>> e = get_connection('mysql://', strategy='mock', executor=None, engine_name='mysql')
     >>> b = Bulk(engine='mysql', size=10)
     >>> b.prepare('update', User.table.update().values(year='year').where(User.c.username=='username'))
@@ -3156,7 +3161,7 @@ if __name__ == '__main__':
     # db = get_connection('sqlite://')
     # db.metadata.drop_all()
     # class User(Model):
-    #     username = Field(unicode, primary_key=True)
+    #     username = Field(str, primary_key=True)
     #     year = Field(int, default=30)
     #
     # Bulk = orm.Bulk
@@ -3189,7 +3194,7 @@ if __name__ == '__main__':
     # db = get_connection('sqlite://')
     # db.metadata.drop_all()
     # class User(Model):
-    #     username = Field(unicode, primary_key=True)
+    #     username = Field(str, primary_key=True)
     #     year = Field(int, default=30)
     #
     # from sqlalchemy import create_engine

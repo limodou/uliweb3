@@ -1882,7 +1882,7 @@ class Property(object):
     def to_column_info(self):
         d = {}
         d['verbose_name'] = u(self.verbose_name or '')
-        d['label'] = u(self.label) or ''
+        d['label'] = u(self.label or '')
         d['name'] = self.name
         d['fieldname'] = self.fieldname
         d['type'] = self.type_name
@@ -1962,7 +1962,7 @@ class UUIDBinaryProperty(VarBinaryProperty):
         import uuid
 
         u = uuid.uuid4()
-        return u.get_bytes()
+        return u.bytes
 
     def convert(self, value):
         if value is None:
@@ -3207,7 +3207,7 @@ class ManyResult(Result):
         row = self.do_(
             select([self.table.c[self.fieldb]],
                 self.get_default_condition() &
-                self.condition).limit(1)
+                text(self.condition)).limit(1)
             )
         return len(list(row)) > 0
 
@@ -4388,11 +4388,15 @@ class Model(with_metaclass(ModelMetaclass)):
         """
         if not collection_name:
             collection_name = prefix + '_set'
-            if hasattr(cls, collection_name):
-                #if the xxx_set is already existed, then automatically
-                #create unique collection_set id
-                collection_name = prefix + '_set_' + str(cls._collection_set_id)
-                cls._collection_set_id += 1
+            try:
+                if hasattr(cls, collection_name):
+                    #if the xxx_set is already existed, then automatically
+                    #create unique collection_set id
+                    collection_name = prefix + '_set_' + str(cls._collection_set_id)
+                    cls._collection_set_id += 1
+            except:
+                # just skip collection_name is not exists
+                pass
         else:
             if collection_name in cls._collection_names:
                 if cls._collection_names.get(collection_name) != from_class_name:
@@ -5008,9 +5012,10 @@ class Bulk(object):
             else:
                 if sql['positional']:
                     d = [values[k] for k, v in sql['fields'].items()]
+                    return do_(sql['raw_sql'], args=d)
                 else:
                     d = {v:values[k] for k, v in sql['fields'].items()}
-            return do_(sql['raw_sql'], **d)
+                    return do_(sql['raw_sql'], **d)
         except:
             if self.transcation:
                 Rollback(self.engine)
