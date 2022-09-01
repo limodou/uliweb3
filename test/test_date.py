@@ -21,10 +21,13 @@ def test():
     >>> date.to_datetime(c, tzinfo=AsiaShanghai)
     datetime.datetime(2011, 9, 13, 20, 14, 15, tzinfo=Timezone('Asia/Shanghai'))
     >>> date.to_datetime(d, tzinfo=date.UTC)
-    datetime.datetime(2011, 9, 13, 12, 14, 15, tzinfo=Timezone('UTC'))
+    DateTime(2011, 9, 13, 12, 14, 15, tzinfo=Timezone('UTC'))
+    >>> date.get_server_timezone()
     >>> date.set_server_timezone(date.UTC)
+    >>> date.get_server_timezone()
+    Timezone('UTC')
     >>> date.to_datetime(d)
-    datetime.datetime(2011, 9, 13, 12, 14, 15, tzinfo=Timezone('UTC'))
+    DateTime(2011, 9, 13, 12, 14, 15, tzinfo=Timezone('UTC'))
     >>> date.to_date('2011-9-13 20:14:15')
     datetime.date(2011, 9, 13)
     >>> date.to_datetime('2011-9-13 20:14:15')
@@ -37,25 +40,50 @@ def test():
     datetime.time(20, 14, 15, tzinfo=Timezone('UTC'))
     >>> date.to_time('2011-9-13 20:14:15', tzinfo=date.UTC)
     datetime.time(20, 14, 15, tzinfo=Timezone('UTC'))
+    >>> date.to_string(date.to_datetime('2011-9-13 20:14:15'))
+    '2011-09-13 20:14:15 UTC'
+    >>> date.to_local(d)
+    DateTime(2011, 9, 13, 12, 14, 15, tzinfo=Timezone('UTC'))
+    >>> date.set_server_timezone(None)
+    >>> date.get_server_timezone()
+    >>> date.to_datetime('2011-9-13 20:14:15')
+    datetime.datetime(2011, 9, 13, 20, 14, 15)
+    >>> date.to_date('2011-9-13 20:14:15', tzinfo=date.UTC)
+    datetime.date(2011, 9, 13)
+    >>> date.to_time('2011-9-13 20:14:15')
+    datetime.time(20, 14, 15)
     >>> date.to_string(date.to_date('2011-9-13 20:14:15'))
     '2011-09-13'
     >>> date.to_string(date.to_datetime('2011-9-13 20:14:15'))
-    '2011-09-13 20:14:15 UTC'
+    '2011-09-13 20:14:15'
     >>> date.to_string(date.to_time('2011-9-13 20:14:15'))
     '20:14:15'
     >>> date.to_timezone(None)
     >>> date.to_datetime(None)
     >>> date.to_date(None)
     >>> date.to_time(None)
-    >>> date.set_local_timezone('Asia/Shanghai')
+    >>> print(date.get_local_timezone())
+    None
     >>> date.to_local(d)
-    datetime.datetime(2011, 9, 13, 20, 14, 15, tzinfo=Timezone('Asia/Shanghai'))
+    datetime.datetime(2011, 9, 13, 20, 14, 15)
+    >>> date.set_local_timezone('Asia/Shanghai')
+    >>> date.get_local_timezone()
+    Timezone('Asia/Shanghai')
+    >>> date.to_local(d)
+    DateTime(2011, 9, 13, 20, 14, 15, tzinfo=Timezone('Asia/Shanghai'))
     >>> date.timezone('Asia/Shanghai')
     Timezone('Asia/Shanghai')
+    >>> date.set_local_timezone(None)
+    >>> date.get_local_timezone()
+    >>> date.to_local(d)
+    datetime.datetime(2011, 9, 13, 20, 14, 15)
     """
     
 def test_microsecond():
     """
+    >>> date.set_server_timezone(date.UTC)
+    >>> date.get_server_timezone()
+    Timezone('UTC')
     >>> date.to_datetime('2012-08-01 16:41:12.5200')
     DateTime(2012, 8, 1, 16, 41, 12, 520000, tzinfo=Timezone('UTC'))
     >>> a = datetime(2012,8,1,16,41,12,5200)
@@ -64,6 +92,16 @@ def test_microsecond():
     >>> b = date.to_datetime(a)
     >>> b
     datetime.datetime(2012, 8, 1, 16, 41, 12, 5200, tzinfo=Timezone('UTC'))
+    >>> date.to_string(b, microsecond=True)
+    '2012-08-01 16:41:12.005200 UTC'
+    >>> date.to_string(b, timezone=False)
+    '2012-08-01 16:41:12'
+    >>> date.set_server_timezone(None)
+    >>> date.get_server_timezone()
+    >>> date.to_datetime('2012-08-01 16:41:12.5200')
+    datetime.datetime(2012, 8, 1, 16, 41, 12, 520000)
+    >>> date.to_datetime(a)
+    datetime.datetime(2012, 8, 1, 16, 41, 12, 5200)
     >>> date.to_string(b, microsecond=True)
     '2012-08-01 16:41:12.005200 UTC'
     >>> date.to_string(b, timezone=False)

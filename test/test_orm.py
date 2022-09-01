@@ -2180,14 +2180,14 @@ def test_load_dump():
     >>> s = b.dump()
     >>> s['pickle'] = base64.b64encode(s['pickle'])
     >>> s # doctest:+ELLIPSIS, +NORMALIZE_WHITESPACE
-    {'string': 'limodou', 'boolean': 'True', 'integer': '200', 'date1': '2009-01-01 14:00:05', 'date2': '2009-01-01', 'date3': '14:00:00', 'float': '200.02', 'decimal': '10.2', 'pickle': b'gAWVEQAAAAAAAAB9lCiMAWGUSwGMAWKUSwJ1Lg==', 'json': '{"a":1,"b":["c","d"]}', 'id': '1'}
+    {'string': 'limodou', 'boolean': 'True', 'integer': '200', 'date1': '2009-01-01 14:00:05', 'date2': '2009-01-01', 'date3': '14:00:00', 'float': '200.02', 'decimal': '10.2', 'pickle': b'...VEQAAAAAAAAB9lCiMAWGUSwGMAWKUSwJ1Lg==', 'json': '{"a":1,"b":["c","d"]}', 'id': '1'}
     >>> b.dump(fields=['boolean', 'decimal'])
     {'boolean': 'True', 'decimal': '10.2', 'id': '1'}
     >>> b.pickle = {'a':[1,2,3]}
     >>> s = b.dump(fields=['pickle'])
     >>> s['pickle'] = base64.b64encode(s['pickle'])
-    >>> s
-    {'pickle': b'gAWVEgAAAAAAAAB9lIwBYZRdlChLAUsCSwNlcy4=', 'id': '1'}
+    >>> s # doctest:+ELLIPSIS, +NORMALIZE_WHITESPACE
+    {'pickle': b'...VEgAAAAAAAAB9lIwBYZRdlChLAUsCSwNlcy4=', 'id': '1'}
     >>> b.json
     {'a': 1, 'b': ['c', 'd']}
     >>> print(b.dump(fields=['json'])['json'])

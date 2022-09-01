@@ -127,9 +127,8 @@ def to_datetime(dt, tzinfo=None, format=None):
             getattr(dt, 'second', 0), getattr(dt, 'microsecond', 0))
         if not getattr(dt, 'tzinfo', None):
             d = d.replace(tzinfo=tz)
-            return d
-        else:
-            d = d.replace(tzinfo=dt.tzinfo)
+        elif tz:
+            d = tz.convert(dt)
     return d
 
 def to_local(dt, tzinfo=None):
