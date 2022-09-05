@@ -17,7 +17,6 @@ StingIO, BytesIO
 from io import StringIO, BytesIO
 
 """
-import os
 import sys
 import inspect
 
@@ -31,6 +30,16 @@ try:
     from cgi import escape
 except Exception as e:
     from html import escape
+
+#https://werkzeug.palletsprojects.com/en/2.2.x/changes/#version-2-0-0
+try:
+    from werkzeug.wrappers import Response, BaseResponse
+    def isresponse(item):
+        return isinstance(item, (Response, BaseResponse))
+except Exception as e:
+    from werkzeug.wrappers import Response
+    def isresponse(item):
+        return isinstance(item, Response)
 
 if not PY2:
     unichr = chr

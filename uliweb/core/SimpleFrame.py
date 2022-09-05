@@ -5,12 +5,10 @@
 from __future__ import print_function, absolute_import
 
 import os, sys
-import inspect
 import re
 import types
 import threading
 from werkzeug import Request as OriginalRequest, Response as OriginalResponse
-from werkzeug.wrappers import BaseResponse
 from werkzeug.local import Local, LocalManager
 from werkzeug.exceptions import HTTPException, NotFound, BadRequest, InternalServerError
 from werkzeug.routing import Map
@@ -26,7 +24,7 @@ import uliweb.utils.pyini as pyini
 from uliweb.i18n import gettext_lazy, i18n_ini_convertor
 from uliweb.utils.localproxy import LocalProxy, Global
 from uliweb import UliwebError
-from uliweb.utils._compat import html_escape
+from uliweb.utils._compat import html_escape, isresponse
 
 # from rules import Mapping, add_rule
 from . import rules
@@ -1103,7 +1101,7 @@ class Dispatcher(object):
             response.write(self.template(tmpfile, result, env, default_template=d, layout=layout))
         elif isinstance(result, string_types):
             response.write(result)
-        elif isinstance(result, (Response, BaseResponse)):
+        elif isresponse(result):
             response = result
         #add generator support 2014-1-8
         elif isinstance(result, types.GeneratorType) or hasattr(result, '__iter__'):
