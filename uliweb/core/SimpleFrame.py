@@ -1109,7 +1109,7 @@ class Dispatcher(object):
             #such as response.content_type='application/json'
             result_iter = iter(result)
             try:
-                x = result_iter.next()
+                x = next(result_iter)
                 if x == None:
                     x = ''
             except StopIteration:
