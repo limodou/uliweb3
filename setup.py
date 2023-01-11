@@ -141,7 +141,8 @@ setup(name='Uliweb3',
     install_requires=[
       'pendulum',
       'six',
-      'werkzeug'
+      'werkzeug',
+      'ua-parser'
     ],
     zip_safe=False,
     entry_points = {

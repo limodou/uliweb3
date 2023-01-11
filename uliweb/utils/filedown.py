@@ -32,14 +32,17 @@ def _generate_etag(mtime, file_size, real_filename):
 
 def _get_download_filename(env, filename):
     from uliweb.utils.common import safe_str
-    from werkzeug.useragents import UserAgent
+    from ua_parser import user_agent_parser
 
-    agent = UserAgent(env)
+    # werkzeug.useragents was remove from werkzeug 2.1 using ua-parser replace it.
+    # link https://github.com/pallets/werkzeug/issues/2078
+    http_user_agent = user_agent_parser.Parse(env.get("HTTP_USER_AGENT", {}))
+    ua_browser = http_user_agent.get("user_agent", {}).get("family","").lower()
 
     fname = safe_str(filename, 'utf8')
-    if agent.browser == 'msie':
+    if ua_browser == 'msie':
         result = 'filename=' + quote(fname)
-    elif agent.browser == 'safari':
+    elif ua_browser == 'safari':
         result = 'filename=' + fname
     else:
         result = "filename*=UTF-8''" + quote(fname)
