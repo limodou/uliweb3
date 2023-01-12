@@ -4700,7 +4700,8 @@ class Model(with_metaclass(ModelMetaclass)):
             
     @classmethod
     def count(cls, condition=None, **kwargs):
-        count = do_(cls.table.count(condition, **kwargs), cls.get_session()).scalar()
+        # count = do_(cls.table.count(condition, **kwargs), cls.get_session()).scalar()
+        count = cls.filter(condition, **kwargs).count()
         return count
     
     @classmethod

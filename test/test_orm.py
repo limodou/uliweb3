@@ -32,6 +32,8 @@ def test_1():
     [<Test {'username':'limodou','year':30,'birth':datetime.date(2011, 3, 4),'id':1}>, <Test {'username':'limodou1','year':30,'birth':None,'id':2}>]
     >>> print(Test.count())
     2
+    >>> print(Test.count(Test.c.id==1))
+    1
     >>> Test.any()
     True
     >>> a.username
