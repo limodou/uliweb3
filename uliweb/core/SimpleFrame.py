@@ -1385,8 +1385,8 @@ class Dispatcher(object):
             if order is None:
                 order = getattr(cls, 'ORDER', 500)
             m.append((order, cls))
-        
-        m.sort()
+        # only compare order
+        m.sort(key=lambda x: x[0])
             
         return [x[1] for x in m]
     
