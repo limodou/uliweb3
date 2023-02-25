@@ -1,7 +1,7 @@
 #coding=utf-8
 from __future__ import print_function, absolute_import, unicode_literals
 import re
-import cgi
+from uliweb.utils._compat import html_escape
 
 re_string_html = re.compile(r'(?P<htmlchars>[<&>])|(?P<space>^[ \t]+)|(?P<lineend>\r\n|\r|\n)|(?P<protocal>(^|\s*)(http|ftp|https)://[\w\-\.,@?^=%&:/~\+#]+)', re.S|re.M|re.I)
 re_string = re.compile(r'(?P<htmlchars>[<&>])|(?P<space>^[ \t]+)|(?P<lineend>\r\n|\r|\n)', re.S|re.M|re.I)
@@ -11,7 +11,7 @@ def text2html(text, tabstop=4, link=True):
     def do_sub(m):
         c = m.groupdict()
         if c['htmlchars']:
-            return cgi.escape(c['htmlchars'])
+            return html_escape(c['htmlchars'])
         if c['lineend']:
             return '<br/>'
         elif c['space']:
