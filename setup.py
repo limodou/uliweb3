@@ -139,7 +139,7 @@ setup(name='Uliweb3',
     license=uliweb.__license__,
     include_package_data=True,
     install_requires=[
-      'pendulum',
+      'pendulum<3.0',
       'six',
       'werkzeug',
       'ua-parser'
