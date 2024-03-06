@@ -67,7 +67,7 @@ def unbind(topic, func):
 def _test(kwargs, receiver):
     signal = kwargs.get('signal', None)
     f = receiver['func']
-    args = inspect.getargspec(f)[0]
+    args = inspect.signature(f).parameters
     if 'signal' not in args:
         kwargs.pop('signal', None)
     _signal = receiver.get('signal')

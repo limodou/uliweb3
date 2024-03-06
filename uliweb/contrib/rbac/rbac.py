@@ -11,7 +11,7 @@ def call_func(func, kwargs):
     import inspect
     
     args = {}
-    for x in inspect.getargspec(func).args:
+    for x in inspect.signature(func).parameters:
         try:
             args[x] = kwargs[x]
         except KeyError:

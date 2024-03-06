@@ -302,7 +302,7 @@ class Expose(object):
                     setattr(func, '__fixed_url__', False)
     
     def _get_url(self, appname, prefix, f):
-        args = inspect.getargspec(f)[0]
+        args = inspect.signature(f).parameters
         if args:
             if ismethod(f):
                 args = args[1:]
@@ -318,7 +318,7 @@ class Expose(object):
     
     def parse_function(self, f):
         from uliweb.utils.date import now
-        args = inspect.getargspec(f)[0]
+        args = inspect.signature(f).parameters
         if args:
             args = ['<%s>' % x for x in args]
         if f.__name__ in reserved_keys:
