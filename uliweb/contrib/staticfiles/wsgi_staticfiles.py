@@ -41,14 +41,21 @@ class StaticFilesMiddleware(SharedDataMiddleware):
 
             app = self.app
             if dir:
-                fname = os.path.normpath(os.path.join(dir, filename)).replace('\\', '/')
+                # if filename = 'static/..\..\etc/passwd',
+                # normpath first will not change filename,
+                # then doing replace action will make filename = 'static/../../etc/passwd',
+                # which is actually not under static folder,
+                # but it matches startswith condition and will not raise Forbidden.
+                # So it needs to replace backslash to slash first, then do normpath
+                # to avoid filename includes '..\'
+                fname = os.path.normpath(os.path.join(dir, filename).replace('\\', '/'))
                 if not fname.startswith(dir):
                     return Forbidden("You can only visit the files under static directory."), None
                 if os.path.exists(fname):
                     return fname, self._opener(fname)
 
             for p in reversed(app.apps):
-                fname = os.path.normpath(os.path.join('static', filename)).replace('\\', '/')
+                fname = os.path.normpath(os.path.join('static', filename).replace('\\', '/'))
                 if not fname.startswith('static/'):
                     return Forbidden("You can only visit the files under static directory."), None
 
