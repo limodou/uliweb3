@@ -95,6 +95,7 @@ class FileServing(object):
         @param subpath: sub folder in to_path
         """
         from uliweb.utils.common import safe_unicode
+        from werkzeug.exceptions import Forbidden
         
         #make sure the filename is unicode
         s = settings.GLOBAL
@@ -105,11 +106,16 @@ class FileServing(object):
             _filename = filename
         nfile = safe_unicode(_filename, s.HTMLPAGE_ENCODING)
 
+        application_to_path = application_path(self.to_path)
         if subpath:
-            paths = [application_path(self.to_path), subpath, nfile]
+            paths = [application_to_path, subpath, nfile]
         else:
-            paths = [application_path(self.to_path), nfile]
-        f = os.path.normpath(os.path.join(*paths)).replace('\\', '/')
+            paths = [application_to_path, nfile]
+        f = os.path.normpath(os.path.join(*paths).replace('\\', '/'))
+        # not allow file path outside of the application to_path
+        if not f.startswith(os.path.normpath(application_to_path)):
+            log.exception(f"File path: {f} is not under {self.to_path}.")
+            raise Forbidden("Not allow filename")
     
         if filesystem:
             return files.encode_filename(f, to_encoding=s.FILESYSTEM_ENCODING)
@@ -120,18 +126,33 @@ class FileServing(object):
         action will be "download", "inline"
         and if the request.GET has 'action', then the action will be replaced by it.
         """
-        from uliweb import request
+        from uliweb import request, settings
         from uliweb.utils.common import safe_str
         from uliweb.utils.filedown import filedown
+        from werkzeug.exceptions import Forbidden
         
         s = settings.GLOBAL
 
         action = request.GET.get('action', action)
-        
+
         if not real_filename:
             real_filename = self.get_filename(filename, True, convert=False)
         else:
             real_filename = files.encode_filename(real_filename, to_encoding=s.FILESYSTEM_ENCODING)
+
+        # Using settings.UPLOAD.ALLOW_LOCATIONS (default: [settings.UPLOAD.TO_PATH])
+        # to set allowed download paths to control file download,
+        # only files under allowed download path can be downloaded
+        allowed = False
+        real_filepath = os.path.normpath(real_filename.decode(s.FILESYSTEM_ENCODING))
+        allow_download_paths = settings.UPLOAD.ALLOW_DOWNLOAD_PATHS
+        for fpath in allow_download_paths:
+            if real_filepath.startswith(os.path.normpath(application_path(fpath))):
+                allowed = True
+                break
+        if not allowed:
+            log.exception(f"Cannot download file from {real_filepath}, only allow to download files under {allow_download_paths}")
+            raise Forbidden("Not allow download")
 
         if not x_filename:
             x_filename = safe_str(filename, s.FILESYSTEM_ENCODING)
