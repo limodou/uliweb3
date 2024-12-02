@@ -2,9 +2,11 @@ import time, sys
 sys.path.insert(0, '../uliweb/lib')
 from uliweb import expose
 from uliweb.core import rules
+from uliweb.utils.sorteddict import SortedDict
 
 def test_1():
     """
+    >>> rules.__exposes__ = SortedDict() # reset exposes
     >>> def view():pass
     >>> f = expose('!/')(view)
     >>> rules.merge_rules()

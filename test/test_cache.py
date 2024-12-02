@@ -3,18 +3,28 @@ path = os.path.dirname(os.path.dirname(__file__))
 sys.path.insert(0, path)
 from uliweb import manage, functions
 
+cdir = None
+
+
+def setup():
+    global cdir
+    cdir = os.getcwd()
+
+
 def teardown():
     import shutil
-    os.chdir('..')
+    if cdir:
+        os.chdir(cdir)
     if os.path.exists('TestProject'):
         shutil.rmtree('TestProject', ignore_errors=True)
+
 
 def test_file():
     """
     >>> manage.call('uliweb makeproject -y TestProject')
     >>> os.chdir('TestProject')
     >>> path = os.getcwd()
-    >>> app = manage.make_simple_application(project_dir=path, include_apps=['uliweb.contrib.cache'])
+    >>> app = manage.make_simple_application(project_dir=path, include_apps=['uliweb.contrib.cache'], reuse=False)
     >>> cache = functions.get_cache()
     >>> cache.get('name', None)
     >>> def set_name():
@@ -53,7 +63,7 @@ def test_redis():
     >>> manage.call('uliweb makeproject -y TestProject')
     >>> os.chdir('TestProject')
     >>> path = os.getcwd()
-    >>> app = manage.make_simple_application(project_dir=path, include_apps=['uliweb.contrib.cache'])
+    >>> app = manage.make_simple_application(project_dir=path, include_apps=['uliweb.contrib.cache'], reuse=False)
     >>> cache = functions.get_cache(storage_type='redis', options={'connection_pool':{'host':'localhost', 'port':6379}})
     >>> cache.get('name', None)
     >>> def set_name():
@@ -102,7 +112,7 @@ def test_memcache():
     >>> manage.call('uliweb makeproject -y TestProject')
     >>> os.chdir('TestProject')
     >>> path = os.getcwd()
-    >>> app = manage.make_simple_application(project_dir=path, include_apps=['uliweb.contrib.cache'])
+    >>> app = manage.make_simple_application(project_dir=path, include_apps=['uliweb.contrib.cache'], reuse=False)
     >>> cache = functions.get_cache(storage_type='memcache', options={'connection':['127.0.0.1:11211']})
     >>> cache.get('name', None)
     >>> def set_name():
