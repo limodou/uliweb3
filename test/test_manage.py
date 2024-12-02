@@ -5,30 +5,34 @@
 
 import os
 
+
 class TestMakeProject:
-    def setup_method(self, test_makeproject):
+    def setup(self):
         import shutil
-        if os.path.exists('test'):
-            shutil.rmtree('test', ignore_errors=True)
+        if os.path.exists('maketest'):
+            print("remove maketest when setup")
+            shutil.rmtree('maketest', ignore_errors=True)
         print('setup')
             
-    def teardown_method(self, test_makeproject):
+    def teardown(self):
         import shutil
-        if os.path.exists('test'):
-            shutil.rmtree('test', ignore_errors=True)
+        if os.path.exists('maketest'):
+            print("remove maketest when teardown")
+            shutil.rmtree('maketest', ignore_errors=True)
         print('teardown')
 
     def test_makeproject(self):
         from uliweb import manage
 
-        manage.call('uliweb makeproject -y test')
-        assert os.path.exists('test')
+        manage.call('uliweb makeproject -y maketest')
+        assert os.path.exists('maketest')
         
     def test_makeapp(self):
         from uliweb import manage
         
-        manage.call('uliweb makeproject -y test')
-        os.chdir('test')
+        cdir = os.getcwd()
+        manage.call('uliweb makeproject -y maketest')
+        os.chdir('maketest')
         manage.call('uliweb makeapp Hello')
-        os.chdir('..')
-        assert os.path.exists('test/apps/Hello')
+        os.chdir(cdir)
+        assert os.path.exists('maketest/apps/Hello')
