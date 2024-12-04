@@ -37,5 +37,3 @@ def test():
     <BLANKLINE>
     """
 
-from uliweb import json_dumps
-print(json_dumps({'a':'中文'}, unicode=True))

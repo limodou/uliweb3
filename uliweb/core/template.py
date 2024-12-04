@@ -743,16 +743,16 @@ class LRUTmplatesCacheDict(object):
             del self.__values[key]
             if self.check_modified_time:
                 del self.__modified_times[key]
-            self.__access_keys.remove(key)
+            # self.__access_keys.remove(key)
 
     def cleanup(self):
         if not self.max_size: return
-        for i in range(len(self.__access_keys)-1, self.max_size, -1):
+        for i in range(len(self.__access_keys), self.max_size, -1):
             key = self.__access_keys.pop()
             self.__delitem__(key)
 
     def keys(self):
-        return self.__values.keys()
+        return list(self.__values.keys())
 
 r_extend = re.compile(r'(\s*#.*?)?\{\{extend[s]?\s\S+\s*\}\}', re.DOTALL)
 
@@ -1066,7 +1066,7 @@ class _File(_Node):
             writer.write_line("_tt_append = _tt_buffer.append", self.line)
             writer.write_line("def _tt_write(t, escape=True):", self.line)
             writer.write_line("    if escape:", self.line)
-            writer.write_line("        _tt_append(xhtml_escape(_tt_utf8(t)))", self.line)
+            writer.write_line("        _tt_append(_tt_utf8(xhtml_escape(t)))", self.line)
             writer.write_line("    else:", self.line)
             writer.write_line("        _tt_append(_tt_utf8(t))", self.line)
             writer.write_line("        pass", self.line)

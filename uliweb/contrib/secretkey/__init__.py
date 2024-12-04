@@ -35,7 +35,7 @@ def get_key():
     """
     Read the key content from secret_file
     """
-    with file(application_path(settings.SECRETKEY.SECRET_FILE), 'rb') as f:
+    with open(application_path(settings.SECRETKEY.SECRET_FILE), 'rb') as f:
         return f.read()
     
 def get_cipher_key():

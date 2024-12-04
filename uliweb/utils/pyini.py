@@ -612,13 +612,13 @@ class Ini(SortedDict):
         if not filename:
             filename = sys.stdout
         if isinstance(filename, string_types):
-            f = open(filename, 'wb')
+            f = open(filename, 'w', encoding=self._encoding)
             need_close = True
         else:
             f = filename
             need_close = False
-        
-        print('#coding=%s' % self._encoding, file=f)
+
+        print('#coding={}'.format(self._encoding), file=f)
         for s in self.keys():
             if s in self._env:
                 continue

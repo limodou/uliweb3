@@ -125,7 +125,7 @@ def find(plugin, *args, **kwargs):
         call = getattr(mod, 'call', None)
         call.__name__ = call.__module__
         if call:
-            para = inspect.signature(f).parameters
+            para = list(inspect.signature(call).parameters)
             #test if the funtion is defined as old style
             if ['app', 'var', 'env'] == para[:3]:
                 warnings.simplefilter('default')
