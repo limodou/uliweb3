@@ -3,11 +3,21 @@ path = os.path.dirname(os.path.dirname(__file__))
 sys.path.insert(0, path)
 from uliweb import manage, functions
 
+cdir = None
+
+
+def setup():
+    global cdir
+    cdir = os.getcwd()
+
+
 def teardown():
     import shutil
-    os.chdir('..')
+    if cdir:
+        os.chdir(cdir)
     if os.path.exists('TestProject'):
         shutil.rmtree('TestProject', ignore_errors=True)
+
 
 def test_file():
     """
