@@ -44,9 +44,10 @@ class Storage(BaseStorage):
             
     def _is_not_expiry(self, accessed_time, expiry_time):
         return time.time() < accessed_time + expiry_time
-    
+
+
 def create_table(url, tablename, create=False):
-    db = sa.create_engine(url, strategy='threadlocal')
+    db = sa.create_engine(url)
     meta = sa.MetaData(db)
     table = sa.Table(tablename, meta,
                      sa.Column('id', types.Integer, primary_key=True),

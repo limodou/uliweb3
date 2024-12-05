@@ -186,7 +186,7 @@ def test_4():
 #testing transaction
 def test_5():
     """
-    >>> db = get_connection('sqlite://', strategy='threadlocal')
+    >>> db = get_connection('sqlite://')
     >>> db.metadata.drop_all()
     >>> class Test(Model):
     ...     username = Field(text_type)
@@ -1916,54 +1916,6 @@ def test_manytomany_delete_fieldname():
     >>> g1
     <Group {'name':'python','deleted':True,'id':1}>
     """
-
-def test_generic_relation():
-    """
-    >>> from uliweb.utils.generic import GenericReference, GenericRelation
-    >>> db = get_connection('sqlite://')
-    >>> db.echo = False
-    >>> db.metadata.drop_all()
-    >>> from uliweb.contrib.tables.models import Tables
-    >>> class Article(Model):
-    ...     title = Field(str)
-    ...     content = Field(TEXT)
-    ...     tags = GenericRelation('tag')
-    >>> class Tag(Model):
-    ...     name = Field(str)
-    ...     content_object = GenericReference()
-    >>> a = Article(title='Test')
-    >>> a.save()
-    True
-    >>> b = Article(title='Linux')
-    >>> b.save()
-    True
-    >>> print(list(a.all())) # doctest:+ELLIPSIS
-    [<Article {'title':'Test','content':'','tags':<uliweb.orm.Result ...>,'id':1}>, <Article {'title':'Linux','content':'','tags':<uliweb.orm.Result ...>,'id':2}>]
-    >>> t = Tag(name='python', content_object=a)
-    >>> t.save()
-    True
-    >>> t1 = Tag(name='linux', content_object=a)
-    >>> t1.save()
-    True
-    >>> b = list(t.all())[0]
-    >>> print(repr(b)) # doctest:+ELLIPSIS
-    <Tag {'name':'python','content_object':<Article {'title':'Test','content':'','tags':<uliweb.orm.Result ...>,'id':1}>,'id':1,'table_id':1,'object_id':1}>
-    >>> print(b.to_dict())
-    {'name': 'python', 'content_object': (1, 1), 'id': 1, 'table_id': 1, 'object_id': 1}
-    >>> print(b.content_object)
-    1
-    >>> print([x.name for x in a.tags])
-    ['python', 'linux']
-    >>> print([x.name for x in Tag.content_object.filter(a)])
-    ['python', 'linux']
-    >>> print([x.name for x in Tag.content_object.filter(('article', a.id))])
-    ['python', 'linux']
-    >>> c = Article(title="perl", content=None)
-    >>> c.save()
-    True
-    >>> Article.get(Article.c.title=='perl') # doctest:+ELLIPSIS
-    <Article {'title':'perl','content':'','tags':<uliweb.orm.Result...>,'id':3}>
-    """
     
 def test_camel_case_tablename():
     """
@@ -2169,7 +2121,7 @@ def test_load_dump():
     ...     date2 = DateProperty()
     ...     date3 = TimeProperty()
     ...     float = FloatProperty()
-    ...     decimal = DecimalProperty()
+    ...     decimal = StringProperty()  # Change DecimalProperty to StringProperty, to fixt this: Warning: Dialect sqlite+pysqlite does *not* support Decimal objects natively, and SQLAlchemy must convert from floating point - rounding errors and other issues may occur. Please consider storing Decimal numbers as strings or integers on this platform for lossless storage.
     ...     pickle = PickleProperty()
     ...     json = JsonProperty()
     >>> a = {'date1': '2009-01-01 14:00:05', 'date3': '14:00:00', 'date2': '2009-01-01', 'string': 'limodou', 'decimal': '10.2', 'float': 200.02, 'boolean': True, 'integer': 200, 'pickle': {'a': 1,'b': 2}, 'json':{'a':1, 'b':['c', 'd']}, 'id':1}

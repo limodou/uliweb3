@@ -2716,7 +2716,8 @@ class Result(object):
         result if False, then only use condition to count
         """
         if self._group_by or self._join or self.distinct_field:
-            return self.do_(self.get_query().limit(None).order_by(None).offset(None).alias().count()).scalar()
+            subquery = self.get_query().limit(None).order_by(None).offset(None).alias()
+            return self.do_(select([func.count()]).select_from(subquery)).scalar()
         else:
             return self.do_(self.get_query().with_only_columns([func.count()]).limit(None).order_by(None).offset(None)).scalar()
 
@@ -3311,10 +3312,10 @@ class ManyResult(Result):
             if self.with_relation_name:
                 offset = len(self.table.columns)
                 
-            o = self.modelb.load(list(zip(result.keys()[offset:], result.values()[offset:])))
+            o = self.modelb.load(list(zip(list(result.keys())[offset:], list(result.values())[offset:])))
             
             if self.with_relation_name:
-                r = self.through_model.load(list(zip(result.keys()[:offset], result.values()[:offset])))
+                r = self.through_model.load(list(zip(list(result.keys())[:offset], list(result.values())[:offset])))
                 setattr(o, self.with_relation_name, r)
                 
             return o
