@@ -7,7 +7,9 @@ from __future__ import print_function, absolute_import
 import os, sys
 import re
 import types
+import typing as t
 import threading
+from inspect import iscoroutinefunction
 from werkzeug import Request as OriginalRequest, Response as OriginalResponse
 from werkzeug.local import Local, LocalManager
 from werkzeug.exceptions import HTTPException, NotFound, BadRequest, InternalServerError
@@ -1118,10 +1120,12 @@ class Dispatcher(object):
                 yield x
                 for x in result_iter:
                     yield x
-            return Response(f(x), direct_passthrough=True, headers=response.headers,
+            sync_call = self.ensure_sync(Response.__call__)
+            return sync_call(f(x), direct_passthrough=True, headers=response.headers,
                             content_type=response.content_type)
         else:
-            response = Response(str(result), content_type=response.content_type)
+            sync_call = self.ensure_sync(Response.__call__)
+            response = sync_call(str(result), content_type=response.content_type)
         return response
     
     def get_view_env(self):
@@ -1139,15 +1143,48 @@ class Dispatcher(object):
         env = Storage(self.env.to_dict())
         env.update(local_env)
         return env
-       
+
+    def ensure_sync(self, func: t.Callable[..., t.Any]) -> t.Callable[..., t.Any]:
+        """Ensure that the function is synchronous for WSGI workers.
+
+        Plain ``def`` functions are returned as-is. ``async def``
+        functions are wrapped to run and wait for the response.
+
+        Override this method to change how the app runs async views.
+        """
+        if iscoroutinefunction(func):
+            return self.async_to_sync(func)
+        return func
+
+    def async_to_sync(
+        self, func: t.Callable[..., t.Coroutine[t.Any, t.Any, t.Any]]
+    ) -> t.Callable[..., t.Any]:
+        """Return a sync function that will run the coroutine function.
+
+        .. code-block:: python
+            result = app.async_to_sync(func)(*args, **kwargs)
+
+        Override this method to change how the app converts async code
+        to be synchronously callable.
+        """
+        try:
+            from asgiref.sync import async_to_sync as asgiref_async_to_sync
+        except ImportError:
+            raise RuntimeError(
+                "Install Flask with the 'async' extra in order to use async views."
+            ) from None
+        return asgiref_async_to_sync(func)
+
     def _call_function(self, handler, request, response, env, args=None, kwargs=None):
-        
         handler.__globals__.update(env)
         handler.__globals__['env'] = env
         
         args = args or ()
         kwargs = kwargs or {}
-        result = handler(*args, **kwargs)
+
+        sync_call = self.ensure_sync(handler)
+        result = sync_call(*args, **kwargs)
+
         if isinstance(result, LocalProxy) and result._obj_name == 'response':
             result = local.response
         return result
@@ -1494,36 +1531,41 @@ class Dispatcher(object):
                 for cls in process_request_classes:
                         ins = cls(self, settings)
                         _inss[cls] = ins
-                        response = ins.process_request(req)
+                        sync_call = self.ensure_sync(ins.process_request)
+                        response = sync_call(req)
                         if response is not None:
                             break
                 
                 if response is None:
                     try:
                         if pre_call:
-                            response = pre_call(req)
+                            sync_call = self.ensure_sync(pre_call)
+                            response = sync_call(req)
                         if response is None:
                             try:
                                 response = self.call_view(mod, handler_cls, handler, req, res, kwargs=values)
                             except RedirectException as e:
                                 response = e.get_response()
                         if post_call:
-                            response = post_call(req, response)
+                            sync_call = self.ensure_sync(post_call)
+                            response = sync_call(req, response)
                     except Exception as e:
                         for cls in process_exception_classes:
-                                ins = _inss.get(cls)
-                                if not ins:
-                                    ins = cls(self, settings)
-                                response = ins.process_exception(req, e)
-                                if response:
-                                    return response
+                            ins = _inss.get(cls)
+                            if not ins:
+                                ins = cls(self, settings)
+                            sync_call = self.ensure_sync(ins.process_exception)
+                            response = sync_call(req, e)
+                            if response:
+                                return response
                         raise
                     
                 for cls in process_response_classes:
                     ins = _inss.get(cls)
                     if not ins:
                         ins = cls(self, settings)
-                    response = ins.process_response(req, response)
+                    sync_call = self.ensure_sync(ins.process_response)
+                    response = sync_call(req, response)
                 
                     if not isinstance(response, (OriginalResponse, Response)):
                         raise Exception("Middleware %s should return an Response object, but %r found" % (ins.__class__.__name__, response))
